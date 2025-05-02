@@ -17,7 +17,7 @@ module.exports = {
     channelid: process.env.CHANNELID || "120363321675231023@newsletter",
     channel: process.env.CHANNEL || "https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d",
     botName: process.env.BOT_NAME || "BloomBot",
-    image: process.env.IMAGE || "https://raw.githubusercontent.com/FrioNode/Bloombot/main/bloom.jpg",
+    image: process.env.IMAGE || "https://raw.githubusercontent.com/FrioNode/Bloombot/main/colors/bloom.jpg",
     lang: process.env.LANGUAGE || "EN",
     antilink: process.env.ANTILINK || "OFF",
     react: process.env.REACT || true,
