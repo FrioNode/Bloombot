@@ -1,6 +1,6 @@
 module.exports = {
     fun: {
-        type: 'fun',
+        type: 'system',
         desc: 'Lists all fun-type commands',
         run: async (Bloom, message, fulltext, commands) => {
             const funCmds = Object.entries(commands).filter(([_, cmd]) => cmd.type === 'fun');

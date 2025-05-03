@@ -7,7 +7,9 @@ const axios = require('axios');
 const setup = require('./colors/setup');
 const react = require('./colors/react');
 const mess = require('./colors/mess');
-const qrCode = require('qrcode-terminal'); // Import the qr-code-terminal module
+const qrCode = require('qrcode-terminal');
+const { startGame } = require('./bloom/games/games');
+let stopPokemonGame;
 
 const { emojis, doReact } = react;
 
@@ -100,7 +102,13 @@ async function start() {
                                     },
                             },
                         };
-                        await Bloom.sendMessage(setup.sudoChat, Payload);
+                       // await Bloom.sendMessage(setup.sudoChat, Payload);
+                        await Bloom.sendMessage(setup.errorChat, Payload);
+                        stopPokemonGame = await startGame(Bloom);
+                        process.on('SIGINT', () => {
+                            stopPokemonGame?.();
+                            process.exit();
+                        });
                     } else {
                         console.error('Failed to retrieve starting message data.');
                     }
