@@ -5,7 +5,6 @@ const mess = require('../colors/mess');
 
 const commands = {};
 
-// Load all `.js` files from all folders in current directory (excluding self)
 const currentDir = __dirname;
 const subdirs = fs.readdirSync(currentDir).filter(file => {
     const fullPath = path.join(currentDir, file);
@@ -17,11 +16,18 @@ for (const dir of subdirs) {
     for (const file of files) {
         if (file.endsWith('.js') && !file.startsWith('_')) {
             const module = require(path.join(currentDir, dir, file));
-            console.log(`📦 Loading from ${dir}/${file}:`, Object.keys(module));
-            Object.assign(commands, module);
+            for (const [cmd, data] of Object.entries(module)) {
+                if (typeof data.run === 'function') {
+                    commands[cmd] = data;
+                    console.log(`📦 Loaded command: ${cmd} (type: ${data.type})`);
+                } else {
+                    console.warn(`⚠️ Skipping invalid command format: ${cmd}`);
+                }
+            }
         }
     }
 }
+
 
 const bloomCmd = async (message, Bloom ) => {
     const text = message.message?.conversation || message.message?.extendedTextMessage?.text || '';
@@ -33,11 +39,10 @@ const bloomCmd = async (message, Bloom ) => {
 
     if (commands[command]) {
         try {
-            await commands[command](Bloom, message, fulltext);
+            await commands[command].run(Bloom, message, fulltext, commands);
             console.log("✅ Command executed:", fulltext);
         } catch (err) {
             console.error(`❌ Error in ${command}:`, err);
-            // error messaging logic
         }
     } else {
         console.warn(`⚠️ Command "${command}" not found in loaded commands.`);
