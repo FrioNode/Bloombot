@@ -1,7 +1,7 @@
 {
   "name": "BloomBot",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.1",
+  "description": "WhatsApp multidevice bot build on baileys",
   "main": "bloom.js",
   "scripts": {
     "start": "pm2 start index.js --deep-monitoring --attach --name bloom && pm2 logs && pm2 save && pm2 watch",
