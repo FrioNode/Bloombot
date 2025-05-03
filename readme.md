@@ -66,15 +66,22 @@ If you get banned by the Kingdom of Meta, no Phoenix Down can save you.
 
 ---
 
-## 🧭 Need Guidance? Contact the Oracle
+<h2 align="center">💌 Seek Guidance from the Mystical Realm</h2>
+<p align="center">If you find yourself in need of help, or wish to connect with the BloomBot wizards, here are your portals:</p>
 
-If you're lost in the fog, summon our support circle:
-
-| 📬 Method   | Contact Info                                      |
-|------------|---------------------------------------------------|
-| ✉️ Email   | support@bloombot.com                              |
-| 📱 WhatsApp| +254718241545, +254768413736                      |
-| 🧙 Telegram | [@frionode](https://t.me/frionode)                |
+<p align="center">
+  <a href="mailto:frionode@gmail..com">
+    <img src="https://img.shields.io/badge/Email-frionode@gmail.com-blue?logo=gmail&logoColor=white" alt="Email">
+  </a>
+  &nbsp;
+  <a href="https://wa.me/254718241545">
+    <img src="https://img.shields.io/badge/WhatsApp-Chat%20Now-25D366?logo=whatsapp&logoColor=white" alt="WhatsApp">
+  </a>
+  &nbsp;
+  <a href="https://t.me/frionode">
+    <img src="https://img.shields.io/badge/Telegram-@frionode-0088cc?logo=telegram&logoColor=white" alt="Telegram">
+  </a>
+</p>
 
 ---
 
