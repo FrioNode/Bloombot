@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const setup = require('../colors/setup');
 const mess = require('../colors/mess');
+const { trackUsage}  = require('../colors/exp');
 
 const commands = {};
 
@@ -30,12 +31,15 @@ for (const dir of subdirs) {
 
 
 const bloomCmd = async (message, Bloom ) => {
+    const senderJid = message.key?.participant || message.key?.remoteJid;
+    if (senderJid) await trackUsage(senderJid);
+
     const text = message.message?.conversation || message.message?.extendedTextMessage?.text || '';
     const fulltext = text.trim().replace(/^\s*!/, '').replace(/\s+/g, ' ');
     const command = fulltext.split(' ')[0].toLowerCase();
 
-    console.log("🧠 Available commands:", Object.keys(commands));
-    console.log("🧠 Requested command:", command);
+    // console.log("🧠 Available commands:", Object.keys(commands));
+    // console.log("🧠 Requested command:", command);
 
     if (commands[command]) {
         try {

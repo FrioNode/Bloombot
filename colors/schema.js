@@ -65,4 +65,11 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-module.exports = { Pokemon, User };
+const expSchema = new mongoose.Schema({
+    jid: { type: String, required: true, unique: true },
+    points: { type: Number, default: 0 },
+}, { timestamps: true });
+
+const Exp = mongoose.model('Exp', expSchema);
+
+module.exports = { Pokemon, User , Exp };
