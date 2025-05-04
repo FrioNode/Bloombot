@@ -43,4 +43,5 @@ module.exports = {
     restart_failed: '❌ Restart failed!',
     installing_dependencies: '📦 Installing dependencies...',
     install_failed: '❌ Failed to install dependencies!',
+    caption: footer,
 };
