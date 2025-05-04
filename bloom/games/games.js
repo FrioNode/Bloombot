@@ -185,7 +185,7 @@ module.exports = {
         desc: 'Purchase an item from the shop',
         run: async (Bloom, message, fulltext) => {
             const senderID = message.key.participant || message.key.remoteJid;
-            const itemName = fulltext.trim().split(/\s+/)[1];
+            const itemName = fulltext.trim().split(/\s+/)[1]?.toLowerCase();
             const user = await User.findById(senderID);
             const itemPrice = shopItems[itemName];
 
