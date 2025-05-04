@@ -197,6 +197,13 @@
 
 <div id="runtime">Loading uptime...</div>
 <script>
+    new Typed('#typing-text', {
+      strings: ['Enhance your chats...', 'Automate replies like a boss.', 'BloomBot makes it easy.'],
+      typeSpeed: 60,
+      backSpeed: 35,
+      loop: true,
+      backDelay: 1200
+    });
   let uptimeSeconds = 0;
 
   async function fetchUptime() {

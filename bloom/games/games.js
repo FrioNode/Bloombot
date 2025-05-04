@@ -486,28 +486,6 @@ module.exports = {
         }
     },
 
-    purge: {
-        type: 'economy',
-        desc: 'Reset your account (warning: irreversible)',
-        run: async (Bloom, message) => {
-            const senderID = message.key.participant || message.key.remoteJid;
-            const user = await User.findById(senderID);
-
-            user.walletBalance = 0;
-            user.bankBalance = 0;
-            user.inventory = { mining: [], magic: [], fishing: [], healing: [], animals: [], stones: [], miningUses: new Map() };
-            user.transactionHistory = [];
-            user.lastDailyClaim = new Date();
-            user.lastZooCatch = new Date();
-            user.lastGamble = new Date();
-            user.lastWork = new Date();
-
-            await user.save();
-
-            Bloom.sendMessage(message.key.remoteJid, { text: `Your account has been purged and reset to default values, ${user.name}. All items and balances have been cleared.` }, { quoted: message });
-        }
-    },
-
     mine: {
         type: 'economy',
         desc: 'Mine for stones using your tools',
@@ -557,6 +535,27 @@ module.exports = {
             return Bloom.sendMessage(message.key.remoteJid, { text: `You used your ${tool} and mined a ${randomSize} ${randomStone} rock worth ${stoneValue} 💰. Your ${tool} has ${toolLimits[tool] - toolUsage} uses left.` }, { quoted: message });
         }
     },
+    purge: {
+        type: 'economy',
+        desc: 'Reset your account (warning: irreversible)',
+        run: async (Bloom, message) => {
+            const senderID = message.key.participant || message.key.remoteJid;
+            const user = await User.findById(senderID);
+
+            user.walletBalance = 0;
+            user.bankBalance = 0;
+            user.inventory = { mining: [], magic: [], fishing: [], healing: [], animals: [], stones: [], miningUses: new Map() };
+            user.transactionHistory = [];
+            user.lastDailyClaim = new Date();
+            user.lastZooCatch = new Date();
+            user.lastGamble = new Date();
+            user.lastWork = new Date();
+
+            await user.save();
+
+            Bloom.sendMessage(message.key.remoteJid, { text: `Your account has been purged and reset to default values, ${user.name}. All items and balances have been cleared.` }, { quoted: message });
+        }
+    },
 
     catch: {
         type: 'pokemon',
@@ -590,7 +589,7 @@ module.exports = {
             }, { quoted: message });
         }
     },
-    pokedex: {
+    pokemon: {
         type: 'pokemon',
         desc: 'View your Pokémon collection',
         run: async (Bloom, message) => {
@@ -616,6 +615,48 @@ module.exports = {
             } catch (error) {
                 console.error('Error in pokedex function:', error);
                 await Bloom.sendMessage(message.key.remoteJid, { text: "Oops! Something went wrong while fetching your Pokémon. Please try again later." }, { quoted: message });
+            }
+        }
+    },
+    pokedex: {
+        type: 'pokemon',
+        desc: 'View any Pokémon details by name or ID',
+        run: async (Bloom, message, fulltext) => {
+            const input = fulltext.trim().split(/\s+/)[1]?.toLowerCase();
+            const chatId = message.key.remoteJid;
+
+            if (!input) {
+                await Bloom.sendMessage(chatId, { text: "Please provide a Pokémon name or ID to search for." }, { quoted: message });
+                return;
+            }
+
+            try {
+                const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${input}`);
+                if (!res.ok) {
+                    await Bloom.sendMessage(chatId, { text: `❌ Pokémon "${input}" does not exist.` }, { quoted: message });
+                    return;
+                }
+
+                const pokemon = await res.json();
+
+                // Get description from species endpoint
+                const speciesRes = await fetch(pokemon.species.url);
+                const speciesData = await speciesRes.json();
+
+                const flavorEntry = speciesData.flavor_text_entries.find(entry => entry.language.name === 'en');
+                const pokemonDescription = flavorEntry?.flavor_text || "No description available.";
+                const cleanedDescription = pokemonDescription.replace(/\f/g, ' ').replace(/\n/g, ' ');
+
+                const msg = `*${pokemon.name.toUpperCase()}*\n` +
+                `Height: ${pokemon.height} decimeters\n` +
+                `Weight: ${pokemon.weight} hectograms\n` +
+                `Description: ${cleanedDescription}`;
+
+                await Bloom.sendMessage(chatId, { text: msg }, { quoted: message });
+
+            } catch (error) {
+                console.error('Error in pokedex lookup:', error);
+                await Bloom.sendMessage(chatId, { text: "⚠️ An error occurred while fetching Pokémon data. Please try again later." }, { quoted: message });
             }
         }
     }
