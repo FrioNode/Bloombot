@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="colors/bloom.jpg" alt="BloomBot Banner" width="100%" />
-</p>
-
 <h1 align="center" style="color:#6b21a8">🌼 BloomBot (Multi-Device) by FrioNode™</h1>
 
 
@@ -13,6 +9,10 @@
 </p>
 
 ---
+
+<p align="center">
+  <img src="colors/bloom.jpg" alt="BloomBot Banner" width="100%" />
+</p>
 
 ## 🌟 Welcome to the Realm of BloomBot
 
