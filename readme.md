@@ -2,10 +2,18 @@
 
 
 <p align="center">
-  <img src="https://img.shields.io/github/stars/FrioNode/Bloombot?style=social" />
-  <img src="https://img.shields.io/github/forks/FrioNode/Bloombot?style=social" />
-  <img src="https://img.shields.io/github/issues/FrioNode/Bloombot" />
-  <img src="https://img.shields.io/github/license/FrioNode/Bloombot" />
+  <a href="https://github.com/FrioNode/Bloombot/stargazers">
+    <img src="https://img.shields.io/github/stars/FrioNode/Bloombot?style=social&cacheSeconds=60" alt="Stars">
+  </a>
+  <a href="https://github.com/FrioNode/Bloombot/network/members">
+    <img src="https://img.shields.io/github/forks/FrioNode/Bloombot?style=social" alt="Forks">
+  </a>
+  <a href="https://github.com/FrioNode/Bloombot/issues">
+    <img src="https://img.shields.io/github/issues/FrioNode/Bloombot" alt="Issues">
+  </a>
+  <a href="https://github.com/FrioNode/Bloombot/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/FrioNode/Bloombot" alt="License">
+  </a>
 </p>
 
 ---
