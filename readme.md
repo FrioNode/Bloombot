@@ -70,18 +70,20 @@ If you get banned by the Kingdom of Meta, no Phoenix Down can save you.
 <p align="center">If you find yourself in need of help, or wish to connect with the BloomBot wizards, here are your portals:</p>
 
 <p align="center">
-  <a href="mailto:frionode@gmail..com">
-    <img src="https://img.shields.io/badge/Email-frionode@gmail.com-blue?logo=gmail&logoColor=white" alt="Email">
+  <a href="https://github.com/FrioNode/Bloombot/stargazers">
+    <img src="https://img.shields.io/github/stars/FrioNode/Bloombot?style=social&cacheSeconds=60" alt="Stars">
   </a>
-  &nbsp;
-  <a href="https://wa.me/254718241545">
-    <img src="https://img.shields.io/badge/WhatsApp-Chat%20Now-25D366?logo=whatsapp&logoColor=white" alt="WhatsApp">
+  <a href="https://github.com/FrioNode/Bloombot/network/members">
+    <img src="https://img.shields.io/github/forks/FrioNode/Bloombot?style=social" alt="Forks">
   </a>
-  &nbsp;
-  <a href="https://t.me/frionode">
-    <img src="https://img.shields.io/badge/Telegram-@frionode-0088cc?logo=telegram&logoColor=white" alt="Telegram">
+  <a href="https://github.com/FrioNode/Bloombot/issues">
+    <img src="https://img.shields.io/github/issues/FrioNode/Bloombot" alt="Issues">
+  </a>
+  <a href="https://github.com/FrioNode/Bloombot/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/FrioNode/Bloombot" alt="License">
   </a>
 </p>
+
 
 ---
 
