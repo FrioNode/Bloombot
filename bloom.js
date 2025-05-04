@@ -164,11 +164,10 @@ init();
 
 
 app.use(express.static(path.join(__dirname, 'colors')));
-
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'colors', 'bloom.html'));
 });
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`${setup.botName} Server is running on port ${PORT}`);
 });
