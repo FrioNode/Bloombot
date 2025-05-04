@@ -10,6 +10,7 @@ const mess = require('./colors/mess');
 const qrCode = require('qrcode-terminal');
 const express = require('express');
 const app = express();
+const serverStartTime = Date.now();
 const { startGame } = require('./bloom/games/games');
 let stopPokemonGame;
 
@@ -170,4 +171,17 @@ app.get('/', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`${setup.botName} Server is running on port ${PORT}`);
+});
+
+
+app.get('/uptime', (req, res) => {
+    const now = Date.now();
+    const diff = now - serverStartTime;
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    res.json({ days, hours, minutes, seconds });
 });
