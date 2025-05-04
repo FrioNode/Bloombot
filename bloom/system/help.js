@@ -1,8 +1,28 @@
 module.exports = {
     help: {
         type: 'system',
-        desc: 'Shows help info for all commands, grouped by category',
+        desc: 'Shows help info. Usage: help [command]',
         run: async (Bloom, message, fulltext, commands) => {
+            const args = fulltext.trim().split(' ').slice(1); // remove "help"
+
+            if (args.length > 0) {
+                const cmdName = args[0].toLowerCase();
+                const cmd = commands[cmdName];
+                if (!cmd) {
+                    return await Bloom.sendMessage(message.key.remoteJid, {
+                        text: `❌ Command *${cmdName}* not found. Use *help* / *menu* to see all commands.`
+                    });
+                }
+
+                const detailText = `🔍 *Help: ${cmdName}*\n\n` +
+                `• Category: ${cmd.type || 'misc'}\n` +
+                `• Description: ${cmd.desc || 'No description'}\n` +
+                `• Usage: ${cmd.usage || cmdName}`;
+
+                return await Bloom.sendMessage(message.key.remoteJid, { text: detailText });
+            }
+
+            // Fallback to full help menu
             const grouped = {};
 
             for (const [name, cmd] of Object.entries(commands)) {

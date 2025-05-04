@@ -1,0 +1,155 @@
+const { isGroupAdminContext } = require('../../colors/auth');
+
+module.exports = {
+    add: {
+        type: 'group',
+        desc: 'Add a participant to the group',
+        run: async (Bloom, message, fulltext) => {
+            if (!await isGroupAdminContext(Bloom, message)) return;
+            const args = fulltext.split(' ').slice(1).join(' ');
+            const jid = arg + '@s.whatsapp.net';
+            await Bloom.groupParticipantsUpdate(message.key.remoteJid, [jid], 'add');
+            await Bloom.sendMessage(message.key.remoteJid, { text: '✅ Added successfully.' });
+        }
+    },
+
+    kick: {
+        type: 'group',
+        desc: 'Remove a participant from the group',
+        run: async (Bloom, message, fulltext) => {
+            if (!await isGroupAdminContext(Bloom, message)) return;
+            const arg = fulltext.split(' ')[1];
+            let targetJid = arg ? `${arg}@s.whatsapp.net` :
+            message.message?.extendedTextMessage?.contextInfo?.participant;
+            if (!targetJid) return await Bloom.sendMessage(message.key.remoteJid, { text: '❌ Tag or provide a number to kick.' });
+
+            await Bloom.groupParticipantsUpdate(message.key.remoteJid, [targetJid], 'remove');
+            await Bloom.sendMessage(message.key.remoteJid, { text: `👢 Removed ${targetJid.split('@')[0]}` });
+        }
+    }
+    ,
+
+    open: {
+        type: 'group',
+        desc: 'Open group (anyone can send messages)',
+        run: async (Bloom, message) => {
+            if (!await isGroupAdminContext(Bloom, message)) return;
+            await Bloom.groupSettingUpdate(message.key.remoteJid, 'not_announcement');
+            await Bloom.sendMessage(message.key.remoteJid, { text: '🔓 Group is now open.' });
+        }
+    },
+
+    close: {
+        type: 'group',
+        desc: 'Close group (only admins can send)',
+        run: async (Bloom, message) => {
+            if (!await isGroupAdminContext(Bloom, message)) return;
+            await Bloom.groupSettingUpdate(message.key.remoteJid, 'announcement');
+            await Bloom.sendMessage(message.key.remoteJid, { text: '🔒 Group is now closed.' });
+        }
+    },
+    lock: {
+        type: 'group',
+        desc: 'Lock group settings (only admins can edit group info)',
+        run: async (Bloom, message) => {
+            if (!await isGroupAdminContext(Bloom, message)) return;
+
+            await Bloom.groupSettingUpdate(message.key.remoteJid, 'locked');
+            await Bloom.sendMessage(message.key.remoteJid, {
+                text: '🔒 Group settings locked. Only admins can edit group info.'
+            });
+        }
+    },
+    unlock: {
+        type: 'group',
+        desc: 'Unlock group settings (any member can edit group info)',
+        run: async (Bloom, message) => {
+            if (!await isGroupAdminContext(Bloom, message)) return;
+
+            await Bloom.groupSettingUpdate(message.key.remoteJid, 'unlocked');
+            await Bloom.sendMessage(message.key.remoteJid, {
+                text: '🔓 Group settings unlocked. Members can now edit group info.'
+            });
+        }
+    },
+
+    disappear: {
+        type: 'group',
+        desc: 'Set disappearing messages (0=off, 24=1 day, 7=1 week, 90=3 months)',
+        run: async (Bloom, message, fulltext) => {
+            if (!await isGroupAdminContext(Bloom, message)) return;
+
+            const parts = fulltext.trim().split(' ');
+            const input = parseInt(parts[1]); // e.g., !disappear 24
+
+            const durations = {
+                0: 0,
+                24: 86400,
+                7: 604800,
+                90: 7776000
+            };
+
+            if (!durations.hasOwnProperty(input)) {
+                return await Bloom.sendMessage(message.key.remoteJid, {
+                    text: '❗ Invalid value. Use: 0 (off), 24, 7, or 90'
+                });
+            }
+
+            await Bloom.sendMessage(message.key.remoteJid, { disappearingMessagesInChat: durations[input] });
+            const statusMsg = input === 0 ? '❌ Disappearing messages disabled' : `💨 Disappearing messages set to ${input} hour(s)/day(s).`;
+            await Bloom.sendMessage(message.key.remoteJid, { text: statusMsg });
+        }
+    },
+
+    rename: {
+        type: 'group',
+        desc: 'Change group subject',
+        run: async (Bloom, message, fulltext) => {
+
+            if (!await isGroupAdminContext(Bloom, message)) return;
+            const newName = fulltext.split(' ').slice(1).join(' ').trim();
+            if (!newName) return Bloom.sendMessage(message.key.remoteJid, { text: '❌ Please provide a new name.' });
+            await Bloom.groupUpdateSubject(message.key.remoteJid, newName);
+            await Bloom.sendMessage(message.key.remoteJid, { text: `✏️ Group name updated to:\n\n${newName}` });
+        }
+    },
+
+    desc: {
+        type: 'group',
+        desc: 'Change group description',
+        run: async (Bloom, message, fulltext) => {
+            if (!await isGroupAdminContext(Bloom, message)) return;
+            const de = fulltext.split(' ').slice(1).join(' ').trim();
+            if (!de) return Bloom.sendMessage(message.key.remoteJid, { text: '❌ Please provide a new description.' });
+            await Bloom.groupUpdateDescription(message.key.remoteJid, de);
+            await Bloom.sendMessage(message.key.remoteJid, { text: `📄 Description updated to.\n\n${de}` });
+        }
+    },
+
+    revoke: {
+        type: 'group',
+        desc: 'Revoke group invite link',
+        run: async (Bloom, message) => {
+            if (!await isGroupAdminContext(Bloom, message)) return;
+            await Bloom.groupRevokeInvite(message.key.remoteJid);
+            await Bloom.sendMessage(message.key.remoteJid, { text: '🔗 Invite link revoked.' });
+        }
+    },
+        revoke: {
+            type: 'group',
+            desc: 'Revoke current group invite link',
+            run: async (Bloom, message, fulltext) => {
+                if (!await isGroupAdminContext(Bloom, message)) return;
+
+                try {
+                    const code = await Bloom.groupRevokeInvite(message.key.remoteJid);
+                    await Bloom.sendMessage(message.key.remoteJid, {
+                        text: `🔁 Group invite link has been revoked.\n\n🆕 New Link: https://chat.whatsapp.com/${code}`
+                    });
+                } catch (err) {
+                    await Bloom.sendMessage(message.key.remoteJid, { text: `❌ Failed to revoke link.` });
+                    console.error('Revoke error:', err);
+                }
+            }
+        }
+};
