@@ -1,7 +1,7 @@
 module.exports = {
     menu: {
         type: 'system',
-        desc: 'Shows a list of all available command names grouped by type',
+        desc: 'Shows all command names grouped by type',
         run: async (Bloom, message, fulltext, commands) => {
             const grouped = {};
 

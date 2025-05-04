@@ -5,7 +5,12 @@ async function trackUsage(jid) {
     try {
         await Exp.findOneAndUpdate(
             { jid },
-            { $inc: { points: 1 } },
+            {
+                $inc: {
+                    points: 1,
+                    messageCount: 1
+                }
+            },
             { upsert: true, new: true }
         );
     } catch (err) {
