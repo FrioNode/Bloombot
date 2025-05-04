@@ -24,6 +24,7 @@
     "axios": "^1.9.0",
     "baileys": "^6.7.16",
     "dotenv": "^16.5.0",
+    "express": "^5.1.0",
     "fs": "0.0.1-security",
     "mongoose": "^8.14.1",
     "node-fetch": "^2.7.0",

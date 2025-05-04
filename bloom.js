@@ -8,6 +8,8 @@ const setup = require('./colors/setup');
 const react = require('./colors/react');
 const mess = require('./colors/mess');
 const qrCode = require('qrcode-terminal');
+const express = require('express');
+const app = express();
 const { startGame } = require('./bloom/games/games');
 let stopPokemonGame;
 
@@ -161,12 +163,12 @@ async function init() {
 init();
 
 
-/*
- * app.use(express.static(path.join(__dirname, 'mydata')));
- * app.get('/', (req, res) => {
- *    res.sendFile(path.join(__dirname, 'mydata', 'index.html'));
- * });
- * app.listen(PORT, () => {
- *    console.log(`Server is running on port ${PORT}`);
- * });
- */
+app.use(express.static(path.join(__dirname, 'colors')));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'colors', 'bloom.html'));
+});
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
