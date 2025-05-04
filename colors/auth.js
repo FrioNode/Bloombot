@@ -43,20 +43,33 @@ const isBloomKing = async (sender, message) => {
 
 const isGroupAdminContext = async (Bloom, message) => {
     const groupMetadata = await fetchGroupMetadata(Bloom, message);
-
-    if (!groupMetadata) {
-        // await Bloom.sendMessage(message.key.remoteJid, { text: "❌ This is not a group chat!" });
-        return false;
-    }
+    if (!groupMetadata) return false;
 
     const botAdmin = await isBotAdmin(Bloom, message);
     const senderAdmin = await isSenderAdmin(Bloom, message);
+
     if (!botAdmin && !senderAdmin) {
-        await Bloom.sendMessage(message.key.remoteJid, { text: "❌ Neither I nor you are admins in this group." });
+        await Bloom.sendMessage(message.key.remoteJid, {
+            text: "❌ Neither I nor you are admins in this group."
+        });
         return false;
     }
 
-    return botAdmin && senderAdmin;
+    if (!botAdmin) {
+        await Bloom.sendMessage(message.key.remoteJid, {
+            text: "❌ I must be a group admin to perform this command."
+        });
+        return false;
+    }
+
+    if (!senderAdmin) {
+        await Bloom.sendMessage(message.key.remoteJid, {
+            text: "❌ You must be a group admin to use this command."
+        });
+        return false;
+    }
+
+    return true; // both are admins
 };
 
 module.exports = {

@@ -10,9 +10,7 @@ module.exports = {
             }
 
             const quotedJid = message.message?.extendedTextMessage?.contextInfo?.participant;
-            console.log(quotedJid);
             const parts = fulltext.split(' ').slice(1);
-            console.log(parts);
             let targetJid = null;
             let amount = null;
 
@@ -43,6 +41,7 @@ module.exports = {
             });
         },
         type: 'owner',
-        desc: 'Set EXP for a user manually'
-    }
+        desc: 'Set EXP for a user manually',
+        usage: '*setxp (quote user) 1234*\nor\n*setxp 254700000000 1234*'
+    },
 };

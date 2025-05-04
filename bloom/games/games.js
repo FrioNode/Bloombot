@@ -535,9 +535,9 @@ module.exports = {
             return Bloom.sendMessage(message.key.remoteJid, { text: `You used your ${tool} and mined a ${randomSize} ${randomStone} rock worth ${stoneValue} 💰. Your ${tool} has ${toolLimits[tool] - toolUsage} uses left.` }, { quoted: message });
         }
     },
-    purge: {
+    reset: {
         type: 'economy',
-        desc: 'Reset your account (warning: irreversible)',
+        desc: 'Reset your Economy account (warning: irreversible)',
         run: async (Bloom, message) => {
             const senderID = message.key.participant || message.key.remoteJid;
             const user = await User.findById(senderID);

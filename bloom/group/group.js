@@ -6,7 +6,7 @@ module.exports = {
         desc: 'Add a participant to the group',
         run: async (Bloom, message, fulltext) => {
             if (!await isGroupAdminContext(Bloom, message)) return;
-            const args = fulltext.split(' ').slice(1).join(' ');
+            const arg = fulltext.split(' ')[1];
             const jid = arg + '@s.whatsapp.net';
             await Bloom.groupParticipantsUpdate(message.key.remoteJid, [jid], 'add');
             await Bloom.sendMessage(message.key.remoteJid, { text: '✅ Added successfully.' });
