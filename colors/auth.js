@@ -1,6 +1,4 @@
-// ../../colors/auth.js
 const { sudoChat } = require("./setup");
-// Fetch group metadata
 const fetchGroupMetadata = async (Bloom, message) => {
     const groupId = message.key.remoteJid;
     if (!groupId.endsWith('@g.us')) return null;
@@ -33,13 +31,11 @@ const isSenderAdmin = async (Bloom, message) => {
     );
 };
 
-// Check if sender is the Bloom King
 const isBloomKing = async (sender, message) => {
     if (sender.endsWith('@g.us')) sender = message.key.participant;
     return sender === sudoChat;
 };
 
-// One-shot: Check if bot and sender are admins
 const isGroupAdminContext = async (Bloom, message) => {
     return (await isBotAdmin(Bloom, message)) && (await isSenderAdmin(Bloom, message));
 };
