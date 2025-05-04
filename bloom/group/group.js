@@ -151,5 +151,49 @@ module.exports = {
                     console.error('Revoke error:', err);
                 }
             }
-        }
+        },
+            poll: {
+                type: 'group',
+                desc: 'Creates a poll in the group (admin only)',
+                usage: 'poll Question | Option 1 | Option 2 | ...',
+                run: async (Bloom, message, fulltext) => {
+                    if (!await isGroupAdminContext(Bloom, message)) return;
+
+                    const groupId = message.key.remoteJid;
+                    const pollText = fulltext.trim().split(' ').slice(1).join(' ').trim(); // remove 'poll'
+
+                    const segments = pollText.split('|').map(s => s.trim()).filter(Boolean);
+
+                    if (segments.length < 2) {
+                        return await Bloom.sendMessage(groupId, {
+                            text: '❌ Invalid format.\nUsage: poll Question | Option 1 | Option 2 | ...'
+                        }, { quoted: message });
+                    }
+
+                    const pollName = segments[0];
+                    const pollOptions = segments.slice(1);
+
+                    if (pollOptions.length < 2) {
+                        return await Bloom.sendMessage(groupId, {
+                            text: '❌ A poll requires at least 2 options.'
+                        }, { quoted: message });
+                    }
+
+                    try {
+                        await Bloom.sendMessage(groupId, {
+                            poll: {
+                                name: pollName,
+                                values: pollOptions,
+                                selectableCount: 1,
+                                toAnnouncementGroup: false
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Poll error:', error);
+                        await Bloom.sendMessage(groupId, {
+                            text: '❌ Failed to create poll.'
+                        }, { quoted: message });
+                    }
+                }
+            }
 };

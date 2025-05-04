@@ -1,12 +1,17 @@
 const { sudoChat } = require("./setup");
+
 const fetchGroupMetadata = async (Bloom, message) => {
     const groupId = message.key.remoteJid;
-    if (!groupId.endsWith('@g.us')) return null;
+    if (!groupId.endsWith('@g.us')) {
+        await Bloom.sendMessage(message.key.remoteJid, { text: "❌ This command is meant for group chat!" });
+        return null;
+    }
 
     try {
         return await Bloom.groupMetadata(groupId);
     } catch (err) {
         console.error('Error fetching group metadata:', err);
+        await Bloom.sendMessage(message.key.remoteJid, { text: "❌ Failed to fetch group metadata." });
         return null;
     }
 };
@@ -37,7 +42,21 @@ const isBloomKing = async (sender, message) => {
 };
 
 const isGroupAdminContext = async (Bloom, message) => {
-    return (await isBotAdmin(Bloom, message)) && (await isSenderAdmin(Bloom, message));
+    const groupMetadata = await fetchGroupMetadata(Bloom, message);
+
+    if (!groupMetadata) {
+        // await Bloom.sendMessage(message.key.remoteJid, { text: "❌ This is not a group chat!" });
+        return false;
+    }
+
+    const botAdmin = await isBotAdmin(Bloom, message);
+    const senderAdmin = await isSenderAdmin(Bloom, message);
+    if (!botAdmin && !senderAdmin) {
+        await Bloom.sendMessage(message.key.remoteJid, { text: "❌ Neither I nor you are admins in this group." });
+        return false;
+    }
+
+    return botAdmin && senderAdmin;
 };
 
 module.exports = {
