@@ -4,7 +4,7 @@
   "description": "WhatsApp multidevice bot build on baileys",
   "main": "bloom.js",
   "scripts": {
-    "start": "pm2 start index.js --deep-monitoring --attach --name bloom && pm2 logs && pm2 save && pm2 watch",
+    "start": "pm2 start bloom.js --deep-monitoring --attach --name bloom && pm2 logs && pm2 save && pm2 watch",
     "stop": "pm2 stop bloom",
     "restart": "pm2 restart bloom",
     "test": "node test.js"

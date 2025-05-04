@@ -36,7 +36,7 @@ module.exports = {
                     });
                 }
 
-                menuText += `📂 *${category.toUpperCase()}*\n╭─────────\n`;
+                menuText += `📂 *${category.toUpperCase()}*\n╭──────────\n`;
                 const names = grouped[category];
 
                 // Group the commands into 3 per line for this category
@@ -48,7 +48,7 @@ module.exports = {
             } else {
                 // Show the full menu with categories
                 Object.entries(grouped).forEach(([type, names]) => {
-                    menuText += `📂 *${type.toUpperCase()}*\n╭───\n`;
+                    menuText += `📂 *${type.toUpperCase()}*\n╭──────────\n`;
                     for (let i = 0; i < names.length; i += 3) {
                         menuText += `│ ${names.slice(i, i + 3).join(' | ')}\n`;
                     }
