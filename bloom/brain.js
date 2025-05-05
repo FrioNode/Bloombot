@@ -83,52 +83,61 @@ function loadCommands() {
 
 loadCommands();
 
-// Add after loadCommands() function
 function setupAutoReload() {
     if (setup.Node === 'production') return;
+
+    // ===== NEW: Debounce tracking =====
+    const lastReloadTimes = new Map();
+    const DEBOUNCE_MS = 500; // 0.5 second cooldown
 
     const watchPaths = [
         // Command files
         path.join(__dirname, '**/*.js'),
 
-        // Brain and color files
-        path.join(__dirname, '../brain.js'),
+        // Color files
         path.join(__dirname, '../colors/**/*.js'),
 
         // Exclusions
-        '!' + path.join(__dirname, 'middleware.js'),
+        '!' + path.join(__dirname, 'brain.js'),
         '!' + path.join(__dirname, '**/_*.js')
     ];
 
     const watcher = chokidar.watch(watchPaths, {
         ignoreInitial: true,
+        // ===== UPDATED: More stable file watching =====
         awaitWriteFinish: {
-            stabilityThreshold: 200,
+            stabilityThreshold: 500, // Increased from 200
             pollInterval: 100
-        }
+        },
+        ignorePermissionErrors: true
     });
 
     watcher.on('change', (changedPath) => {
+        // ===== NEW: Debounce check =====
+        const now = Date.now();
+        const lastReload = lastReloadTimes.get(changedPath) || 0;
+        if (now - lastReload < DEBOUNCE_MS) return;
+        lastReloadTimes.set(changedPath, now);
+
         const relativePath = path.relative(path.join(__dirname, '../'), changedPath);
 
-        // Special handling for non-command files
-        if (changedPath.includes('/colors/') || changedPath.endsWith('brain.js')) {
-            console.log(`🎨 Reloading config file: ${relativePath}`);
+        // Config files (colors/, plugins.js)
+        if (changedPath.includes('/colors/') || changedPath.endsWith('plugin.js')) {
+            console.log(`🎨 Reloading config: ${relativePath}`);
             try {
                 delete require.cache[require.resolve(changedPath)];
                 require(changedPath);
-                console.log(`✅ Successfully reloaded: ${relativePath}`);
             } catch (err) {
-                console.error(`❌ Failed to reload ${relativePath}:`, err);
+                console.error(`❌ Config reload failed: ${relativePath}`, err);
             }
             return;
         }
 
-        // Original command reload logic
+        // Command files
         const cmdName = path.basename(changedPath, '.js');
         const dirName = path.basename(path.dirname(changedPath));
-        console.log(`🔄 Detected changes in: ${dirName}/${cmdName}.js`);
 
+        console.log(`🔄 Reloading command: ${dirName}/${cmdName}.js`);
         try {
             delete require.cache[require.resolve(changedPath)];
             const module = require(changedPath);
@@ -136,11 +145,10 @@ function setupAutoReload() {
             for (const [cmd, data] of Object.entries(module)) {
                 if (typeof data?.run === 'function') {
                     commands[cmd] = data;
-                    console.log(`♻️ Updated command: ${cmd} (from ${dirName}/)`);
                 }
             }
         } catch (err) {
-            console.error(`❌ Failed to reload ${dirName}/${cmdName}.js:`, err);
+            console.error(`❌ Command reload failed: ${dirName}/${cmdName}`, err);
         }
     });
 
@@ -406,12 +414,4 @@ const bloomCmd = async (Bloom, message) => {
     }
 };
 
-module.exports = {
-    bloomCmd,
-    commands,
-    reloadCommands: () => {
-        console.log('♻️ Reloading commands...');
-        for (const cmd in commands) delete commands[cmd];
-        loadCommands();
-    }
-};
+module.exports = { bloomCmd, commands };
