@@ -2,6 +2,7 @@ module.exports = {
     help: {
         type: 'system',
         desc: 'Shows help info. Usage: help [command]',
+        usage: 'Just type: *help* or *help* <command> for specific plugin',
         run: async (Bloom, message, fulltext, commands) => {
             const args = fulltext.trim().split(' ').slice(1); // remove "help"
 

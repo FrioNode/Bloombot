@@ -3,6 +3,7 @@ require('dotenv').config({ path: require('path').resolve(__dirname, '../config.e
 function convertToBool(text, fault = 'true') {
     return text === fault ? true : false;
 }
+
 const Bot=require('../package.json');
 module.exports = {
     session: process.env.SESSION,
@@ -23,6 +24,7 @@ module.exports = {
     react: process.env.REACT || true,
     emoji: process.env.EMOJI || "🌼",
     bloom: Bot, reboot: process.env.REBOOT || "false",
+    Node: process.env.NODE_ENV || "development",
     prefix: process.env.PREFIX || "!",
     timezone: process.env.TIMEZONE || 'Africa/Nairobi',
     mode: process.env.MODE || "public",

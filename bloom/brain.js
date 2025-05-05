@@ -4,10 +4,11 @@ const setup = require('../colors/setup');
 const mess = require('../colors/mess');
 const { trackUsage}  = require('../colors/exp');
 const options = { serverSelectionTimeoutMS: 30000, socketTimeoutMS: 45000 };
-
+const chokidar = require('chokidar');
+const path = require('path');
 // MongoDB connection with error handling
 mongoose.connect(setup.mongo, options)
-.then(() => console.log('Middleware: Successfully connected to MongoDB'))
+.then(() => console.log('Brain: Successfully connected to MongoDB'))
 .catch(err => console.error('MongoDB connection error:', err));
 
 
@@ -33,7 +34,6 @@ async function bloomCm(Bloom, message, fulltext, commands) {
 
 // Dynamic command loader with improved error handling
 const fs = require('fs');
-const path = require('path');
 const commands = {};
 
 function loadCommands() {
@@ -82,6 +82,78 @@ function loadCommands() {
 }
 
 loadCommands();
+
+// Add after loadCommands() function
+function setupAutoReload() {
+    if (setup.Node === 'production') return;
+
+    const watchPaths = [
+        // Command files
+        path.join(__dirname, '**/*.js'),
+
+        // Brain and color files
+        path.join(__dirname, '../brain.js'),
+        path.join(__dirname, '../colors/**/*.js'),
+
+        // Exclusions
+        '!' + path.join(__dirname, 'middleware.js'),
+        '!' + path.join(__dirname, '**/_*.js')
+    ];
+
+    const watcher = chokidar.watch(watchPaths, {
+        ignoreInitial: true,
+        awaitWriteFinish: {
+            stabilityThreshold: 200,
+            pollInterval: 100
+        }
+    });
+
+    watcher.on('change', (changedPath) => {
+        const relativePath = path.relative(path.join(__dirname, '../'), changedPath);
+
+        // Special handling for non-command files
+        if (changedPath.includes('/colors/') || changedPath.endsWith('brain.js')) {
+            console.log(`🎨 Reloading config file: ${relativePath}`);
+            try {
+                delete require.cache[require.resolve(changedPath)];
+                require(changedPath);
+                console.log(`✅ Successfully reloaded: ${relativePath}`);
+            } catch (err) {
+                console.error(`❌ Failed to reload ${relativePath}:`, err);
+            }
+            return;
+        }
+
+        // Original command reload logic
+        const cmdName = path.basename(changedPath, '.js');
+        const dirName = path.basename(path.dirname(changedPath));
+        console.log(`🔄 Detected changes in: ${dirName}/${cmdName}.js`);
+
+        try {
+            delete require.cache[require.resolve(changedPath)];
+            const module = require(changedPath);
+
+            for (const [cmd, data] of Object.entries(module)) {
+                if (typeof data?.run === 'function') {
+                    commands[cmd] = data;
+                    console.log(`♻️ Updated command: ${cmd} (from ${dirName}/)`);
+                }
+            }
+        } catch (err) {
+            console.error(`❌ Failed to reload ${dirName}/${cmdName}.js:`, err);
+        }
+    });
+
+    console.log('🔥 Hot Reload active for:');
+    watchPaths.filter(p => !p.startsWith('!')).forEach(p => {
+        console.log(`   → ${path.relative(path.join(__dirname, '../'), p)}`);
+    });
+}
+
+// Initialize at the bottom (before exports)
+if (setup.Node !== 'production') {
+    setupAutoReload();
+}
 
 // Robust command parser
 function extractCommand(message) {
