@@ -17,7 +17,8 @@
   "prefix": "!",
   "timezone": "Africa/Nairobi",
   "mode": "public",
-  "pixelKey": "https://www.pexels.com/api/",
+  "pixelKey": "khiVE4MkSCKRiKSpyPTnqtxioFSb27YwNNKfzTtKjeSljP8iBYpkvbSS",
   "deepSeek": "https://platform.deepseek.com/api_keys",
-  "pasteBinApi": "pastebin-api"
+  "pasteBinApi": "pastebin-api",
+  "Node": "development"
 }

@@ -21,6 +21,5 @@ module.exports = {
     ...config,
 
     cpYear: new Date().getFullYear(),
-    bloom: Bot,
-    Node: process.env.NODE_ENV || 'development'
+    bloom: Bot
 };
