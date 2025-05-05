@@ -589,7 +589,7 @@ module.exports = {
             }, { quoted: message });
         }
     },
-    pokemon: {
+    pokes: {
         type: 'pokemon',
         desc: 'View your Pokémon collection',
         run: async (Bloom, message) => {

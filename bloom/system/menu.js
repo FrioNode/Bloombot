@@ -2,8 +2,9 @@ const { caption } = require('../../colors/mess');
 
 module.exports = {
     menu: {
-        type: 'system',
-        desc: 'Shows all command names grouped by type, or specific type if argument is provided',
+        type: 'user',
+        desc: 'Shows all commands by type, or specific type if argument is provided',
+        usage: `Just type *menu* or *menu* <submenu> for a specific menu\n\nEg: *menu group*`,
         run: async (Bloom, message, fulltext, commands) => {
             const grouped = {};
             let totalCommands = 0;
@@ -36,23 +37,23 @@ module.exports = {
                     });
                 }
 
-                menuText += `📂 *${category.toUpperCase()}*\n╭──────────\n`;
+                menuText += `📂 *${category.toUpperCase()}*\n╭─────────────\n`;
                 const names = grouped[category];
 
                 // Group the commands into 3 per line for this category
-                for (let i = 0; i < names.length; i += 3) {
-                    menuText += `│ ${names.slice(i, i + 3).join(' | ')}\n`;
+                for (let i = 0; i < names.length; i += 4) {
+                    menuText += `│ ${names.slice(i, i + 4).join(' | ')}\n`;
                 }
 
-                menuText += `╰──────────\n`;
+                menuText += `╰─────────────\n`;
             } else {
                 // Show the full menu with categories
                 Object.entries(grouped).forEach(([type, names]) => {
-                    menuText += `📂 *${type.toUpperCase()}*\n╭──────────\n`;
-                    for (let i = 0; i < names.length; i += 3) {
-                        menuText += `│ ${names.slice(i, i + 3).join(' | ')}\n`;
+                    menuText += `📂 *${type.toUpperCase()}*\n╭─────────────\n`;
+                    for (let i = 0; i < names.length; i += 4) {
+                        menuText += `│ ${names.slice(i, i + 4).join(' | ')}\n`;
                     }
-                    menuText += `╰──────────\n`;
+                    menuText += `╰─────────────\n`;
                 });
             }
             const final = menuText + caption;

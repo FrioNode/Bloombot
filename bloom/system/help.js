@@ -1,6 +1,6 @@
 module.exports = {
     help: {
-        type: 'system',
+        type: 'user',
         desc: 'Shows help info. Usage: help [command]',
         usage: 'Just type: *help* or *help* <command> for specific plugin',
         run: async (Bloom, message, fulltext, commands) => {
