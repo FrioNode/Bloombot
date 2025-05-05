@@ -5,7 +5,7 @@ const { pokemon } = require('../../colors/pokemon');
 const { mongo, openChat } = require('../../colors/setup');
 const options = { serverSelectionTimeoutMS: 30000, socketTimeoutMS: 45000 };
 mongoose.connect(mongo, options)
-.then(() => console.log('Successfully connected to MongoDB'))
+.then(() => console.log('Game module: Successfully connected to MongoDB'))
 .catch(err => console.error('MongoDB connection error:', err));
 
 const pokemonNames = ['Pikachu', 'Charmander', 'Bulbasaur', 'Squirtle', 'Jigglypuff', 'Meowth', 'Psyduck', 'Eevee', 'Snorlax', 'Mewtwo'];

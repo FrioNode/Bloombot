@@ -135,7 +135,7 @@ async function start() {
                     console.error('Error during auto reaction:', err);
                 }
             }
-            await bloomCmd(message, Bloom);
+            await bloomCmd(Bloom, message);
         });
 
     if (setup.mode === "public") {

@@ -43,5 +43,8 @@ module.exports = {
     restart_failed: '❌ Restart failed!',
     installing_dependencies: '📦 Installing dependencies...',
     install_failed: '❌ Failed to install dependencies!',
+    privateMode: `Bot set to private for now, please do not disturb`,
+    blocked: `You will be blocked for violating pricacy policy`,
+    groupOnly: `Bot have been set to group only`,
     caption: footer,
 };

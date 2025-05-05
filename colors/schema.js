@@ -8,7 +8,6 @@ const pokemonSchema = new mongoose.Schema({
     timeout: { type: Date, required: true },
 });
 
-const Pokemon = mongoose.model('Pokemon', pokemonSchema);
 const userSchema = new mongoose.Schema({
     _id: { type: String },
     name: { type: String, required: true },
@@ -63,8 +62,6 @@ const userSchema = new mongoose.Schema({
     lastFishCatch: { type: Date, default: Date.now },
 });
 
-const User = mongoose.model('User', userSchema);
-
 const expSchema = new mongoose.Schema({
     jid: { type: String, required: true, unique: true },
     points: { type: Number, default: 0 },
@@ -73,6 +70,33 @@ const expSchema = new mongoose.Schema({
     messageCount: { type: Number, default: 0 },
 }, { timestamps: true });
 
+const settingsSchema = new mongoose.Schema({
+    group: { type: String, required: true, unique: true },
+    antiLink: { type: Boolean, default: false },
+    noImage: { type: Boolean, default: false },
+    gameEnabled: { type: Boolean, default: true },
+    nsfwEnabled: { type: Boolean, default: false },
+    warns: { type: Map, of: Number, default: {} }
+});
+
+
+const userCounterSchema = new mongoose.Schema({
+    user: { type: String, required: true, unique: true },
+    count: { type: Number, default: 1 },
+    lastUpdated: { type: Date, default: Date.now }
+});
+
+const afkSchema = new mongoose.Schema({
+    user: { type: String, required: true, unique: true }, // WhatsApp JID
+    reason: { type: String, default: '' },
+    since: { type: Date, default: Date.now }
+});
+
+const AFK = mongoose.model('AFK', afkSchema);
+const Pokemon = mongoose.model('Pokemon', pokemonSchema);
+const UserCounter = mongoose.model('UserCounter', userCounterSchema);
+const User = mongoose.model('User', userSchema);
+const Settings = mongoose.model('Settings', settingsSchema);
 const Exp = mongoose.model('Exp', expSchema);
 
-module.exports = { Pokemon, User , Exp };
+module.exports = { Pokemon, UserCounter, User , Settings, Exp, AFK };
