@@ -77,7 +77,7 @@ module.exports = {
 
     disap: {
         type: 'group',
-        desc: 'Set disappearing messages:\n\n(0=off, 24=1 day, 7=1 week, 90=3 months)',
+        desc: 'Set disappearing messages:\n(0=off, 24=1 day, 7=1 week, 90=3 months)',
         run: async (Bloom, message, fulltext) => {
             if (!await isGroupAdminContext(Bloom, message)) return;
 

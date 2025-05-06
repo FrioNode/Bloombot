@@ -8,7 +8,6 @@ module.exports = {
         desc: 'Force reload all commands (Bot admin only)',
         run: async (Bloom, message) => {
             const sender = message.key.participant || message.key.remoteJid;
-
             // Bot Admin check
             if (sender !== sudoChat) {
                 return await Bloom.sendMessage(message.key.remoteJid, {
@@ -25,7 +24,7 @@ module.exports = {
                 const currentDir = path.join(__dirname, '..');
                 Object.keys(require.cache).forEach(key => {
                     if (key.startsWith(currentDir) &&
-                        !key.includes('middleware.js') &&
+                        !key.includes('reload.js') &&
                         !key.includes('system/reload.js')) {
                         delete require.cache[key];
                         }
