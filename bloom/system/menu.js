@@ -25,7 +25,7 @@ module.exports = {
 
             // If no category argument is provided, show the full menu with total commands
             if (!category) {
-                menuText += `📜 *Command Menu* (Total Commands: ${totalCommands})\n\n`;
+                menuText += `📜 *Command Menu* (Total: ${totalCommands})\n\n`;
             }
 
             // If a category is provided, show only that category's commands
@@ -34,7 +34,7 @@ module.exports = {
                 if (!grouped[category]) {
                     return await Bloom.sendMessage(message.key.remoteJid, {
                         text: `❌ No commands found for category *${category}*.`
-                    });
+                    }, { quoted: message });
                 }
 
                 menuText += `📂 *${category.toUpperCase()}*\n╭─────────────\n`;
@@ -57,7 +57,7 @@ module.exports = {
                 });
             }
             const final = menuText + caption;
-            await Bloom.sendMessage(message.key.remoteJid, { text: final });
+            await Bloom.sendMessage(message.key.remoteJid, { text: final }, { quoted: message });
         }
     }
 };

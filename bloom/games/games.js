@@ -665,11 +665,22 @@ module.exports = {
 
 
 
- async function startGame(Bloom) {
-        setInterval(async () => { await loadPokemons(Bloom); }, 30 * 60 * 1000);
-        setInterval(async () => { await handleExpiredPokemons(Bloom); }, 30 * 60 * 1000);
-    }
-    module.exports.startGame = startGame;
+// 👇 Auto-start setup function — NOT exported above
+async function startGame(Bloom) {
+    console.log('✅ Pokémon game started!');
+    const interval1 = setInterval(() => loadPokemons(Bloom), 30 * 60 * 1000);
+    const interval2 = setInterval(() => handleExpiredPokemons(Bloom), 30 * 60 * 1000);
+
+    return () => {
+        clearInterval(interval1);
+        clearInterval(interval2);
+        console.log('🛑 Pokémon game stopped.');
+    };
+}
+
+// ✅ Export only this separately
+module.exports._autoStartGame = startGame;
+
 async function loadPokemons(Bloom) {
     let randomPokemon;
     try {

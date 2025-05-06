@@ -9,11 +9,10 @@ const react = require('./colors/react');
 const mess = require('./colors/mess');
 const qrCode = require('qrcode-terminal');
 const express = require('express');
+const { _autoStartGame } = require('./bloom/games/games');
+let stopPokemonGame;
 const app = express();
 const serverStartTime = Date.now();
-const { startGame } = require('./bloom/games/games');
-let stopPokemonGame;
-
 const { emojis, doReact } = react;
 
 let useQR = false;
@@ -107,7 +106,10 @@ async function start() {
                         };
                        // await Bloom.sendMessage(setup.sudoChat, Payload);
                         await Bloom.sendMessage(setup.errorChat, Payload);
-                        stopPokemonGame = await startGame(Bloom);
+                        (async () => {
+                            stopPokemonGame = await _autoStartGame(Bloom);
+                        })();
+
                         process.on('SIGINT', () => {
                             stopPokemonGame?.();
                             process.exit();

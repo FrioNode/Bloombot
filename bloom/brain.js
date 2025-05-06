@@ -59,6 +59,10 @@ function loadCommands() {
                             const module = require(modulePath);
 
                             for (const [cmd, data] of Object.entries(module)) {
+                                if (cmd.startsWith('_')) {
+                                    console.log(`⏩ Skipping internal command: ${cmd}`);
+                                    continue;
+                                }
                                 if (typeof data?.run === 'function') {
                                     commands[cmd] = data;
                                     console.log(`📦 Loaded command: ${cmd} (type: ${data.type})`);
@@ -66,6 +70,7 @@ function loadCommands() {
                                     console.warn(`⚠️ Skipping invalid command format: ${cmd} in ${file}`);
                                 }
                             }
+
                         } catch (err) {
                             console.error(`❌ Failed to load command file: ${dir}/${file}`);
                             console.error(err);
