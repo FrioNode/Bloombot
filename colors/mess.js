@@ -21,6 +21,7 @@ module.exports = {
     group: "_This command can only be used in group chats._",
     agenda: `_Hold on, that is a private agenda unless you are ${botName} owner, you can\`t do that in a group_`,
     ticketarg: `Please write your issue or ticket ID\nE.g:\n!ticket something is not ok with this... or\n!ticket BB-0000A`,
+    noarg: `Please provide arguments... Your command is incomplete..!`,
     botadmin: `_${botName} needs to be admin first!_\n_I can\`t perform that action_`,
     youadmin: "_You are not an admin!\nYou can\`t use that command_",
     nsfwoff: `_NSFW are not enabled in current group!_\n_To enable use *${prefix}act nsfw*_`,

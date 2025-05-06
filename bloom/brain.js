@@ -100,7 +100,7 @@ function setupAutoReload() {
         path.join(__dirname, '**/*.js'),
 
         // Color files
-        path.join(__dirname, '../colors/**/*.js'),
+        path.join(__dirname, '../colors/*.js'),
         path.join(__dirname, '../plugin.js'),
 
         // Exclusions

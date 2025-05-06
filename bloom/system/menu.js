@@ -1,5 +1,5 @@
 const { caption } = require('../../colors/mess');
-
+const { botName } = require('../../colors/setup');
 module.exports = {
     menu: {
         type: 'user',
@@ -25,7 +25,7 @@ module.exports = {
 
             // If no category argument is provided, show the full menu with total commands
             if (!category) {
-                menuText += `📜 *Command Menu* (Total: ${totalCommands})\n\n`;
+                menuText += `📜 *${botName} Menu* (Total: ${totalCommands})\n\n`;
             }
 
             // If a category is provided, show only that category's commands

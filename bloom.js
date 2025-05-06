@@ -9,7 +9,7 @@ const react = require('./colors/react');
 const mess = require('./colors/mess');
 const qrCode = require('qrcode-terminal');
 const express = require('express');
-const { _autoStartGame } = require('./bloom/games/games');
+const { _autoStartGame } = require('./bloom/base/games');
 let stopPokemonGame;
 const app = express();
 const serverStartTime = Date.now();
@@ -54,7 +54,7 @@ async function start() {
         const Bloom = makeWASocket({
             version,
             logger: pino({ level: 'silent' }),
-                                   printQRInTerminal: useQR,  // Always print QR code in terminal if no session
+                                   printQRInTerminal: useQR,
                                    browser: ["Bloom", "safari", "3.3"],
                                    auth: state,
                                    getMessage: async (key) => {

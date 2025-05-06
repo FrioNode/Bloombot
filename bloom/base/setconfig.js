@@ -1,20 +1,21 @@
 const fs = require('fs');
 const path = require('path');
-const { exec } = require('child_process');
-const { bloom,sudoChat, reboot } = require('../../colors/setup');
+const { sudoChat } = require('../../colors/setup');
 const mess = require('../../colors/mess');
-require('dotenv').config({ path: path.join(__dirname, '../../config.env') });
+
+const configPath = path.join(__dirname, '../../colors/config.json');
 
 module.exports = {
     set: {
         type: 'owner',
-        desc: 'Set config variables in .env file (Owner only)',
-        usage: 'set <KEY> <VALUE>',
-        async run(Bloom, message, fulltext ) {
-            const sender=message.key.participant || message.key.remoteJid;
-            const arg = fulltext.split(' ').slice(1)[0];
-            const value = fulltext.split(' ').slice(1).join(' ');
-            if ( sender !== sudoChat) {
+        desc: 'Set config variables in config.json (Owner only)',
+        usage: 'set <key> <value>',
+        async run(Bloom, message, fulltext) {
+            const sender = message.key.participant || message.key.remoteJid;
+            const [arg, ...rest] = fulltext.split(' ').slice(1);
+            const value = rest.join(' ');
+
+            if (sender !== sudoChat) {
                 return await Bloom.sendMessage(message.key.remoteJid, {
                     text: mess.owner
                 }, { quoted: message });
@@ -22,48 +23,36 @@ module.exports = {
 
             if (!arg || !value) {
                 return await Bloom.sendMessage(sender, {
-                    text: 'Usage: set <arg> <value>'
+                    text: 'Usage: set <key> <value>'
                 }, { quoted: message });
             }
 
-            const envFilePath = path.join(__dirname, '../../config.env');
-
             try {
-                let envContent = fs.readFileSync(envFilePath, 'utf8');
-                const lines = envContent.split('\n');
-                let updated = false;
+                const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
-                const newLine = `${arg.toUpperCase()}=${value}`;
-
-                const updatedLines = lines.map(line => {
-                    if (line.startsWith(`${arg.toUpperCase()}=`)) {
-                        updated = true;
-                        return newLine;
-                    }
-                    return line;
-                });
-
-                if (!updated) {
-                    updatedLines.push(newLine);
+                if (!(arg in configData)) {
+                    return await Bloom.sendMessage(sender, {
+                        text: `❌ Key "${arg}" does not exist in config.json.`
+                    }, { quoted: message });
                 }
 
-                fs.writeFileSync(envFilePath, updatedLines.join('\n'));
+                configData[arg] = isNaN(value)
+                ? (value === 'true' ? true : value === 'false' ? false : value)
+                : Number(value);
 
-                require('dotenv').config({ path: envFilePath, override: true });
+                fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
 
-                const rebootRequired = reboot === 'true';
-                await Bloom.sendMessage(message.key.remoteJid, { text: `Check DM for results..`},
-                                        {quoted: message });
-                await Bloom.sendMessage(sender, {
-                    text: `⚙️ ${arg.toUpperCase()} updated to: ${value}\n\n` +
-                        (rebootRequired ? mess.autorestart : mess.manualrestart)
+                // 🔄 Reload setup.js to apply new config immediately
+                delete require.cache[require.resolve('../../colors/setup')];
+                require('../../colors/setup');
+
+                await Bloom.sendMessage(message.key.remoteJid, {
+                    text: `Check DM for results...`
                 }, { quoted: message });
 
-                if (rebootRequired && bloom.scripts?.restart) {
-                    exec(bloom.scripts.restart, (error) => {
-                        if (error) console.error('Restart failed:', error);
-                    });
-                }
+                await Bloom.sendMessage(sender, {
+                    text: `✅ Config updated.\n"${arg}" is now set to: ${value}\n\nNo need for reboot`
+                }, { quoted: message });
 
             } catch (error) {
                 console.error('Config update failed:', error);

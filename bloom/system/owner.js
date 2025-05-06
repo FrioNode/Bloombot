@@ -65,7 +65,7 @@ module.exports = {
                 const command = fulltext.trim().split(' ').slice(1).join(' '); // remove "$" from fulltext
 
                 if (!command) {
-                    return await Bloom.sendMessage(sender, { text: '📎 Please provide a shell command to execute.' }, { quoted: message });
+                    return await Bloom.sendMessage(sender, { text: mess.noarg }, { quoted: message });
                 }
 
                 try {
@@ -94,9 +94,9 @@ module.exports = {
         },
         setxp: {
             run: async (Bloom, message, fulltext) => {
-                const sender = message.key.participant || message.key.remoteJid;
-                if (sender !== sudoChat) {
-                    return await Bloom.sendMessage(message.key.remoteJid, { text: "⛔ Bot Admins only." });
+                const sender = message.key.remoteJid;
+                if (!isOwner(sender, message)) {
+                    return await Bloom.sendMessage(message.key.remoteJid, { text: mess.owner });
                 }
 
                 const quotedJid = message.message?.extendedTextMessage?.contextInfo?.participant;
