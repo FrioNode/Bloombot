@@ -1,7 +1,5 @@
 const { botName, emoji, ownerName, mode, devName, prefix, cpYear } = require('./setup');
 const bloom = require('../package.json');
-console.log(bloom);
-console.log(botName);
 const footer = `> (c) ${cpYear} @${devName} - ${ownerName} - ☁️ •|•`;
 
 module.exports = {

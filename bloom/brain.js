@@ -88,46 +88,43 @@ function loadCommands() {
 
 loadCommands();
 
-function utoReload() {
+function autoReload() {
     if (node === 'production') return;
 
-    // ===== NEW: Debounce tracking =====
     const lastReloadTimes = new Map();
-    const DEBOUNCE_MS = 500; // 0.5 second cooldown
+    const DEBOUNCE_MS = 500;
 
     const watchPaths = [
-        // Command files
         path.join(__dirname, '**/*.js'),
-
-        // Color files
         path.join(__dirname, '../colors/*.js'),
         path.join(__dirname, '../plugin.js'),
 
-        // Exclusions
+        // Exclusions (updated)
         '!' + path.join(__dirname, 'brain.js'),
-        '!' + path.join(__dirname, '**/_*.js')
+        '!' + path.join(__dirname, '**/_*.js'),
+        '!' + path.join(__dirname, '../colors/schema.js') // 🚫 ADDED THIS LINE
     ];
 
     const watcher = chokidar.watch(watchPaths, {
         ignoreInitial: true,
-        // ===== UPDATED: More stable file watching =====
         awaitWriteFinish: {
-            stabilityThreshold: 500, // Increased from 200
+            stabilityThreshold: 500,
             pollInterval: 100
         },
         ignorePermissionErrors: true
     });
 
     watcher.on('change', (changedPath) => {
-        // ===== NEW: Debounce check =====
         const now = Date.now();
         const lastReload = lastReloadTimes.get(changedPath) || 0;
         if (now - lastReload < DEBOUNCE_MS) return;
         lastReloadTimes.set(changedPath, now);
 
+        // 🚫 NEW: Skip if schema.js
+        if (changedPath.includes('schema.js')) return;
+
         const relativePath = path.relative(path.join(__dirname, '../'), changedPath);
 
-        // Config files (colors/, plugins.js)
         if (changedPath.includes('/colors/') || changedPath.endsWith('plugin.js')) {
             console.log(`🎨 Reloading config: ${relativePath}`);
             try {
@@ -139,7 +136,7 @@ function utoReload() {
             return;
         }
 
-        // Command files
+        // Command files logic (unchanged)
         const cmdName = path.basename(changedPath, '.js');
         const dirName = path.basename(path.dirname(changedPath));
 
@@ -158,7 +155,7 @@ function utoReload() {
         }
     });
 
-    console.log('🔥 Hot Reload active for:');
+    console.log('🔥 Hot Reload active (except schema.js)');
     watchPaths.filter(p => !p.startsWith('!')).forEach(p => {
         console.log(`   → ${path.relative(path.join(__dirname, '../'), p)}`);
     });
@@ -166,7 +163,7 @@ function utoReload() {
 
 // Initialize at the bottom (before exports)
 if (node !== 'production') {
-    utoReload();
+    autoReload();
 }
 
 // Robust command parser
