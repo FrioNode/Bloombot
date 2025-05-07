@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 const { Settings, UserCounter, AFK } = require('../colors/schema');
-const setup = require('../colors/setup');
+const { mongo, node, SudoChat, mode, _reload } = require('../colors/setup'); _reload();
 const mess = require('../colors/mess');
 const { trackUsage}  = require('../colors/exp');
 const options = { serverSelectionTimeoutMS: 30000, socketTimeoutMS: 45000 };
 const chokidar = require('chokidar');
 const path = require('path');
 // MongoDB connection with error handling
-mongoose.connect(setup.mongo, options)
+mongoose.connect(mongo, options)
 .then(() => console.log('Brain: Successfully connected to MongoDB'))
 .catch(err => console.error('MongoDB connection error:', err));
 
@@ -88,8 +88,8 @@ function loadCommands() {
 
 loadCommands();
 
-function setupAutoReload() {
-    if (setup.Node === 'production') return;
+function utoReload() {
+    if (node === 'production') return;
 
     // ===== NEW: Debounce tracking =====
     const lastReloadTimes = new Map();
@@ -165,8 +165,8 @@ function setupAutoReload() {
 }
 
 // Initialize at the bottom (before exports)
-if (setup.Node !== 'production') {
-    setupAutoReload();
+if (node !== 'production') {
+    utoReload();
 }
 
 // Robust command parser
@@ -227,12 +227,11 @@ async function checkMode(Bloom, message) {
         const { command } = extractCommand(message);
 
         if (!command || !commands[command]) return true;
-        const mode = setup.mode;
 
         if (mode === 'public') return true;
 
         if (mode === 'private') {
-            if (sender === setup.sudoChat) return true;
+            if (sender === sudoChat) return true;
 
             let user = await UserCounter.findOne({ user: sender });
             if (!user) user = await UserCounter.create({ user: sender, count: 1 });
@@ -249,7 +248,7 @@ async function checkMode(Bloom, message) {
             return false;
         }
 
-        if (mode === 'group' && (!isGroup && sender !== setup.sudoChat)) {
+        if (mode === 'group' && (!isGroup && sender !== sudoChat)) {
             await Bloom.sendMessage(sender, { text: mess.groupOnly });
             return false;
         }

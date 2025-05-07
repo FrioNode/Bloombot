@@ -3,8 +3,9 @@ const mongoose = require('mongoose');
 const { User, Pokemon } = require('../../colors/schema');
 const { pokemon } = require('../../colors/pokemon');
 const setup = require('../../colors/setup');
+const { mongo, openChat }=setup;
 const options = { serverSelectionTimeoutMS: 30000, socketTimeoutMS: 45000 };
-mongoose.connect(setup.mongo, options)
+mongoose.connect(mongo, options)
 .then(() => console.log('Game module: Successfully connected to MongoDB'))
 .catch(err => console.error('MongoDB connection error:', err));
 
@@ -665,7 +666,7 @@ module.exports = {
 
 
 
-// 👇 Auto-start setup function — NOT exported above
+// 👇 Auto-start function — NOT exported above
 async function startGame(Bloom) {
     console.log('✅ Pokémon game started!');
     const interval1 = setInterval(() => loadPokemons(Bloom), 30 * 60 * 1000);
@@ -702,7 +703,7 @@ async function loadPokemons(Bloom) {
     await newPokemon.save();
     console.log(`Pokémon ${newPokemon.name} added to the database.`);
 
-    await Bloom.sendMessage(setup.openChat, {
+    await Bloom.sendMessage(openChat, {
         image: { url: newPokemon.image },
         caption: `A new Pokémon has appeared! Use *!catch ${newPokemon.name}* to add it to your inventory.\n\nClue: ${newPokemon.description}`
     });
@@ -713,7 +714,7 @@ async function handleExpiredPokemons(Bloom) {
 
     if (expiredPokemons.length > 0) {
         for (const pokemon of expiredPokemons) {
-            await Bloom.sendMessage(setup.openChat, {
+            await Bloom.sendMessage(openChat, {
                 text: `No one claimed the Pokémon ${pokemon.name}. It has expired.\n\nDescription: ${pokemon.description}\nHeight: ${pokemon.height}\t\t\tWeight: ${pokemon.weight}`
             });
 

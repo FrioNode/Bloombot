@@ -1,7 +1,6 @@
 const axios = require('axios');
-const setup = require('../../colors/setup');
-const pixelKey = setup.get('pixelKey');
-const caption = setup.get('caption');
+const { pixelKey, _reload } =require('../../colors/setup'); _reload();
+const { caption } = require('../../colors/mess');
 module.exports = {
     wiki: {
         type: 'fun',

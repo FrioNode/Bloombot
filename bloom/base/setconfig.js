@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const setup = require('../../colors/setup');
-const sudoChat = setup.get('sudoChat');
+const { sudoChat, _reload } = require('../../colors/setup'); _reload();
 const mess = require('../../colors/mess');
 
 const configPath = path.join(__dirname, '../../colors/config.json');

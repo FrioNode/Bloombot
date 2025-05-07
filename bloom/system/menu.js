@@ -1,6 +1,5 @@
-const setup = require('../../colors/setup');
-const botName = setup.get('botName');
-const caption = setup.get('caption');
+const { botName, _reload } = require('../../colors/setup'); _reload();
+const { caption } = require('../../colors/mess');
 module.exports = {
     menu: {
         type: 'user',
@@ -106,3 +105,4 @@ module.exports = {
         }
     }
 };
+_reload();

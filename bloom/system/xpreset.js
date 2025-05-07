@@ -1,6 +1,6 @@
 const { Exp } = require('../../colors/schema');
 const setup = require('../../colors/setup');
-const sudoChat = setup.get("sudoChat");
+const { sudoChat } = setup;
 module.exports = {
     xpreset: {
         run: async (Bloom, message, fulltext) => {

@@ -3,11 +3,24 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const Bot = require('../package.json');
-const { caption } = require('./mess');
 const configPath = path.join(__dirname, 'config.json');
 
+// Cache the config to avoid frequent file reads
+let cachedConfig = null;
+let lastModified = 0;
+
 function getConfig() {
-    return JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    try {
+        const stats = fs.statSync(configPath);
+        if (!cachedConfig || stats.mtimeMs > lastModified) {
+            lastModified = stats.mtimeMs;
+            cachedConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        }
+        return cachedConfig;
+    } catch (error) {
+        console.error('Error reading config:', error);
+        return cachedConfig || {};
+    }
 }
 
 function getAll() {
@@ -18,13 +31,29 @@ function getAll() {
         mongo: process.env.MONGO,
         sudoChat: `${process.env.OWNERNUMBER || config.ownerNumber}@s.whatsapp.net`,
         bloom: Bot,
-        caption: caption,
         cpYear: new Date().getFullYear()
     };
 }
 
+// Watch for config file changes
+fs.watch(configPath, (eventType) => {
+    if (eventType === 'change') {
+        console.log('Config file changed, reloading...');
+        cachedConfig = null;
+    }
+});
+
+// Get the initial config
+const config = getAll();
+
+// Export all properties directly at the root level
 module.exports = {
-    getConfig,
-    get: (key) => getAll()[key],
-    all: () => getAll()
+    ...config,
+    // Keep utility methods available
+    _getConfig: getConfig,
+    _getAll: getAll,
+    _reload: () => {
+        cachedConfig = null;
+        return getAll();
+    }
 };
