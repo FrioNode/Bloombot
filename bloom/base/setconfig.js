@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const { sudoChat } = require('../../colors/setup');
+const setup = require('../../colors/setup');
+const sudoChat = setup.get('sudoChat');
 const mess = require('../../colors/mess');
 
 const configPath = path.join(__dirname, '../../colors/config.json');
@@ -51,7 +52,7 @@ module.exports = {
                 }, { quoted: message });
 
                 await Bloom.sendMessage(sender, {
-                    text: `✅ Config updated.\n"${arg}" is now set to: ${value}\n\nNo need for reboot`
+                    text: `✅ Config updated.\n"${arg}" is now set to: ${value}\n\nNo need for reboot but you may need to *reload* commands`
                 }, { quoted: message });
 
             } catch (error) {

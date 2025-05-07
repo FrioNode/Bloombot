@@ -1,4 +1,6 @@
-const { sudoChat, bloom } = require('../../colors/setup');
+const setup = require('../../colors/setup');
+const sudoChat = setup.get("sudoChat");
+const bloom = setup.get("bloom");
 const mess = require('../../colors/mess');
 const { Exp } = require('../../colors/schema');
 const { exec } = require('child_process');

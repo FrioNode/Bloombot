@@ -1,5 +1,4 @@
 const { isGroupAdminContext } = require('../../colors/auth');
-const { sudoChat } = require('../../colors/setup');
 const mess = require('../../colors/mess');
 
 module.exports = {

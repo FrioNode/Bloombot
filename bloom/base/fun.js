@@ -1,5 +1,7 @@
 const axios = require('axios');
-const { pixelKey } = require('../../colors/setup');
+const setup = require('../../colors/setup');
+const pixelKey = setup.get('pixelKey');
+const caption = setup.get('caption');
 module.exports = {
     wiki: {
         type: 'fun',
@@ -32,7 +34,7 @@ module.exports = {
                 const link = data.content_urls.desktop.page;
 
                 await Bloom.sendMessage(sender, {
-                    text: `🧠 *${data.title}*\n\n${snippet}\n\n🔗 ${link}`
+                    text: `🧠 *${data.title}*\n\n${snippet}\n\n🔗 ${link}\n${caption}`
                 }, { quoted: message });
 
             } catch (err) {
@@ -52,7 +54,7 @@ module.exports = {
                 const data = await res.json();
                 await Bloom.sendMessage(
                     message.key.remoteJid,
-                    { text: data.text },
+                    { text: data.text + `\n${caption}` },
                     { quoted: message }
                 );
             } catch (error) {
@@ -75,7 +77,7 @@ module.exports = {
                 const joke = `${data.setup} - ${data.punchline}`;
                 await Bloom.sendMessage(
                     message.key.remoteJid,
-                    { text: joke },
+                    { text: joke +`\n${caption}` },
                     { quoted: message }
                 );
             } catch (error) {

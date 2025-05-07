@@ -1,5 +1,6 @@
-const { caption } = require('../../colors/mess');
-const { botName } = require('../../colors/setup');
+const setup = require('../../colors/setup');
+const botName = setup.get('botName');
+const caption = setup.get('caption');
 module.exports = {
     menu: {
         type: 'user',
