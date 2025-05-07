@@ -5,7 +5,7 @@ const footer = `> (c) ${cpYear} @${devName} - ${ownerName} - ☁️ •|•`;
 module.exports = {
     about: `_Hi, I am ${botName} ${emoji}_\n> A WhatsApp multidevice AI written in JavaScrip based on Baileys. I was developed by Master ${ownerName} and LICENSED under ISC licensing policy at ColdNode Labs (Naivasha, Kenya), I am one of the most current advanced Artificial Intelligence user-bot model with more than 400 features and functionalities, you can check other productions from my developer on GitHub (${devName}). You can contact dev ${devName} by opening a ticket here: \n${emoji} To open a ticket send: *(${prefix}ticket)*`,
     ticket: `Your ticket have been created succsessfully.\n_${devName} will be back to you shortly, in the meantime, check the (${prefix}menu) to see available commands, I\`m glad to serve you_`,
-    bloom: `╭────${emoji} ${botName}─────\n│   > Version: ${bloom.version} beta\n│   > Global prefix: ${prefix}\n│    _A reason to imagine_\n│    _Operating mode: ${mode}_\n╰─────────────────────\n${footer}`,
+    bloom: `╭────${emoji} ${botName} ─────\n│   > Version: ${bloom.version} beta\n│   > Global prefix: ${prefix}\n│    _A reason to imagine_\n│    _Operating mode: ${mode}_\n╰─────────────────\n${footer}`,
     powered: `Powered By ${devName}`,
     admin: "_This command is meant for group admins only!_",
     owner: `This Command is meant for ${botName} owner only!`,

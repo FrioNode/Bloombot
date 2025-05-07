@@ -1,5 +1,5 @@
 const { makeWASocket, Browsers, fetchLatestBaileysVersion, DisconnectReason, useMultiFileAuthState } = require('baileys');
-const { bloomCmd } = require('./bloom/brain');
+const { bloomCmd, initCommandHandler } = require('./bloom/brain'); // 🔥 Updated import
 const pino = require('pino');
 const fs = require('fs');
 const path = require('path');
@@ -10,6 +10,8 @@ const mess = require('./colors/mess');
 const qrCode = require('qrcode-terminal');
 const express = require('express');
 const { _autoStartGame } = require('./bloom/base/games');
+const chokidar = require('chokidar'); // 🔥 NEW: For config watching
+
 let stopPokemonGame;
 const app = express();
 const serverStartTime = Date.now();
@@ -24,6 +26,29 @@ const credsPath = path.join(sessionDir, 'creds.json');
 
 if (!fs.existsSync(sessionDir)) {
     fs.mkdirSync(sessionDir, { recursive: true });
+}
+
+// 🔥 NEW: Config watcher setup
+function setupConfigWatcher(Bloom) {
+    const watcher = chokidar.watch(path.join(__dirname, 'colors/config.json'), {
+        ignoreInitial: true,
+        awaitWriteFinish: {
+            stabilityThreshold: 2000,
+            pollInterval: 100
+        }
+    });
+
+    watcher.on('change', async () => {
+        console.log('⚡ Config changed - refreshing commands');
+        try {
+            // Safe reload of command handler
+            delete require.cache[require.resolve('./bloom/brain')];
+            const { initCommandHandler } = require('./bloom/brain');
+            await initCommandHandler(Bloom);
+        } catch (err) {
+            console.error('Config reload failed:', err);
+        }
+    });
 }
 
 async function downloadSessionData() {
@@ -66,6 +91,12 @@ async function start() {
                                    }
         });
 
+        // 🔥 Initialize command handler with Bloom instance
+        await initCommandHandler(Bloom);
+
+        // 🔥 Start watching config changes
+        setupConfigWatcher(Bloom);
+
         // QR Code event listener
         Bloom.ev.on('qr', (qr) => {
             if (useQR) { qrCode.generate(qr, { small: true }); }
@@ -104,7 +135,6 @@ async function start() {
                                     },
                             },
                         };
-                       // await Bloom.sendMessage(setup.sudoChat, Payload);
                         await Bloom.sendMessage(setup.errorChat, Payload);
                         (async () => {
                             stopPokemonGame = await _autoStartGame(Bloom);
@@ -117,7 +147,6 @@ async function start() {
                     } else {
                         console.error('Failed to retrieve starting message data.');
                     }
-
                     initialConnection = false;
                 } else {
                     console.log("♻️ Connection re-established after restart.");
@@ -140,7 +169,7 @@ async function start() {
             await bloomCmd(Bloom, message);
         });
 
-    if (setup.mode === "public") {
+        if (setup.mode === "public") {
             Bloom.public = true;
         } else if (setup.mode === "private") {
             Bloom.public = false;
@@ -165,7 +194,6 @@ async function init() {
 
 init();
 
-
 app.use(express.static(path.join(__dirname, 'colors')));
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'colors', 'bloom.html'));
@@ -174,7 +202,6 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`${setup.botName} Server is running on port ${PORT}`);
 });
-
 
 app.get('/uptime', (req, res) => {
     const now = Date.now();

@@ -2,41 +2,31 @@ const mongoose = require('mongoose');
 const { Settings, UserCounter, AFK } = require('../colors/schema');
 const { mongo, node, SudoChat, mode, _reload } = require('../colors/setup'); _reload();
 const mess = require('../colors/mess');
-const { trackUsage}  = require('../colors/exp');
+const { trackUsage } = require('../colors/exp');
 const options = { serverSelectionTimeoutMS: 30000, socketTimeoutMS: 45000 };
 const chokidar = require('chokidar');
 const path = require('path');
+const fs = require('fs');
+
 // MongoDB connection with error handling
 mongoose.connect(mongo, options)
 .then(() => console.log('Brain: Successfully connected to MongoDB'))
 .catch(err => console.error('MongoDB connection error:', err));
 
+// Command registry with init capability
+let commandRegistry = {};
+let activeBloomInstance = null;
 
-async function bloomCm(Bloom, message, fulltext, commands) {
-    const senderJid = message.key?.participant || message.key?.remoteJid;
-    if (senderJid) await trackUsage(senderJid);
-    const commandName = fulltext.split(' ')[0].toLowerCase();
-    const commandModule = commands[commandName];
+// Initialize command handler
+async function initCommandHandler(Bloom) {
+    activeBloomInstance = Bloom;
+    commandRegistry = {};
+    await loadCommands();
+    console.log('♻️ Command handler initialized');
+}
 
-    if (!commandModule || typeof commandModule.run !== 'function') return;
-
-    try {
-        await commandModule.run(Bloom, message, fulltext,commands);
-        console.log(`✅ Command executed: ${fulltext}`);
-    } catch (err) {
-        console.error(`❌ Error running command "${commandName}":`, err);
-        await Bloom.sendMessage(message.key.remoteJid, {
-            text: '❗ An error occurred while executing the command.',
-        });
-    }
-};
-
-
-// Dynamic command loader with improved error handling
-const fs = require('fs');
-const commands = {};
-
-function loadCommands() {
+// Safe command loader
+async function loadCommands() {
     try {
         const currentDir = __dirname;
         const subdirs = fs.readdirSync(currentDir).filter(file => {
@@ -56,6 +46,7 @@ function loadCommands() {
                     if (file.endsWith('.js') && !file.startsWith('_')) {
                         try {
                             const modulePath = path.join(currentDir, dir, file);
+                            delete require.cache[require.resolve(modulePath)]; // Clear cache
                             const module = require(modulePath);
 
                             for (const [cmd, data] of Object.entries(module)) {
@@ -64,13 +55,12 @@ function loadCommands() {
                                     continue;
                                 }
                                 if (typeof data?.run === 'function') {
-                                    commands[cmd] = data;
+                                    commandRegistry[cmd] = data;
                                     console.log(`📦 Loaded command: ${cmd} (type: ${data.type})`);
                                 } else {
                                     console.warn(`⚠️ Skipping invalid command format: ${cmd} in ${file}`);
                                 }
                             }
-
                         } catch (err) {
                             console.error(`❌ Failed to load command file: ${dir}/${file}`);
                             console.error(err);
@@ -81,14 +71,34 @@ function loadCommands() {
                 console.error(`❌ Error reading command directory ${dir}:`, e);
             }
         }
+        console.log(`📦 Total loaded commands: ${Object.keys(commandRegistry).length}`);
     } catch (e) {
         console.error('❌ Critical error loading commands:', e);
     }
 }
 
-loadCommands();
+// Command execution handler
+async function bloomCm(Bloom, message, fulltext, commands) {
+    const senderJid = message.key?.participant || message.key?.remoteJid;
+    if (senderJid) await trackUsage(senderJid);
+    const commandName = fulltext.split(' ')[0].toLowerCase();
+    const commandModule = commands[commandName];
 
-function autoReload() {
+    if (!commandModule || typeof commandModule.run !== 'function') return;
+
+    try {
+        await commandModule.run(Bloom, message, fulltext, commands);
+        console.log(`✅ Command executed: ${fulltext}`);
+    } catch (err) {
+        console.error(`❌ Error running command "${commandName}":`, err);
+        await Bloom.sendMessage(message.key.remoteJid, {
+            text: '❗ An error occurred while executing the command.',
+        });
+    }
+}
+
+// Hot reload functionality
+function setupHotReload() {
     if (node === 'production') return;
 
     const lastReloadTimes = new Map();
@@ -98,11 +108,9 @@ function autoReload() {
         path.join(__dirname, '**/*.js'),
         path.join(__dirname, '../colors/*.js'),
         path.join(__dirname, '../plugin.js'),
-
-        // Exclusions (updated)
         '!' + path.join(__dirname, 'brain.js'),
         '!' + path.join(__dirname, '**/_*.js'),
-        '!' + path.join(__dirname, '../colors/schema.js') // 🚫 ADDED THIS LINE
+        '!' + path.join(__dirname, '../colors/schema.js')
     ];
 
     const watcher = chokidar.watch(watchPaths, {
@@ -114,13 +122,12 @@ function autoReload() {
         ignorePermissionErrors: true
     });
 
-    watcher.on('change', (changedPath) => {
+    watcher.on('change', async (changedPath) => {
         const now = Date.now();
         const lastReload = lastReloadTimes.get(changedPath) || 0;
         if (now - lastReload < DEBOUNCE_MS) return;
         lastReloadTimes.set(changedPath, now);
 
-        // 🚫 NEW: Skip if schema.js
         if (changedPath.includes('schema.js')) return;
 
         const relativePath = path.relative(path.join(__dirname, '../'), changedPath);
@@ -136,22 +143,11 @@ function autoReload() {
             return;
         }
 
-        // Command files logic (unchanged)
-        const cmdName = path.basename(changedPath, '.js');
-        const dirName = path.basename(path.dirname(changedPath));
-
-        console.log(`🔄 Reloading command: ${dirName}/${cmdName}.js`);
+        console.log(`♻️ Reloading commands due to change in: ${relativePath}`);
         try {
-            delete require.cache[require.resolve(changedPath)];
-            const module = require(changedPath);
-
-            for (const [cmd, data] of Object.entries(module)) {
-                if (typeof data?.run === 'function') {
-                    commands[cmd] = data;
-                }
-            }
+            await loadCommands();
         } catch (err) {
-            console.error(`❌ Command reload failed: ${dirName}/${cmdName}`, err);
+            console.error('Reload failed:', err);
         }
     });
 
@@ -159,11 +155,6 @@ function autoReload() {
     watchPaths.filter(p => !p.startsWith('!')).forEach(p => {
         console.log(`   → ${path.relative(path.join(__dirname, '../'), p)}`);
     });
-}
-
-// Initialize at the bottom (before exports)
-if (node !== 'production') {
-    autoReload();
 }
 
 // Robust command parser
@@ -212,7 +203,7 @@ async function getBotRoles(Bloom, groupId) {
     }
 }
 
-// 1. Mode check with proper validation
+// Mode check with proper validation
 async function checkMode(Bloom, message) {
     try {
         if (!Bloom || !message?.key) return false;
@@ -223,12 +214,12 @@ async function checkMode(Bloom, message) {
         const isGroup = message.key.remoteJid?.endsWith('@g.us') || false;
         const { command } = extractCommand(message);
 
-        if (!command || !commands[command]) return true;
+        if (!command || !commandRegistry[command]) return true;
 
         if (mode === 'public') return true;
 
         if (mode === 'private') {
-            if (sender === sudoChat) return true;
+            if (sender === SudoChat) return true;
 
             let user = await UserCounter.findOne({ user: sender });
             if (!user) user = await UserCounter.create({ user: sender, count: 1 });
@@ -245,7 +236,7 @@ async function checkMode(Bloom, message) {
             return false;
         }
 
-        if (mode === 'group' && (!isGroup && sender !== sudoChat)) {
+        if (mode === 'group' && (!isGroup && sender !== SudoChat)) {
             await Bloom.sendMessage(sender, { text: mess.groupOnly });
             return false;
         }
@@ -257,7 +248,7 @@ async function checkMode(Bloom, message) {
     }
 }
 
-// 2. Anti-link / no-image with safety checks
+// Anti-link / no-image with safety checks
 async function checkMessageType(Bloom, message) {
     try {
         if (!Bloom || !message?.key) return true;
@@ -306,11 +297,11 @@ async function checkMessageType(Bloom, message) {
         return true;
     } catch (e) {
         console.error('❌ Error in checkMessageType:', e);
-        return true; // Fail open to avoid blocking legit messages
+        return true;
     }
 }
 
-// 3. NSFW/Game toggle with validation
+// NSFW/Game toggle with validation
 async function checkCommandTypeFlags(Bloom, message) {
     try {
         if (!Bloom || !message?.key) return true;
@@ -319,9 +310,9 @@ async function checkCommandTypeFlags(Bloom, message) {
         if (!groupId?.endsWith('@g.us')) return true;
 
         const { command } = extractCommand(message);
-        if (!command || !commands[command]) return true;
+        if (!command || !commandRegistry[command]) return true;
 
-        const cmdData = commands[command];
+        const cmdData = commandRegistry[command];
         if (!cmdData) return true;
 
         const settings = await Settings.findOne({ group: groupId });
@@ -340,11 +331,11 @@ async function checkCommandTypeFlags(Bloom, message) {
         return true;
     } catch (e) {
         console.error('❌ Error in checkCommandTypeFlags:', e);
-        return true; // Fail open
+        return true;
     }
 }
 
-// 4. AFK check with safety
+// AFK check with safety
 async function checkAFK(Bloom, message) {
     try {
         if (!Bloom || !message?.key || !message.message?.extendedTextMessage?.contextInfo) {
@@ -366,16 +357,21 @@ async function checkAFK(Bloom, message) {
         return true;
     } catch (e) {
         console.error('❌ Error in checkAFK:', e);
-        return true; // Fail open
+        return true;
     }
 }
 
-// Final bloomCmd with comprehensive error handling
+// Main command handler
 const bloomCmd = async (Bloom, message) => {
     try {
         if (!Bloom || !message?.key) {
             console.warn('⚠️ Invalid message received - missing Bloom client or message key');
             return false;
+        }
+
+        // Initialize if not already done
+        if (!activeBloomInstance) {
+            await initCommandHandler(Bloom);
         }
 
         // Run all checks with proper error handling
@@ -390,7 +386,7 @@ const bloomCmd = async (Bloom, message) => {
         for (const check of checks) {
             try {
                 shouldProceed = shouldProceed && await check();
-                if (!shouldProceed) break; // Short-circuit if any check fails
+                if (!shouldProceed) break;
             } catch (e) {
                 console.error(`❌ Error running bloomCmd check ${check.name}:`, e);
                 shouldProceed = false;
@@ -400,12 +396,8 @@ const bloomCmd = async (Bloom, message) => {
 
         if (shouldProceed) {
             const { command, fulltext } = extractCommand(message);
-            if (command && commands[command]) {
-                try {
-                    await bloomCm(Bloom, message, fulltext, commands);
-                } catch (e) {
-                    console.error('❌ Error in command handler:', e);
-                }
+            if (command && commandRegistry[command]) {
+                await bloomCm(Bloom, message, fulltext, commandRegistry);
             }
         }
 
@@ -416,4 +408,15 @@ const bloomCmd = async (Bloom, message) => {
     }
 };
 
-module.exports = { bloomCmd, commands };
+// Initialize at the bottom (before exports)
+if (node !== 'production') {
+    setupHotReload();
+}
+
+module.exports = {
+    bloomCmd,
+    initCommandHandler,
+    commands: commandRegistry,
+    getGroupRoles,
+    getBotRoles
+};

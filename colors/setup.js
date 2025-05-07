@@ -34,23 +34,6 @@ function getAll() {
         cpYear: new Date().getFullYear()
     };
 }
-
-// 🔥 NEW: Auto-reload helper (clears Node's cache for project files)
-function reloadProjectModules() {
-    Object.keys(require.cache).forEach((key) => {
-        if (!key.includes('node_modules')) delete require.cache[key];
-    });
-}
-
-// Watch for config file changes
-fs.watch(configPath, (eventType) => {
-    if (eventType === 'change') {
-        console.log('⚡ Config file changed - Reloading everything!');
-        cachedConfig = null;
-        reloadProjectModules(); // 🔥 FORCE RELOAD ALL MODULES
-    }
-});
-
 // Get the initial config
 const config = getAll();
 
