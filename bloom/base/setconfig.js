@@ -47,27 +47,25 @@ module.exports = {
                 // Save config
                 fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
 
-                // 🔥 Targeted reload of only base/ and system/ directories
-                const reloadPaths = [
+                // 🔥 NEW: Optimized reload logic
+                const reloadTargets = [
                     path.join(__dirname, '../base'),
                     path.join(__dirname, '../system')
                 ];
 
+                // Clear require cache for target files
                 Object.keys(require.cache).forEach(key => {
                     if (
-                        // Only reload files in target directories
-                        reloadPaths.some(dir => key.startsWith(dir)) &&
-                        // Never reload these files
-                        !key.includes('setconfig.js') &&
-                        !key.includes('brain.js')
+                        reloadTargets.some(dir => key.startsWith(dir)) &&
+                        !key.includes('setconfig.js')
                     ) {
                         delete require.cache[key];
                     }
                 });
 
                 // Notify success
-                await Bloom.sendMessage(message.key.remoteJid, {
-                    text: `✅ Config updated!\n"${arg}" = ${value}\n\nReloaded: base/, system/`
+                await Bloom.sendMessage(sender, {
+                    text: `✅ Config updated!\n"${arg}" = ${value}\n\nCommands reloaded automatically`
                 }, { quoted: message });
 
             } catch (error) {
