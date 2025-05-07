@@ -1,4 +1,5 @@
-const {botName,emoji,ownerName,bloom,mode,devName,prefix,cpYear}=require("./setup");
+const setup = require("./setup").all();
+const {botName,emoji,ownerName,bloom,mode,devName,prefix,cpYear}= setup ;
 const footer =`> (c) ${cpYear} @${devName} - ${ownerName} - ☁️ •|•`;
 module.exports = {
     about: `_Hi, I am ${botName} ${emoji}_\n> A WhatsApp multidevice AI written in JavaScrip based on Baileys. I was developed by Master ${ownerName} and LICENSED under ISC licensing policy at ColdNode Labs (Naivasha, Kenya), I am one of the most current advanced Artificial Intelligence user-bot model with more than 400 features and functionalities, you can check other productions from my developer on GitHub (${devName}). You can contact dev ${devName} by opening a ticket here: \n${emoji} To open a ticket send: *(${prefix}ticket)*`,

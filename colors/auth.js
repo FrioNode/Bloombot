@@ -1,4 +1,5 @@
-const sudoChat = require('../../colors/setup').sudoChat;
+const setup = require('../../colors/setup');
+const sudoChat = setup.get("sudoChat");
 const fetchGroupMetadata = async (Bloom, message) => {
     const groupId = message.key.remoteJid;
     if (!groupId.endsWith('@g.us')) {
