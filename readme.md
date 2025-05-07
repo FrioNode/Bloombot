@@ -1,5 +1,6 @@
 <h1 align="center" style="color:#6b21a8">🌼 BloomBot (Multi-Device) by FrioNode™</h1>
 
+[![WhatsApp Group](https://img.shields.io/badge/Join_Our_WhatsApp_Group-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/DlQmSxwD5IsA3xE4Wtczgh)
 
 <p align="center">
   <a href="https://github.com/FrioNode/Bloombot/stargazers">
