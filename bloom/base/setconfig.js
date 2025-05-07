@@ -24,7 +24,7 @@ module.exports = {
 
             // Validate input
             if (!arg || !value) {
-                return await Bloom.sendMessage(sender, {
+                return await Bloom.sendMessage(message.key.remoteJid, {
                     text: 'Usage: set <key> <value>'
                 }, { quoted: message });
             }
@@ -34,7 +34,7 @@ module.exports = {
                 const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
                 if (!(arg in configData)) {
-                    return await Bloom.sendMessage(sender, {
+                    return await Bloom.sendMessage(message.key.remoteJid, {
                         text: `❌ Key "${arg}" does not exist in config.json.`
                     }, { quoted: message });
                 }
