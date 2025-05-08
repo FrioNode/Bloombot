@@ -5,7 +5,7 @@ const pino = require('pino');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
-const reacts = require('./colors/react');
+const { emojis, doReact } = require('./colors/react');
 const mess = require('./colors/mess');
 const qrCode = require('qrcode-terminal');
 const express = require('express');
@@ -15,7 +15,6 @@ const chokidar = require('chokidar'); // 🔥 NEW: For config watching
 let stopPokemonGame;
 const app = express();
 const serverStartTime = Date.now();
-const { emojis, doReact } = reacts;
 
 let useQR = false;
 let initialConnection = true;
