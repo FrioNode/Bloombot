@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const { Settings, UserCounter, AFK } = require('../colors/schema');
-const { mongo, node, SudoChat, mode, _reload } = require('../colors/setup'); _reload();
+const { mongo, node, sudochat, mode, _reload } = require('../colors/setup'); _reload();
 const mess = require('../colors/mess');
 const { trackUsage } = require('../colors/exp');
 const options = { serverSelectionTimeoutMS: 30000, socketTimeoutMS: 45000 };
@@ -219,7 +219,7 @@ async function checkMode(Bloom, message) {
         if (mode === 'public') return true;
 
         if (mode === 'private') {
-            if (sender === SudoChat) return true;
+            if (sender === sudochat) return true;
 
             let user = await UserCounter.findOne({ user: sender });
             if (!user) user = await UserCounter.create({ user: sender, count: 1 });
@@ -236,7 +236,7 @@ async function checkMode(Bloom, message) {
             return false;
         }
 
-        if (mode === 'group' && (!isGroup && sender !== SudoChat)) {
+        if (mode === 'group' && (!isGroup && sender !== sudochat)) {
             await Bloom.sendMessage(sender, { text: mess.groupOnly });
             return false;
         }

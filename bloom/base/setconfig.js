@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { sudoChat } = require('../../colors/setup');
+const { sudochat } = require('../../colors/setup');
 const mess = require('../../colors/mess');
 
 const configPath = path.join(__dirname, '../../colors/config.json');
@@ -16,7 +16,7 @@ module.exports = {
             const value = rest.join(' ');
 
             // Permission check
-            if (sender !== sudoChat) {
+            if (sender !== sudochat) {
                 return await Bloom.sendMessage(message.key.remoteJid, {
                     text: mess.owner
                 }, { quoted: message });

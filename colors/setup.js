@@ -29,9 +29,9 @@ function getAll() {
         ...config,
         session: process.env.SESSION,
         mongo: process.env.MONGO,
-        sudoChat: `${process.env.OWNERNUMBER || config.ownerNumber}@s.whatsapp.net`,
+        sudochat: `${process.env.OWNERNUMBER || config.ownernumber}@s.whatsapp.net`,
         bloom: Bot,
-        cpYear: new Date().getFullYear()
+        cpyear: new Date().getFullYear()
     };
 }
 // Get the initial config

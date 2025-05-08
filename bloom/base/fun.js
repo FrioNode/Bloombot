@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { pixelKey, _reload } =require('../../colors/setup'); _reload();
+const { pixelkey, _reload } =require('../../colors/setup'); _reload();
 const { caption } = require('../../colors/mess');
 module.exports = {
     wiki: {
@@ -100,7 +100,7 @@ module.exports = {
 
             try {
                 const { data } = await axios.get(apiUrl, {
-                    headers: { Authorization: pixelKey }
+                    headers: { Authorization: pixelkey }
                 });
 
                 if (!data.photos || data.photos.length === 0) {

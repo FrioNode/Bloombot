@@ -1,11 +1,10 @@
 const { Exp } = require('../../colors/schema');
-const setup = require('../../colors/setup');
-const { sudoChat } = setup;
+const { sudochat } = require('../../colors/setup');
 module.exports = {
     xpreset: {
         run: async (Bloom, message, fulltext) => {
             const sender = message.key.participant || message.key.remoteJid;
-            if (sender !== sudoChat) {
+            if (sender !== sudochat) {
                 return await Bloom.sendMessage(message.key.remoteJid, {
                     text: "🚫 Only the bot owner can reset EXP."
                 });

@@ -74,7 +74,7 @@ async function start() {
     try {
         const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
         const { version, isLatest } = await fetchLatestBaileysVersion();
-        console.log(`BloomBot on Baileys V${version.join('.')}, Is latest ?: ${isLatest}`);
+        console.log(`${setup.botname} on Baileys V${version.join('.')}, Is latest ?: ${isLatest}`);
 
         const Bloom = makeWASocket({
             version,
@@ -111,7 +111,7 @@ async function start() {
                 }
             } else if (connection === 'open') {
                 if (initialConnection) {
-                    console.log("✔️  BloomBot is now online");
+                    console.log(`${setup.emoji}  ${setup.botname} is now online`);
 
                     if (mess) {
                         const Payload = {
@@ -122,11 +122,11 @@ async function start() {
                                 forwardingScore: 2,
                                     forwardedNewsletterMessageInfo: {
                                         newsletterJid: setup.channelid,
-                                        newsletterName: setup.botName,
+                                        newsletterName: setup.botname,
                                         serverMessageId: -1,
                                     },
                                     externalAdReply: {
-                                        title: setup.botName,
+                                        title: setup.botname,
                                         body: mess.powered,
                                         thumbnailUrl: setup.image,
                                         sourceUrl: setup.channel,

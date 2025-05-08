@@ -1,4 +1,4 @@
-const { sudoChat, bloom, _reload } = require('../../colors/setup'); _reload();
+const { sudochat, bloom, _reload } = require('../../colors/setup'); _reload();
 const mess = require('../../colors/mess');
 const { Exp } = require('../../colors/schema');
 const { exec } = require('child_process');
@@ -7,9 +7,9 @@ const execPromise = promisify(exec);
 
 const isOwner = (sender, message) => {
     if (sender.endsWith('@g.us')) {
-        return message.key.participant === sudoChat;
+        return message.key.participant === sudochat;
     }
-    return sender === sudoChat;
+    return sender === sudochat;
 };
 
 module.exports = {

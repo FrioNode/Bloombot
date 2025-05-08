@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const { sudoChat } = require('../../colors/setup');
+const { sudochat } = require('../../colors/setup');
 
 module.exports = {
     reload: {
@@ -9,7 +9,7 @@ module.exports = {
         run: async (Bloom, message) => {
             const sender = message.key.participant || message.key.remoteJid;
             // Bot Admin check
-            if (sender !== sudoChat) {
+            if (sender !== sudochat) {
                 return await Bloom.sendMessage(message.key.remoteJid, {
                     text: '❌ This command is restricted to bot admins.'
                 });

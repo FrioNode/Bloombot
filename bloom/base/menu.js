@@ -1,4 +1,4 @@
-const { botName, _reload } = require('../../colors/setup'); _reload();
+const { botname, _reload } = require('../../colors/setup'); _reload();
 const { caption } = require('../../colors/mess');
 module.exports = {
     menu: {
@@ -25,7 +25,7 @@ module.exports = {
 
             // If no category argument is provided, show the full menu with total commands
             if (!category) {
-                menuText += `📜 *${botName} Menu* (Total: ${totalCommands})\n\n`;
+                menuText += `📜 *${botname} Menu* (Total: ${totalCommands})\n\n`;
             }
 
             // If a category is provided, show only that category's commands
