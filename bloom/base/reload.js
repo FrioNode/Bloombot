@@ -1,7 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const setup = require('../../colors/setup');
-const { sudoChat } = setup;
+const { sudoChat } = require('../../colors/setup');
 
 module.exports = {
     reload: {
