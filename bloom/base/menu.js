@@ -1,5 +1,5 @@
 const { botname, _reload } = require('../../colors/setup'); _reload();
-const { caption } = require('../../colors/mess');
+const { footer } = require('../../colors/mess');
 module.exports = {
     menu: {
         type: 'user',
@@ -56,7 +56,7 @@ module.exports = {
                     menuText += `╰─────────────\n`;
                 });
             }
-            const final = menuText + caption;
+            const final = menuText + footer;
             await Bloom.sendMessage(message.key.remoteJid, { text: final }, { quoted: message });
         }
     },
@@ -81,7 +81,7 @@ module.exports = {
                 `• Description: ${cmd.desc || 'No description'}\n` +
                 `• Usage: ${cmd.usage || cmdName}\n`;
 
-                return await Bloom.sendMessage(message.key.remoteJid, { text: detailText + caption });
+                return await Bloom.sendMessage(message.key.remoteJid, { text: detailText + footer });
             }
 
             // Fallback to full help menu
@@ -101,7 +101,7 @@ module.exports = {
                 }
             }
 
-            await Bloom.sendMessage(message.key.remoteJid, { text: helpText + caption});
+            await Bloom.sendMessage(message.key.remoteJid, { text: helpText + footer});
         }
     }
 };

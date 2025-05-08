@@ -1,11 +1,11 @@
 const { makeWASocket, Browsers, fetchLatestBaileysVersion, DisconnectReason, useMultiFileAuthState } = require('baileys');
+const {session,botname,mode,react,emoji,image,errorchat,channel,channelid} = require('./colors/setup');
 const { bloomCmd, initCommandHandler } = require('./bloom/brain'); // 🔥 Updated import
 const pino = require('pino');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
-const setup = require('./colors/setup');
-const react = require('./colors/react');
+const reacts = require('./colors/react');
 const mess = require('./colors/mess');
 const qrCode = require('qrcode-terminal');
 const express = require('express');
@@ -15,7 +15,7 @@ const chokidar = require('chokidar'); // 🔥 NEW: For config watching
 let stopPokemonGame;
 const app = express();
 const serverStartTime = Date.now();
-const { emojis, doReact } = react;
+const { emojis, doReact } = reacts;
 
 let useQR = false;
 let initialConnection = true;
@@ -52,11 +52,11 @@ function setupConfigWatcher(Bloom) {
 }
 
 async function downloadSessionData() {
-    if (!setup.session) {
+    if (!session) {
         console.error('Please add your session to SESSION_ID env !!');
         return false;
     }
-    const sessdata = setup.session.split("BLOOM~")[1];
+    const sessdata = session.split("BLOOM~")[1];
     const url = `https://pastebin.com/raw/${sessdata}`;
     try {
         const response = await axios.get(url);
@@ -74,7 +74,7 @@ async function start() {
     try {
         const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
         const { version, isLatest } = await fetchLatestBaileysVersion();
-        console.log(`${setup.botname} on Baileys V${version.join('.')}, Is latest ?: ${isLatest}`);
+        console.log(`${botname} on Baileys V${version.join('.')}, Is latest ?: ${isLatest}`);
 
         const Bloom = makeWASocket({
             version,
@@ -87,7 +87,7 @@ async function start() {
                                            const msg = await store.loadMessage(key.remoteJid, key.id);
                                            return msg.message || undefined;
                                        }
-                                       return { conversation: "BloomBot for whatsapp Automation" };
+                                       return { conversation: `${botname} for whatsapp Automation` };
                                    }
         });
 
@@ -111,31 +111,31 @@ async function start() {
                 }
             } else if (connection === 'open') {
                 if (initialConnection) {
-                    console.log(`${setup.emoji}  ${setup.botname} is now online`);
+                    console.log(`${emoji}  ${botname} is now online`);
 
                     if (mess) {
                         const Payload = {
-                            image: { url: setup.image },
-                            caption: mess.bloom || "Caption Failed to load",
+                            image: { url: image },
+                            caption: mess.bloom,
                             contextInfo: {
                                 isForwarded: true,
                                 forwardingScore: 2,
                                     forwardedNewsletterMessageInfo: {
-                                        newsletterJid: setup.channelid,
-                                        newsletterName: setup.botname,
+                                        newsletterJid: channelid,
+                                        newsletterName: botname,
                                         serverMessageId: -1,
                                     },
                                     externalAdReply: {
-                                        title: setup.botname,
+                                        title: botname,
                                         body: mess.powered,
-                                        thumbnailUrl: setup.image,
-                                        sourceUrl: setup.channel,
+                                        thumbnailUrl: image,
+                                        sourceUrl: channel,
                                         mediaType: 1,
                                         renderLargerThumbnail: false,
                                     },
                             },
                         };
-                        await Bloom.sendMessage(setup.errorChat, Payload);
+                        await Bloom.sendMessage(errorchat, Payload);
                         (async () => {
                             stopPokemonGame = await _autoStartGame(Bloom);
                         })();
@@ -158,7 +158,7 @@ async function start() {
         Bloom.ev.on("messages.upsert", async (chatUpdate) => {
             const message = chatUpdate.messages?.[0];
             if (!message || !message.message || message.key.fromMe) return;
-            if (setup.react) {
+            if (react) {
                 try {
                     const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
                     await doReact(Bloom, randomEmoji, message);
@@ -169,9 +169,9 @@ async function start() {
             await bloomCmd(Bloom, message);
         });
 
-        if (setup.mode === "public") {
+        if (mode === "public") {
             Bloom.public = true;
-        } else if (setup.mode === "private") {
+        } else if (mode === "private") {
             Bloom.public = false;
         }
 
@@ -200,7 +200,7 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`${setup.botName} Server is running on port ${PORT}`);
+    console.log(`${botname} Server is running on port ${PORT}`);
 });
 
 app.get('/uptime', (req, res) => {

@@ -1,11 +1,10 @@
 const { botname, emoji, ownername, mode, devname, prefix, cpyear } = require('./setup');
 const bloom = require('../package.json');
-const footer = `> (c) ${cpyear} @${devname} - ${ownername} - ☁️ •|•`;
 
 module.exports = {
     about: `_Hi, I am ${botname} ${emoji}_\n> A WhatsApp multidevice AI written in JavaScrip based on Baileys. I was developed by Master ${ownername} and LICENSED under ISC licensing policy at ColdNode Labs (Naivasha, Kenya), I am one of the most current advanced Artificial Intelligence user-bot model with more than 400 features and functionalities, you can check other productions from my developer on GitHub (${devname}). You can contact dev ${devname} by opening a ticket here: \n${emoji} To open a ticket send: *(${prefix}ticket)*`,
     ticket: `Your ticket have been created succsessfully.\n_${devname} will be back to you shortly, in the meantime, check the (${prefix}menu) to see available commands, I\`m glad to serve you_`,
-    bloom: `╭────${emoji} ${botname} ─────\n│   > Version: ${bloom.version} beta\n│   > Global prefix: ${prefix}\n│    _A reason to imagine_\n│    _Operating mode: ${mode}_\n╰─────────────────\n${footer}`,
+    bloom: `╭────${emoji} ${botname} ─────\n│   > Version: ${bloom.version} beta\n│   > Global prefix: ${prefix}\n│    _A reason to imagine_\n│    _Operating mode: ${mode}_\n╰─────────────────\n> (c) ${cpyear} ${botname} By @${devname} - ☁️ •|•`,
     powered: `Powered By ${devname}`,
     admin: "_This command is meant for group admins only!_",
     owner: `This Command is meant for ${botname} owner only!`,
@@ -49,5 +48,5 @@ module.exports = {
     privateMode: `Bot set to private for now, please do not disturb`,
         blocked: `You will be blocked for violating pricacy policy`,
         groupOnly: `Bot have been set to group only`,
-        caption: footer,
+        footer: `> (c) ${cpyear} ${botname} By @${devname} - ☁️ •|•`
 };

@@ -1,6 +1,6 @@
 const axios = require('axios');
 const { pixelkey, _reload } =require('../../colors/setup'); _reload();
-const { caption } = require('../../colors/mess');
+const { footer } = require('../../colors/mess');
 module.exports = {
     wiki: {
         type: 'fun',
@@ -33,7 +33,7 @@ module.exports = {
                 const link = data.content_urls.desktop.page;
 
                 await Bloom.sendMessage(sender, {
-                    text: `🧠 *${data.title}*\n\n${snippet}\n\n🔗 ${link}\n${caption}`
+                    text: `🧠 *${data.title}*\n\n${snippet}\n\n🔗 ${link}\n${footer}`
                 }, { quoted: message });
 
             } catch (err) {
@@ -53,7 +53,7 @@ module.exports = {
                 const data = await res.json();
                 await Bloom.sendMessage(
                     message.key.remoteJid,
-                    { text: data.text + `\n${caption}` },
+                    { text: data.text + `\n${footer}` },
                     { quoted: message }
                 );
             } catch (error) {
@@ -76,7 +76,7 @@ module.exports = {
                 const joke = `${data.setup} - ${data.punchline}`;
                 await Bloom.sendMessage(
                     message.key.remoteJid,
-                    { text: joke +`\n${caption}` },
+                    { text: joke +`\n${footer}` },
                     { quoted: message }
                 );
             } catch (error) {
@@ -114,7 +114,7 @@ module.exports = {
 
                 await Bloom.sendMessage(sender, {
                     image: { url: imageUrl },
-                    caption: `🖼️ Random image of: *${query}*`
+                    footer: `🖼️ Random image of: *${query}*`
                 }, { quoted: message });
 
             } catch (err) {
