@@ -50,7 +50,7 @@ module.exports = {
                 // 🔥 NEW: Optimized reload logic
                 const reloadTargets = [
                     path.join(__dirname, '../base'),
-                    path.join(__dirname, '../system')
+                    path.join(__dirname, '../plugins')
                 ];
 
                 // Clear require cache for target files

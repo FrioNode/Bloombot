@@ -26,7 +26,7 @@ module.exports = {
                 Object.keys(require.cache).forEach(key => {
                     if (key.startsWith(currentDir) &&
                         !key.includes('reload.js') &&
-                        !key.includes('system/reload.js')) {
+                        !key.includes('base/reload.js')) {
                         delete require.cache[key];
                         }
                 });
