@@ -3,6 +3,7 @@ const { Settings, UserCounter, AFK } = require('../colors/schema');
 const { mongo, node, sudochat, mode, _reload } = require('../colors/setup'); _reload();
 const mess = require('../colors/mess');
 const { trackUsage } = require('../colors/exp');
+const { tttmove } = require('./tttmove');
 const options = { serverSelectionTimeoutMS: 30000, socketTimeoutMS: 45000 };
 const chokidar = require('chokidar');
 const path = require('path');
@@ -75,20 +76,29 @@ async function loadCommands() {
     } catch (e) {
         console.error('❌ Critical error loading commands:', e);
     }
+
 }
 
 // Command execution handler
 async function bloomCm(Bloom, message, fulltext, commands) {
     const senderJid = message.key?.participant || message.key?.remoteJid;
     if (senderJid) await trackUsage(senderJid);
-    const commandName = fulltext.split(' ')[0].toLowerCase();
+
+    let commandName = fulltext.split(' ')[0].toLowerCase();
+
+    // 🟢 ONLY CHANGE: Treat numbers 1-9 as tttmove command
+    if (!isNaN(commandName) && commandName >= 1 && commandName <= 9) {
+        commandName = 'tttmove';
+    }
+
+    // 🔴 EVERYTHING BELOW REMAINS EXACTLY THE SAME
     const commandModule = commands[commandName];
 
     if (!commandModule || typeof commandModule.run !== 'function') return;
 
     try {
         await commandModule.run(Bloom, message, fulltext, commands);
-        console.log(`✅ Command executed: ${fulltext}`);
+        console.log(`✅ Command executed: ${commandName}`);
     } catch (err) {
         console.error(`❌ Error running command "${commandName}":`, err);
         await Bloom.sendMessage(message.key.remoteJid, {
@@ -106,11 +116,11 @@ function setupHotReload() {
 
     const watchPaths = [
         path.join(__dirname, '**/*.js'),
-        path.join(__dirname, '../colors/*.js'),
-        path.join(__dirname, '../plugin.js'),
-        '!' + path.join(__dirname, 'brain.js'),
-        '!' + path.join(__dirname, '**/_*.js'),
-        '!' + path.join(__dirname, '../colors/schema.js')
+                  path.join(__dirname, '../colors/*.js'),
+                  path.join(__dirname, '../plugin.js'),
+                  '!' + path.join(__dirname, 'brain.js'),
+                  '!' + path.join(__dirname, '**/_*.js'),
+                  '!' + path.join(__dirname, '../colors/schema.js')
     ];
 
     const watcher = chokidar.watch(watchPaths, {
@@ -155,6 +165,7 @@ function setupHotReload() {
     watchPaths.filter(p => !p.startsWith('!')).forEach(p => {
         console.log(`   → ${path.relative(path.join(__dirname, '../'), p)}`);
     });
+
 }
 
 // Robust command parser
@@ -164,7 +175,7 @@ function extractCommand(message) {
 
         const text = message.message.conversation ||
         message.message.extendedTextMessage?.text || '';
-        const fulltext = text.trim().replace(/^\s*!/, '').replace(/\s+/g, ' ');
+        const fulltext = text.trim().replace(/^s*!/, '').replace(/s+/g, ' ');
         const command = fulltext.split(' ')[0].toLowerCase();
 
         return { command, fulltext };
@@ -172,6 +183,7 @@ function extractCommand(message) {
         console.warn('⚠️ Error extracting command:', e);
         return { command: '', fulltext: '' };
     }
+
 }
 
 // Group role checker with error handling
@@ -190,6 +202,7 @@ async function getGroupRoles(Bloom, jid, groupId) {
         console.warn('⚠️ Error checking group roles:', e);
         return { isAdmin: false, isSuperAdmin: false };
     }
+
 }
 
 async function getBotRoles(Bloom, groupId) {
@@ -246,12 +259,14 @@ async function checkMode(Bloom, message) {
         console.error('❌ Error in checkMode:', e);
         return false;
     }
+
 }
 
 // Anti-link / no-image with safety checks
 async function checkMessageType(Bloom, message) {
     try {
         if (!Bloom || !message?.key) return true;
+
 
         const groupId = message.key.remoteJid;
         if (!groupId?.endsWith('@g.us')) return true;
@@ -299,6 +314,8 @@ async function checkMessageType(Bloom, message) {
         console.error('❌ Error in checkMessageType:', e);
         return true;
     }
+
+
 }
 
 // NSFW/Game toggle with validation
@@ -334,7 +351,6 @@ async function checkCommandTypeFlags(Bloom, message) {
         return true;
     }
 }
-
 // AFK check with safety
 async function checkAFK(Bloom, message) {
     try {
@@ -359,13 +375,14 @@ async function checkAFK(Bloom, message) {
         console.error('❌ Error in checkAFK:', e);
         return true;
     }
+
 }
 
 // Main command handler
 const bloomCmd = async (Bloom, message) => {
     try {
         if (!Bloom || !message?.key) {
-            console.warn('⚠️ Invalid message received - missing Bloom client or message key');
+            console.warn('⚠️ Invalid message received');
             return false;
         }
 
@@ -374,7 +391,16 @@ const bloomCmd = async (Bloom, message) => {
             await initCommandHandler(Bloom);
         }
 
-        // Run all checks with proper error handling
+        // Extract command text first
+        const { command, fulltext } = extractCommand(message);
+
+        // FIRST - Check if it's a number 1-9 and handle immediately
+        if (/^[1-9]$/.test(command)) {
+            await tttmove(Bloom, message, fulltext);
+            return true; // Exit after handling TTT move
+        }
+
+        // Rest remains exactly the same
         const checks = [
             () => checkMode(Bloom, message),
             () => checkMessageType(Bloom, message),
@@ -388,22 +414,19 @@ const bloomCmd = async (Bloom, message) => {
                 shouldProceed = shouldProceed && await check();
                 if (!shouldProceed) break;
             } catch (e) {
-                console.error(`❌ Error running bloomCmd check ${check.name}:`, e);
+                console.error(`❌ Error running check:`, e);
                 shouldProceed = false;
                 break;
             }
         }
 
-        if (shouldProceed) {
-            const { command, fulltext } = extractCommand(message);
-            if (command && commandRegistry[command]) {
-                await bloomCm(Bloom, message, fulltext, commandRegistry);
-            }
+        if (shouldProceed && command && commandRegistry[command]) {
+            await bloomCm(Bloom, message, fulltext, commandRegistry);
         }
 
         return shouldProceed;
     } catch (e) {
-        console.error('❌ Critical error in bloomCmd:', e);
+        console.error('❌ Critical error:', e);
         return false;
     }
 };

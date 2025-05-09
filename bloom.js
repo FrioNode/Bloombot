@@ -110,7 +110,7 @@ async function start() {
                 }
             } else if (connection === 'open') {
                 if (initialConnection) {
-                    console.log(`${emoji}  ${botname} is now online`);
+                    console.log(`${emoji} ${botname} is now online`);
 
                     if (mess) {
                         const Payload = {

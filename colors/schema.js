@@ -92,6 +92,28 @@ const afkSchema = new mongoose.Schema({
     since: { type: Date, default: Date.now }
 });
 
+
+const TicTacToeSchema = new mongoose.Schema({
+    roomId: { type: String, required: true, unique: true },
+    groupId: { type: String },
+    player1: {
+        jid: { type: String, required: true },
+        name: { type: String }, // Add this
+        symbol: { type: String, default: '❌' }
+    },
+   player2: {
+        jid: { type: String, default: null },
+        name: { type: String },
+        symbol: { type: String, default: '⭕' }
+    },
+    board: { type: [String], default: [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '] },
+    currentTurn: { type: String },
+    status: { type: String, enum: ['waiting', 'active', 'ended'], default: 'waiting' },
+    createdAt: { type: Date, default: Date.now },
+    timeoutAt: { type: Date }
+});
+
+const TicTacToe = mongoose.model('TicTacToe', TicTacToeSchema);
 const AFK = mongoose.model('AFK', afkSchema);
 const Pokemon = mongoose.model('Pokemon', pokemonSchema);
 const UserCounter = mongoose.model('UserCounter', userCounterSchema);
@@ -99,4 +121,4 @@ const User = mongoose.model('User', userSchema);
 const Settings = mongoose.model('Settings', settingsSchema);
 const Exp = mongoose.model('Exp', expSchema);
 
-module.exports = { Pokemon, UserCounter, User , Settings, Exp, AFK };
+module.exports = { Pokemon, UserCounter, User , Settings, Exp, AFK, TicTacToe };
