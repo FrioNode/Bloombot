@@ -5,7 +5,22 @@ module.exports = {
     ttt: {
         type: 'game',
         desc: 'Tic Tac Toe game (create, join, end)',
-        usage: 'ttt [join|end]',
+        usage: `🎮 *TIC TAC TOE HELP* 🎮
+
+        *Commands*:
+        ➼ \`!ttt\` - Create new game (you're ❌)
+        ➼ \`!ttt join\` - Join waiting game (you're ⭕)
+        ➼ \`!ttt end\` - End current game
+        ➼ \`1-9\` - Make a move (during game)
+
+        *Rules*:
+        1. ❌ always goes first
+        2. Win by getting 3 in a row
+        3. 5-min timeout for waiting games
+
+        *Tips*:
+        - Tag players when it's their turn
+        - Use \`!ttt end\` to cancel stale games`,
         run: async (Bloom, message, fulltext) => {
             try {
                 const sender = message.key.participant || message.key.remoteJid;
@@ -19,7 +34,7 @@ module.exports = {
                 }
 
                 if (!arg) {
-                    // Create new game
+        // create
                     const res = await createGame(sender, groupId);
                     if (res.error) {
                         return await Bloom.sendMessage(groupId, { text: res.error });
@@ -35,7 +50,7 @@ module.exports = {
                 }
 
                 if (arg === 'join') {
-                    // Join existing game
+                    // Join game
                     const res = await joinGame(sender, groupId);
                     if (res.error) {
                         return await Bloom.sendMessage(groupId, { text: res.error });

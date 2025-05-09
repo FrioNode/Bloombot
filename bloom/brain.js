@@ -5,9 +5,9 @@ const mess = require('../colors/mess');
 const { trackUsage } = require('../colors/exp');
 const { tttmove } = require('./tttmove');
 const options = { serverSelectionTimeoutMS: 30000, socketTimeoutMS: 45000 };
-const chokidar = require('chokidar');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
+const chokidar = require('chokidar');
 
 // MongoDB connection with error handling
 mongoose.connect(mongo, options)
@@ -111,63 +111,89 @@ async function bloomCm(Bloom, message, fulltext, commands) {
 function setupHotReload() {
     if (node === 'production') return;
 
-    const lastReloadTimes = new Map();
-    const DEBOUNCE_MS = 500;
+    console.log('⚡ Initializing hot reload...');
 
+    // 1. Get all immediate subdirectories (except special ones)
+    const commandDirs = fs.readdirSync(__dirname)
+    .filter(file => {
+        const fullPath = path.join(__dirname, file);
+        try {
+            return fs.statSync(fullPath).isDirectory() &&
+            !file.startsWith('_') &&
+            file !== 'colors';
+        } catch (e) {
+            return false;
+        }
+    });
+
+    // 2. Create watch patterns
     const watchPaths = [
-        path.join(__dirname, '**/*.js'),
-                  path.join(__dirname, '../colors/*.js'),
-                  path.join(__dirname, './tttmove.js'),
-                  '!' + path.join(__dirname, 'brain.js'),
-                  '!' + path.join(__dirname, '**/_*.js'),
-                  '!' + path.join(__dirname, '../colors/schema.js')
+        ...commandDirs.map(dir => path.join(__dirname, dir, '*.js')),
+        path.join(__dirname, '*.js'),
+        '!' + path.join(__dirname, 'brain.js'),
+        '!' + path.join(__dirname, '**/_*.js')
     ];
 
     const watcher = chokidar.watch(watchPaths, {
         ignoreInitial: true,
         awaitWriteFinish: {
-            stabilityThreshold: 500,
-            pollInterval: 100
+            stabilityThreshold: 2000,  // Increased for slow filesystems
+            pollInterval: 500
         },
-        ignorePermissionErrors: true
+        depth: 1,  // Watch only 1 level deep
+        ignorePermissionErrors: true,
+        usePolling: true,  // More reliable
+        atomic: true       // Handles editor atomic saves
     });
 
     watcher.on('change', async (changedPath) => {
-        const now = Date.now();
-        const lastReload = lastReloadTimes.get(changedPath) || 0;
-        if (now - lastReload < DEBOUNCE_MS) return;
-        lastReloadTimes.set(changedPath, now);
+        const absPath = path.resolve(changedPath);
+        console.log(`\n📡 Detected change in: ${path.relative(__dirname, absPath)}`);
 
-        if (changedPath.includes('schema.js')) return;
-
-        const relativePath = path.relative(path.join(__dirname, '../'), changedPath);
-
-        if (changedPath.includes('/colors/') || changedPath.endsWith('tttmove.js')) {
-            console.log(`🎨 Reloading config: ${relativePath}`);
-            try {
-                delete require.cache[require.resolve(changedPath)];
-                require(changedPath);
-            } catch (err) {
-                console.error(`❌ Config reload failed: ${relativePath}`, err);
-            }
-            return;
-        }
-
-        console.log(`♻️ Reloading commands due to change in: ${relativePath}`);
         try {
-            await loadCommands();
+            // 1. Clear module cache
+            delete require.cache[require.resolve(absPath)];
+
+            // 2. Clear parent directory cache
+            const dirPath = path.dirname(absPath);
+            Object.keys(require.cache).forEach(key => {
+                if (key.startsWith(dirPath)) {
+                    delete require.cache[key];
+                }
+            });
+
+            // 3. Reload the module
+            require(absPath);
+            console.log(`♻️ Successfully reloaded: ${path.relative(__dirname, absPath)}`);
+
+            // 4. Refresh command registry if needed
+            if (!absPath.includes('colors')) {
+                await loadCommands();
+                console.log('🔄 Command registry refreshed');
+            }
+
         } catch (err) {
-            console.error('Reload failed:', err);
+            console.error(`❌ Hot reload failed: ${err.message}`);
         }
     });
 
-    console.log('🔥 Hot Reload active (except schema.js)');
-    watchPaths.filter(p => !p.startsWith('!')).forEach(p => {
-        console.log(`   → ${path.relative(path.join(__dirname, '../'), p)}`);
+    watcher.on('ready', () => {
+        console.log('\n🔥 Hot Reload Active. Watching:');
+        watchPaths
+        .filter(p => !p.startsWith('!'))
+        .forEach(p => console.log(`   → ${path.relative(__dirname, p)}`));
+
+        // Debug: Log actual watched files
+        console.log('\n🔍 Actually watching these files:');
+        Object.entries(watcher.getWatched()).forEach(([dir, files]) => {
+            files.forEach(file => console.log(`   → ${path.join(dir, file)}`));
+        });
     });
 
+    watcher.on('error', err => {
+        console.error('🔥 Watcher error:', err.message);
+    });
 }
-
 // Robust command parser
 function extractCommand(message) {
     try {
@@ -175,7 +201,7 @@ function extractCommand(message) {
 
         const text = message.message.conversation ||
         message.message.extendedTextMessage?.text || '';
-        const fulltext = text.trim().replace(/^s*!/, '').replace(/s+/g, ' ');
+        const fulltext = text.trim().replace(/^\s*!/, '').replace(/\s+/g, ' ');
         const command = fulltext.split(' ')[0].toLowerCase();
 
         return { command, fulltext };
