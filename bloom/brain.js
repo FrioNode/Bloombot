@@ -117,7 +117,7 @@ function setupHotReload() {
     const watchPaths = [
         path.join(__dirname, '**/*.js'),
                   path.join(__dirname, '../colors/*.js'),
-                  path.join(__dirname, '../plugin.js'),
+                  path.join(__dirname, './tttmove.js'),
                   '!' + path.join(__dirname, 'brain.js'),
                   '!' + path.join(__dirname, '**/_*.js'),
                   '!' + path.join(__dirname, '../colors/schema.js')
@@ -142,7 +142,7 @@ function setupHotReload() {
 
         const relativePath = path.relative(path.join(__dirname, '../'), changedPath);
 
-        if (changedPath.includes('/colors/') || changedPath.endsWith('plugin.js')) {
+        if (changedPath.includes('/colors/') || changedPath.endsWith('tttmove.js')) {
             console.log(`🎨 Reloading config: ${relativePath}`);
             try {
                 delete require.cache[require.resolve(changedPath)];
