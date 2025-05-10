@@ -6,11 +6,45 @@ module.exports = {
         type: 'group',
         desc: 'Add a participant to the group',
         run: async (Bloom, message, fulltext) => {
-            if (!await isGroupAdminContext(Bloom, message)) return;
-            const arg = fulltext.split(' ')[1];
-            const jid = arg + '@s.whatsapp.net';
-            await Bloom.groupParticipantsUpdate(message.key.remoteJid, [jid], 'add');
-            await Bloom.sendMessage(message.key.remoteJid, { text: '✅ Added successfully.' });
+            try {
+                if (!await isGroupAdminContext(Bloom, message)) return;
+
+                const arg = fulltext.split(' ')[1]?.replace(/[^0-9]/g, '');
+                if (!arg || arg.length < 10) return await Bloom.sendMessage(message.key.remoteJid, { text: '❌ Invalid number format' });
+
+                const jid = arg.includes('@') ? arg : `${arg}@s.whatsapp.net`;
+                const groupJid = message.key.remoteJid;
+
+                const [userCheck] = await Bloom.onWhatsApp(jid);
+                if (!userCheck?.exists) return await Bloom.sendMessage(groupJid, { text: '❌ Number not on WhatsApp' });
+
+                const metadata = await Bloom.groupMetadata(groupJid);
+                if (metadata.participants.some(p => p.id === jid)) return await Bloom.sendMessage(groupJid, { text: '❌ Already in group' });
+
+                const result = await Bloom.groupParticipantsUpdate(groupJid, [jid], 'add');
+
+                if (result[0]?.status === 200) {
+                    await Bloom.sendMessage(groupJid, { text: '✅ Added' });
+                }
+                else if (result[0]?.status === 403 && result[0]?.content?.content?.[0]?.tag === 'add_request') {
+                    const inviteCode = result[0].content.content[0].attrs.code;
+                    try {
+                        await Bloom.sendMessage(jid, { text: `📨 Join link: https://chat.whatsapp.com/${inviteCode}` });
+                        await Bloom.sendMessage(groupJid, { text: `📬 Invite sent to ${jid.split('@')[0]}` });
+                    } catch {
+                        await Bloom.sendMessage(groupJid, { text: `📨 Invite Link: https://chat.whatsapp.com/${inviteCode}` });
+                    }
+                }
+                else if (result[0]?.status === 409) {
+                    await Bloom.sendMessage(groupJid, { text: '❌ User already in group' });
+                }
+                else {
+                    const inviteCode = await Bloom.groupInviteCode(groupJid);
+                    await Bloom.sendMessage(groupJid, { text: `📨 Group link: https://chat.whatsapp.com/${inviteCode}` });
+                }
+            } catch (err) {
+                await Bloom.sendMessage(message.key.remoteJid, { text: `❌ Error: ${err.message || 'Failed to add'}` });
+            }
         }
     },
 
