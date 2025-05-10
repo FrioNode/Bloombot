@@ -47,66 +47,127 @@ module.exports = {
             }
         }
     },
+        kick: {
+            type: 'group',
+            desc: 'Remove a participant from the group',
+            usage: 'kick @user',
+            run: async (Bloom, message, fulltext) => {
+                if (!await isGroupAdminContext(Bloom, message)) return;
 
-    kick: {
-        type: 'group',
-        desc: 'Remove a participant from the group',
-        run: async (Bloom, message, fulltext) => {
-            if (!await isGroupAdminContext(Bloom, message)) return;
-            const arg = fulltext.split(' ')[1];
-            let targetJid = arg ? `${arg}@s.whatsapp.net` :
-            message.message?.extendedTextMessage?.contextInfo?.participant;
-            if (!targetJid) return await Bloom.sendMessage(message.key.remoteJid, { text: '❌ Tag or provide a number to kick.' });
+                const arg = fulltext.split(' ')[1];
+                let targetJid = arg ? `${arg.replace(/[^0-9]/g, '')}@s.whatsapp.net` :
+                message.message?.extendedTextMessage?.contextInfo?.participant;
+                if (!targetJid) return await Bloom.sendMessage(message.key.remoteJid, { text: '❌ Tag or provide a number' });
 
-            await Bloom.groupParticipantsUpdate(message.key.remoteJid, [targetJid], 'remove');
-            await Bloom.sendMessage(message.key.remoteJid, { text: `👢 Removed ${targetJid.split('@')[0]}` });
-        }
-    }
-    ,
+                const metadata = await Bloom.groupMetadata(message.key.remoteJid);
+                const targetUser = metadata.participants.find(p => p.id === targetJid);
 
-    open: {
-        type: 'group',
-        desc: 'Open group (anyone can send messages)',
-        run: async (Bloom, message) => {
-            if (!await isGroupAdminContext(Bloom, message)) return;
-            await Bloom.groupSettingUpdate(message.key.remoteJid, 'not_announcement');
-            await Bloom.sendMessage(message.key.remoteJid, { text: '🔓 Group is now open.' });
-        }
-    },
+                if (!targetUser) return await Bloom.sendMessage(message.key.remoteJid, { text: '❌ User not found' });
+                if (targetUser.admin === 'superadmin') return await Bloom.sendMessage(message.key.remoteJid, { text: '👑 Cannot remove group owner' });
 
-    close: {
-        type: 'group',
-        desc: 'Close group (only admins can send)',
-        run: async (Bloom, message) => {
-            if (!await isGroupAdminContext(Bloom, message)) return;
-            await Bloom.groupSettingUpdate(message.key.remoteJid, 'announcement');
-            await Bloom.sendMessage(message.key.remoteJid, { text: '🔒 Group is now closed.' });
-        }
-    },
-    lock: {
-        type: 'group',
-        desc: 'Lock group settings (only admins can edit group info)',
-        run: async (Bloom, message) => {
-            if (!await isGroupAdminContext(Bloom, message)) return;
+                await Bloom.groupParticipantsUpdate(message.key.remoteJid, [targetJid], 'remove');
+                await Bloom.sendMessage(message.key.remoteJid, {
+                    text: `👢 Removed @${targetJid.split('@')[0]}`,
+                                        mentions: [targetJid]
+                });
+            }
+        },
+        promote: {
+            type: 'group',
+            desc: 'Promote user to admin',
+            usage: 'promote @user',
+            run: async (Bloom, message, fulltext) => {
+                if (!await isGroupAdminContext(Bloom, message)) return;
 
-            await Bloom.groupSettingUpdate(message.key.remoteJid, 'locked');
-            await Bloom.sendMessage(message.key.remoteJid, {
-                text: '🔒 Group settings locked. Only admins can edit group info.'
-            });
-        }
-    },
-    unlock: {
-        type: 'group',
-        desc: 'Unlock group settings (any member can edit group info)',
-        run: async (Bloom, message) => {
-            if (!await isGroupAdminContext(Bloom, message)) return;
+                const arg = fulltext.split(' ')[1];
+                let targetJid = arg ? `${arg.replace(/[^0-9]/g, '')}@s.whatsapp.net` :
+                message.message?.extendedTextMessage?.contextInfo?.participant;
+                if (!targetJid) return await Bloom.sendMessage(message.key.remoteJid, { text: '❌ Tag or provide a number' });
 
-            await Bloom.groupSettingUpdate(message.key.remoteJid, 'unlocked');
-            await Bloom.sendMessage(message.key.remoteJid, {
-                text: '🔓 Group settings unlocked. Members can now edit group info.'
-            });
-        }
-    },
+                const metadata = await Bloom.groupMetadata(message.key.remoteJid);
+                const targetUser = metadata.participants.find(p => p.id === targetJid);
+
+                if (!targetUser) return await Bloom.sendMessage(message.key.remoteJid, { text: '❌ User not found' });
+                if (targetUser.admin === 'admin') return await Bloom.sendMessage(message.key.remoteJid, { text: '❌ Already admin' });
+                if (targetUser.admin === 'superadmin') return await Bloom.sendMessage(message.key.remoteJid, { text: '👑 Cannot modify owner' });
+
+                await Bloom.groupParticipantsUpdate(message.key.remoteJid, [targetJid], 'promote');
+                await Bloom.sendMessage(message.key.remoteJid, {
+                    text: `⬆️ Promoted @${targetJid.split('@')[0]}`,
+                                        mentions: [targetJid]
+                });
+            }
+        },
+        demote: {
+            type: 'group',
+            desc: 'Demote admin to member',
+            usage: 'demote @user',
+            run: async (Bloom, message, fulltext) => {
+                if (!await isGroupAdminContext(Bloom, message)) return;
+
+                const arg = fulltext.split(' ')[1];
+                let targetJid = arg ? `${arg.replace(/[^0-9]/g, '')}@s.whatsapp.net` :
+                message.message?.extendedTextMessage?.contextInfo?.participant;
+                if (!targetJid) return await Bloom.sendMessage(message.key.remoteJid, { text: '❌ Tag or provide a number' });
+
+                const metadata = await Bloom.groupMetadata(message.key.remoteJid);
+                const targetUser = metadata.participants.find(p => p.id === targetJid);
+
+                if (!targetUser) return await Bloom.sendMessage(message.key.remoteJid, { text: '❌ User not found' });
+                if (!targetUser.admin) return await Bloom.sendMessage(message.key.remoteJid, { text: '❌ Not an admin' });
+                if (targetUser.admin === 'superadmin') return await Bloom.sendMessage(message.key.remoteJid, { text: '👑 Cannot demote owner' });
+
+                await Bloom.groupParticipantsUpdate(message.key.remoteJid, [targetJid], 'demote');
+                await Bloom.sendMessage(message.key.remoteJid, {
+                    text: `⬇️ Demoted @${targetJid.split('@')[0]}`,
+                                        mentions: [targetJid]
+                });
+            }
+        },
+        open: {
+            type: 'group',
+            desc: 'Open group (anyone can send messages)',
+            run: async (Bloom, message) => {
+                if (!await isGroupAdminContext(Bloom, message)) return;
+                const metadata = await Bloom.groupMetadata(message.key.remoteJid);
+                if (metadata.announce === false) return await Bloom.sendMessage(message.key.remoteJid, { text: 'ℹ️ Group is already open' });
+                await Bloom.groupSettingUpdate(message.key.remoteJid, 'not_announcement');
+                await Bloom.sendMessage(message.key.remoteJid, { text: '🔓 Group is now open' });
+            }
+        },
+        close: {
+            type: 'group',
+            desc: 'Close group (only admins can send)',
+            run: async (Bloom, message) => {
+                if (!await isGroupAdminContext(Bloom, message)) return;
+                const metadata = await Bloom.groupMetadata(message.key.remoteJid);
+                if (metadata.announce === true) return await Bloom.sendMessage(message.key.remoteJid, { text: 'ℹ️ Group is already closed' });
+                await Bloom.groupSettingUpdate(message.key.remoteJid, 'announcement');
+                await Bloom.sendMessage(message.key.remoteJid, { text: '🔒 Group is now closed' });
+            }
+        },
+        lock: {
+            type: 'group',
+            desc: 'Lock group settings (only admins can edit)',
+            run: async (Bloom, message) => {
+                if (!await isGroupAdminContext(Bloom, message)) return;
+                const metadata = await Bloom.groupMetadata(message.key.remoteJid);
+                if (metadata.locked === true) return await Bloom.sendMessage(message.key.remoteJid, { text: 'ℹ️ Group is already locked' });
+                await Bloom.groupSettingUpdate(message.key.remoteJid, 'locked');
+                await Bloom.sendMessage(message.key.remoteJid, { text: '🔒 Group settings locked' });
+            }
+        },
+        unlock: {
+            type: 'group',
+            desc: 'Unlock group settings (members can edit)',
+            run: async (Bloom, message) => {
+                if (!await isGroupAdminContext(Bloom, message)) return;
+                const metadata = await Bloom.groupMetadata(message.key.remoteJid);
+                if (metadata.locked === false) return await Bloom.sendMessage(message.key.remoteJid, { text: 'ℹ️ Group is already unlocked' });
+                await Bloom.groupSettingUpdate(message.key.remoteJid, 'unlocked');
+                await Bloom.sendMessage(message.key.remoteJid, { text: '🔓 Group settings unlocked' });
+            }
+        },
 
     disap: {
         type: 'group',
