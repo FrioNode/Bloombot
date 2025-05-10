@@ -311,11 +311,16 @@ async function checkMessageType(Bloom, message) {
         message.message?.extendedTextMessage?.text || '';
 
         // --- ANTI LINK ---
-        if (settings.antiLink && !senderIsAdmin && text.includes('http')) {
-            if (botIsAdmin) {
-                await Bloom.groupParticipantsUpdate(groupId, [sender], 'remove');
+        // Matches most common links (with or without protocol)
+        const linkRegex = /(?:https?:\/\/|www\.)[^\s]+|(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[^\s]*)?/gi;
+        if (settings.antiLink && !senderIsAdmin) {
+            const matches = text.match(linkRegex);
+            if (matches && matches.length > 0) {
+                if (botIsAdmin) {
+                    await Bloom.groupParticipantsUpdate(groupId, [sender], 'remove');
+                }
+                return false; // Block command execution
             }
-            return false; // Block further handling
         }
 
         // --- NO IMAGE ---
