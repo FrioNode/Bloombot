@@ -289,60 +289,74 @@ async function checkMode(Bloom, message) {
 }
 
 // Anti-link / no-image with safety checks
+
 async function checkMessageType(Bloom, message) {
     try {
-        if (!Bloom || !message?.key) return true;
-
+        if (!Bloom || !message?.key || !message.message) return true;
 
         const groupId = message.key.remoteJid;
         if (!groupId?.endsWith('@g.us')) return true;
 
-        const settings = await Settings.findOne({ group: groupId });
-        if (!settings) return true;
-
         const sender = message.key.participant;
         if (!sender) return true;
+
+        const settings = await Settings.findOne({ group: groupId });
+        if (!settings) return true;
 
         const { isAdmin: senderIsAdmin } = await getGroupRoles(Bloom, sender, groupId);
         const { isAdmin: botIsAdmin } = await getBotRoles(Bloom, groupId);
 
+        const messageType = Object.keys(message.message)[0] || '';
         const text = message.message?.conversation ||
         message.message?.extendedTextMessage?.text || '';
 
-        if (settings.antiLink && text.includes('http') && !senderIsAdmin) {
+        // --- ANTI LINK ---
+        if (settings.antiLink && !senderIsAdmin && text.includes('http')) {
             if (botIsAdmin) {
                 await Bloom.groupParticipantsUpdate(groupId, [sender], 'remove');
             }
-            return false;
+            return false; // Block further handling
         }
 
-        const hasImage = !!message.message?.imageMessage;
-        if (settings.noImage && hasImage && !senderIsAdmin) {
-            settings.warns = settings.warns || {};
-            settings.warns[sender] = (settings.warns[sender] || 0) + 1;
-
-            if (settings.warns[sender] >= 2 && botIsAdmin) {
-                await Bloom.groupParticipantsUpdate(groupId, [sender], 'remove');
-                delete settings.warns[sender];
-            } else {
-                await Bloom.sendMessage(groupId, {
-                    text: `⚠️ @${sender.split('@')[0]}, images are not allowed here.`,
-                                        mentions: [sender]
-                });
+        // --- NO IMAGE ---
+        if (settings.noImage && messageType === 'imageMessage' && !senderIsAdmin) {
+            if (!(settings.warns instanceof Map)) {
+                settings.warns = new Map(Object.entries(settings.warns || {}));
             }
 
+            const safeSender = sender.replace(/\./g, '(dot)');
+            const currentWarn = settings.warns.get(safeSender) || 0;
+            const newWarn = currentWarn + 1;
+
+            settings.warns.set(safeSender, newWarn);
+
+            if (newWarn >= 3) {
+                if (botIsAdmin) {
+                    await Bloom.groupParticipantsUpdate(groupId, [sender], 'remove');
+                }
+                settings.warns.delete(safeSender);
+                await settings.save();
+                return false; // Block further handling
+            }
+
+            // Warn user but ALLOW command handling
+            await Bloom.sendMessage(groupId, {
+                text: `⚠️ @${sender.split('@')[0]}, no images allowed! Warning ${newWarn}/3.`,
+                                    mentions: [sender]
+            });
+
             await settings.save();
-            return false;
         }
 
-        return true;
-    } catch (e) {
-        console.error('❌ Error in checkMessageType:', e);
-        return true;
+        return true; // ✅ Let the command proceed
+
+    } catch (err) {
+        console.error('❌ checkMessageType error:', err);
+        return true; // Fallback: allow command in case of error
     }
-
-
 }
+
+
 
 // NSFW/Game toggle with validation
 async function checkCommandTypeFlags(Bloom, message) {
