@@ -85,13 +85,6 @@ async function bloomCm(Bloom, message, fulltext, commands) {
     if (senderJid) await trackUsage(senderJid);
 
     let commandName = fulltext.split(' ')[0].toLowerCase();
-
-    // 🟢 ONLY CHANGE: Treat numbers 1-9 as tttmove command
-    if (!isNaN(commandName) && commandName >= 1 && commandName <= 9) {
-        commandName = 'tttmove';
-    }
-
-    // 🔴 EVERYTHING BELOW REMAINS EXACTLY THE SAME
     const commandModule = commands[commandName];
 
     if (!commandModule || typeof commandModule.run !== 'function') return;
