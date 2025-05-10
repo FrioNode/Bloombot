@@ -474,10 +474,4 @@ if (node !== 'production') {
     setupHotReload();
 }
 
-module.exports = {
-    bloomCmd,
-    initCommandHandler,
-    commands: commandRegistry,
-    getGroupRoles,
-    getBotRoles
-};
+module.exports = {  bloomCmd, initCommandHandler, commands: commandRegistry, getGroupRoles, getBotRoles };
