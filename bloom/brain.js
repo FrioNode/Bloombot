@@ -7,7 +7,6 @@ const { tttmove } = require('./tttmove');
 const options = { serverSelectionTimeoutMS: 30000, socketTimeoutMS: 45000 };
 const fs = require('fs');
 const path = require('path');
-const chokidar = require('chokidar');
 
 // MongoDB connection with error handling
 mongoose.connect(mongo, options)
@@ -104,14 +103,13 @@ async function bloomCm(Bloom, message, fulltext, commands) {
 function setupHotReload() {
     if (node === 'production') return;
 
-    console.log('⚡ Initializing hot reload...');
+    console.log('⚡ Initializing hot reload (fs.watch)...');
 
-    // 1. Get all immediate subdirectories (except special ones)
+    // 1. Get all command directories
     const commandDirs = fs.readdirSync(__dirname)
     .filter(file => {
-        const fullPath = path.join(__dirname, file);
         try {
-            return fs.statSync(fullPath).isDirectory() &&
+            return fs.statSync(path.join(__dirname, file)).isDirectory() &&
             !file.startsWith('_') &&
             file !== 'colors';
         } catch (e) {
@@ -119,73 +117,53 @@ function setupHotReload() {
         }
     });
 
-    // 2. Create watch patterns
-    const watchPaths = [
-        ...commandDirs.map(dir => path.join(__dirname, dir, '*.js')),
-        path.join(__dirname, '*.js'),
-        '!' + path.join(__dirname, 'brain.js'),
-        '!' + path.join(__dirname, '**/_*.js')
-    ];
+    // 2. Watch each directory
+    commandDirs.forEach(dir => {
+        const dirPath = path.join(__dirname, dir);
 
-    const watcher = chokidar.watch(watchPaths, {
-        ignoreInitial: true,
-        awaitWriteFinish: {
-            stabilityThreshold: 2000,  // Increased for slow filesystems
-            pollInterval: 500
-        },
-        depth: 1,  // Watch only 1 level deep
-        ignorePermissionErrors: true,
-        usePolling: true,  // More reliable
-        atomic: true       // Handles editor atomic saves
-    });
+        fs.watch(dirPath, { recursive: false }, (eventType, filename) => {
+            if (!filename || !filename.endsWith('.js')) return;
 
-    watcher.on('change', async (changedPath) => {
-        const absPath = path.resolve(changedPath);
-        console.log(`\n📡 Detected change in: ${path.relative(__dirname, absPath)}`);
+            const filePath = path.join(dirPath, filename);
+            console.log(`\n📡 ${eventType} detected: ${path.join(dir, filename)}`);
 
-        try {
-            // 1. Clear module cache
-            delete require.cache[require.resolve(absPath)];
-
-            // 2. Clear parent directory cache
-            const dirPath = path.dirname(absPath);
-            Object.keys(require.cache).forEach(key => {
-                if (key.startsWith(dirPath)) {
-                    delete require.cache[key];
-                }
-            });
-
-            // 3. Reload the module
-            require(absPath);
-            console.log(`♻️ Successfully reloaded: ${path.relative(__dirname, absPath)}`);
-
-            // 4. Refresh command registry if needed
-            if (!absPath.includes('colors')) {
-                await loadCommands();
-                console.log('🔄 Command registry refreshed');
-            }
-
-        } catch (err) {
-            console.error(`❌ Hot reload failed: ${err.message}`);
-        }
-    });
-
-    watcher.on('ready', () => {
-        console.log('\n🔥 Hot Reload Active. Watching:');
-        watchPaths
-        .filter(p => !p.startsWith('!'))
-        .forEach(p => console.log(`   → ${path.relative(__dirname, p)}`));
-
-        // Debug: Log actual watched files
-        console.log('\n🔍 Actually watching these files:');
-        Object.entries(watcher.getWatched()).forEach(([dir, files]) => {
-            files.forEach(file => console.log(`   → ${path.join(dir, file)}`));
+            reloadFile(filePath);
         });
     });
 
-    watcher.on('error', err => {
-        console.error('🔥 Watcher error:', err.message);
+    // 3. Watch root directory
+    fs.watch(__dirname, { recursive: false }, (eventType, filename) => {
+        if (!filename || !filename.endsWith('.js') ||
+            filename === 'brain.js' ||
+            filename.startsWith('_')) return;
+
+        const filePath = path.join(__dirname, filename);
+        console.log(`\n📡 ${eventType} detected: ${filename}`);
+        reloadFile(filePath);
     });
+
+    async function reloadFile(filePath) {
+        try {
+            // Clear cache
+            delete require.cache[require.resolve(filePath)];
+
+            // Reload module
+            require(filePath);
+            console.log(`♻️ Reloaded: ${path.relative(__dirname, filePath)}`);
+
+            // Refresh commands
+            if (!filePath.includes('colors')) {
+                await loadCommands();
+                console.log('🔄 Command registry updated');
+            }
+        } catch (err) {
+            console.error(`❌ Reload failed: ${err.message}`);
+        }
+    }
+
+    console.log('✅ Hot reload active for:');
+    commandDirs.forEach(dir => console.log(`   → ${dir}/*.js`));
+    console.log('   → *.js (root)');
 }
 // Robust command parser
 function extractCommand(message) {
@@ -354,8 +332,6 @@ async function checkMessageType(Bloom, message) {
     }
 }
 
-
-
 // NSFW/Game toggle with validation
 async function checkCommandTypeFlags(Bloom, message) {
     try {
@@ -415,7 +391,6 @@ async function checkAFK(Bloom, message) {
     }
 
 }
-
 // Main command handler
 const bloomCmd = async (Bloom, message) => {
     try {
@@ -428,7 +403,6 @@ const bloomCmd = async (Bloom, message) => {
         if (!activeBloomInstance) {
             await initCommandHandler(Bloom);
         }
-
         // Extract command text first
         const { command, fulltext } = extractCommand(message);
 
@@ -437,7 +411,6 @@ const bloomCmd = async (Bloom, message) => {
             await tttmove(Bloom, message, fulltext);
             return true; // Exit after handling TTT move
         }
-
         // Rest remains exactly the same
         const checks = [
             () => checkMode(Bloom, message),
@@ -469,9 +442,7 @@ const bloomCmd = async (Bloom, message) => {
     }
 };
 
-// Initialize at the bottom (before exports)
 if (node !== 'production') {
     setupHotReload();
 }
-
 module.exports = {  bloomCmd, initCommandHandler, commands: commandRegistry, getGroupRoles, getBotRoles };

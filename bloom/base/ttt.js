@@ -34,7 +34,6 @@ module.exports = {
                 }
 
                 if (!arg) {
-        // create
                     const res = await createGame(sender, groupId);
                     if (res.error) {
                         return await Bloom.sendMessage(groupId, { text: res.error });
@@ -50,7 +49,6 @@ module.exports = {
                 }
 
                 if (arg === 'join') {
-                    // Join game
                     const res = await joinGame(sender, groupId);
                     if (res.error) {
                         return await Bloom.sendMessage(groupId, { text: res.error });
