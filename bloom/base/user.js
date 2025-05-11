@@ -112,12 +112,12 @@ module.exports = {
                 await expData.save();
                 const { current, next, toNext } = getLevelData(expData.points);
 
-                const response = `╭───────📊 EXP REPORT───────
-                │ 🔢 *${expData.points}* points
-                │ 🎖️ Level: *${current.name}*
-                ${next ? `│ ⬆️ *${toNext}* more to *${next.name}*` : `│ 🏆 *MAX LEVEL*: ${current.name}`}
-                ${bonusGiven ? `│ 🎁 Daily bonus claimed! (+5 EXP)\n│ 🔥 Streak: *${expData.streak} days*` : `│ 🕒 Daily bonus in: ${msToTime(86400000 - (now - new Date(expData.lastDaily)))}`}
-                ╰─────────────────────────`;
+                const response = `╭────📊 EXP REPORT─────
+│ 🔢 *${expData.points}* points
+│ 🎖️ Level: *${current.name}*
+${next ? `│ ⬆️ *${toNext}* more to *${next.name}*` : `│ 🏆 *MAX LEVEL*: ${current.name}`}
+${bonusGiven ? `│ 🎁 Daily bonus claimed! (+5 EXP)\n│ 🔥 Streak: *${expData.streak} days*` : `│ 🕒 Daily bonus in: ${msToTime(86400000 - (now - new Date(expData.lastDaily)))}`}
+╰────────────────────`;
 
                 await Bloom.sendMessage(message.key.remoteJid, { text: response });
             } catch (err) {
