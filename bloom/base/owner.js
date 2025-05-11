@@ -14,8 +14,51 @@ const isOwner = (sender, message) => {
     }
     return sender === sudochat;
 };
+    module.exports = {
+        join: {
+            type: 'owner',
+            desc: 'Make bot join a group',
+            usage: 'join <group_link> or <code>',
+            run: async (Bloom, message, fulltext) => {
+                const remoteJid = message.key.remoteJid;
+                const sender = message.key.participant || remoteJid;
 
-module.exports = {
+                if (sender !== sudochat) {
+                    return await Bloom.sendMessage(remoteJid, { text: '❌ This command is for the bot owner only.' }, { quoted: message });
+                }
+
+                const input = fulltext.split(' ').slice(1).join(' ').trim();
+                if (!input) {
+                    return await Bloom.sendMessage(remoteJid, { text: '❌ Please provide a group invite link or code.' }, { quoted: message });
+                }
+
+                // Match link or code
+                const match = input.match(/chat\.whatsapp\.com\/([a-zA-Z0-9]+)/) || input.match(/^([a-zA-Z0-9]{20,})$/);
+                if (!match) {
+                    return await Bloom.sendMessage(remoteJid, { text: '❌ Invalid link or code. Please check and try again.' }, { quoted: message });
+                }
+
+                const code = match[1];
+
+                try {
+                    const groupInfo = await Bloom.groupAcceptInvite(code);
+                    return await Bloom.sendMessage(remoteJid, {
+                        text: `✅ Successfully joined group:\n*${groupInfo.subject || 'Unnamed Group'}*`
+                    }, { quoted: message });
+                } catch (err) {
+                    let reason = '❌ Failed to join group.';
+
+                    if (err?.output?.statusCode === 500 && err?.message?.toLowerCase().includes('conflict')) {
+                        reason = '⚠️ Bot is already a member of that group.';
+                    } else if (err?.message?.toLowerCase().includes('not-authorized')) {
+                        reason = '❌ Link may be revoked or invalid.';
+                    }
+
+                    console.error('Group Join Error:', err);
+                    await Bloom.sendMessage(remoteJid, { text: reason }, { quoted: message });
+                }
+            }
+    },
     reboot: {
         type: 'owner',
         desc: 'Reboots the bot.',
