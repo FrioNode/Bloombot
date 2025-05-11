@@ -1,9 +1,19 @@
 const fs = require('fs');
 const path = require('path');
 const yts = require('yt-search');
-const  YtDlpWrap = require('yt-dlp-wrap').default;
+const YtDlpWrap = require('yt-dlp-wrap').default;
 
 const ytDlpWrap = new YtDlpWrap();
+
+// Helper function to format duration
+function formatDuration(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor(seconds % 3600 / 60);
+    const s = Math.floor(seconds % 3600 % 60);
+    return [h, m > 9 ? m : h ? '0' + m : m || '0', s > 9 ? s : '0' + s]
+    .filter(Boolean)
+    .join(':');
+}
 
 module.exports = {
     ytsearch: {
@@ -15,11 +25,17 @@ module.exports = {
             if (!query) return await Bloom.sendMessage(message.key.remoteJid, { text: '❌ Please provide a search query' });
 
             try {
+                // Send processing message
+                const processingMsg = await Bloom.sendMessage(message.key.remoteJid, {
+                    text: '🔍 Searching YouTube...'
+                }, { quoted: message });
+
                 const search = await yts(query);
                 const videos = search.videos.slice(0, 5);
 
                 if (!videos.length) {
-                    return await Bloom.sendMessage(message.key.remoteJid, { text: '❌ No videos found' });
+                    await Bloom.sendMessage(message.key.remoteJid, { text: '❌ No videos found' });
+                    return;
                 }
 
                 let results = '🎬 YouTube Search Results:\n\n';
@@ -53,26 +69,61 @@ module.exports = {
             fs.mkdirSync(path.dirname(tempFile), { recursive: true });
 
             try {
+                // Send processing message
+                const processingMsg = await Bloom.sendMessage(message.key.remoteJid, {
+                    text: '⏳ Downloading audio... This may take a moment.'
+                }, { quoted: message });
+
+                let videoInfo;
                 await new Promise((resolve, reject) => {
+                    // First get video info for metadata
                     ytDlpWrap.exec([
                         url,
-                        '--extract-audio',
-                        '--audio-format', 'mp3',
-                        '--output', tempFile,
-                        '--no-check-certificates',
-                        '--no-warnings',
-                        '--prefer-free-formats'
+                        '--dump-json',
+                        '--no-warnings'
                     ])
                     .on('error', reject)
-                    .on('close', resolve);
+                    .on('ytDlpEvent', (eventType, eventData) => {
+                        if (eventType === 'download') {
+                            try {
+                                videoInfo = JSON.parse(eventData.toString());
+                            } catch {}
+                        }
+                    })
+                    .on('close', () => {
+                        // Then download the actual audio
+                        ytDlpWrap.exec([
+                            url,
+                            '--extract-audio',
+                            '--audio-format', 'mp3',
+                            '--output', tempFile,
+                            '--no-check-certificates',
+                            '--no-warnings',
+                            '--prefer-free-formats'
+                        ])
+                        .on('error', reject)
+                        .on('close', resolve);
+                    });
                 });
+
+                const caption = videoInfo ?
+                `🎵 *${videoInfo.title}*\n` +
+                `👤 *Author:* ${videoInfo.uploader}\n` +
+                `⏱ *Duration:* ${formatDuration(videoInfo.duration)}\n` +
+                (videoInfo.upload_date ? `📅 *Uploaded:* ${videoInfo.upload_date.substring(0, 4)}\n` : '') +
+                (videoInfo.like_count ? `👍 *Likes:* ${videoInfo.like_count.toLocaleString()}\n` : '') +
+                (videoInfo.view_count ? `👀 *Views:* ${videoInfo.view_count.toLocaleString()}` : '')
+                : 'Downloaded Audio';
 
                 await Bloom.sendMessage(message.key.remoteJid, {
                     audio: { url: tempFile },
                     mimetype: 'audio/mpeg',
                     fileName: `audio.mp3`,
                     ptt: false
-                }, { quoted: message });
+                }, {
+                    quoted: message,
+                    caption: caption
+                });
 
                 fs.unlink(tempFile, () => {});
             } catch (err) {
@@ -100,17 +151,40 @@ module.exports = {
             fs.mkdirSync(path.dirname(tempFile), { recursive: true });
 
             try {
+                // Send processing message
+                const processingMsg = await Bloom.sendMessage(message.key.remoteJid, {
+                    text: '⏳ Downloading video... This may take a moment.'
+                }, { quoted: message });
+
+                let videoInfo;
                 await new Promise((resolve, reject) => {
+                    // First get video info for metadata
                     ytDlpWrap.exec([
                         url,
-                        '--format', 'mp4',
-                        '--output', tempFile,
-                        '--no-check-certificates',
-                        '--no-warnings',
-                        '--prefer-free-formats'
+                        '--dump-json',
+                        '--no-warnings'
                     ])
                     .on('error', reject)
-                    .on('close', resolve);
+                    .on('ytDlpEvent', (eventType, eventData) => {
+                        if (eventType === 'download') {
+                            try {
+                                videoInfo = JSON.parse(eventData.toString());
+                            } catch {}
+                        }
+                    })
+                    .on('close', () => {
+                        // Then download the actual video
+                        ytDlpWrap.exec([
+                            url,
+                            '--format', 'mp4',
+                            '--output', tempFile,
+                            '--no-check-certificates',
+                            '--no-warnings',
+                            '--prefer-free-formats'
+                        ])
+                        .on('error', reject)
+                        .on('close', resolve);
+                    });
                 });
 
                 const stats = fs.statSync(tempFile);
@@ -121,9 +195,18 @@ module.exports = {
                     }, { quoted: message });
                 }
 
+                const caption = videoInfo ?
+                `🎬 *${videoInfo.title}*\n` +
+                `👤 *Author:* ${videoInfo.uploader}\n` +
+                `⏱ *Duration:* ${formatDuration(videoInfo.duration)}\n` +
+                (videoInfo.upload_date ? `📅 *Uploaded:* ${videoInfo.upload_date.substring(0, 4)}\n` : '') +
+                (videoInfo.like_count ? `👍 *Likes:* ${videoInfo.like_count.toLocaleString()}\n` : '') +
+                (videoInfo.view_count ? `👀 *Views:* ${videoInfo.view_count.toLocaleString()}` : '')
+                : 'Downloaded Video';
+
                 await Bloom.sendMessage(message.key.remoteJid, {
                     video: { url: tempFile },
-                    caption: `Downloaded Video`,
+                    caption: caption,
                     fileName: `video.mp4`,
                     gifPlayback: false
                 }, { quoted: message });
