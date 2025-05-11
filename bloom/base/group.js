@@ -240,11 +240,30 @@ module.exports = {
                 try {
                     const code = await Bloom.groupRevokeInvite(message.key.remoteJid);
                     await Bloom.sendMessage(message.key.remoteJid, {
-                        text: `🔁 Group invite link has been revoked.\n\n🆕 New Link: https://chat.whatsapp.com/${code}`
+                        text: `🔁 Group invite link has been revoked.\ncheck new link or use *invite* to view`
                     });
                 } catch (err) {
                     await Bloom.sendMessage(message.key.remoteJid, { text: `❌ Failed to revoke link.` });
                     console.error('Revoke error:', err);
+                }
+            }
+        },
+        invite: {
+            type: 'group',
+            desc: 'Get group invite link',
+            run: async (Bloom, message) => {
+                if (!await isGroupAdminContext(Bloom, message)) return;
+
+                try {
+                    const code = await Bloom.groupInviteCode(message.key.remoteJid);
+                    await Bloom.sendMessage(message.key.remoteJid, {
+                        text: `🔗 Group invite link:\n\nhttps://chat.whatsapp.com/${code}`,
+                        detectLinks: true
+                    });
+                } catch (err) {
+                    await Bloom.sendMessage(message.key.remoteJid, {
+                        text: '❌ Failed to generate invite link. Bot needs admin privileges.'
+                    });
                 }
             }
         },
@@ -357,6 +376,21 @@ module.exports = {
                         console.error('❌ Purge error:', err);
                         await Bloom.sendMessage(jid, { text: `❌ Purge failed:\n\`\`\`\n${err.message}\n\`\`\`` }, { quoted: message });
                     }
+                }
+            },
+            leave: {
+                type: 'group',
+                desc: 'Make bot leave the group',
+                run: async (Bloom, message) => {
+                    const metadata = await Bloom.groupMetadata(message.key.remoteJid);
+                    const participant = metadata.participants.find(p => p.id === message.key.participant);
+
+                    if (!['admin', 'superadmin'].includes(participant?.admin)) {
+                        return await Bloom.sendMessage(message.key.remoteJid, { text: '❌ Only admins can use this command' });
+                    }
+
+                    await Bloom.sendMessage(message.key.remoteJid, { text: '👋 Leaving group... \nIt was nice serving you...\nHope we meet again..' });
+                    await Bloom.groupLeave(message.key.remoteJid);
                 }
             }
 };

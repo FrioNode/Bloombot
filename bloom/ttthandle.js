@@ -239,7 +239,7 @@ function initializeCleanup() {
         if (mongoose.connection.readyState === 1) {
             await cleanupStaleGames();
             cron.schedule('*/10 * * * *', cleanupStaleGames);
-            console.log('🔄 Cleanup active (every 10m)');
+            console.log('🔄 Cleanup for TicTacoe: (every 10m)');
         } else {
             setTimeout(checkDB, 5000); // Retry every 5s until DB ready
         }
