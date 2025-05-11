@@ -56,7 +56,7 @@ async function loadCommands() {
                                 }
                                 if (typeof data?.run === 'function') {
                                     commandRegistry[cmd] = data;
-                                    console.log(`📦 Loaded command: ${cmd} (type: ${data.type})`);
+                                 //   console.log(`📦 Loaded command: ${cmd} (type: ${data.type})`);
                                 } else {
                                     console.warn(`⚠️ Skipping invalid command format: ${cmd} in ${file}`);
                                 }

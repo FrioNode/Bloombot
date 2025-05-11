@@ -415,10 +415,10 @@ module.exports = {
                 run: async (Bloom, message, fulltext) =>
                 toggleSetting(Bloom, message, fulltext, 'noimage')
             },
-            game: {
+            games: {
                 type: 'group',
                 desc: 'Toggle game commands',
-                usage: 'game on/off',
+                usage: 'games on/off',
                 run: async (Bloom, message, fulltext) =>
                 toggleSetting(Bloom, message, fulltext, 'game')
             },

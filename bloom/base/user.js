@@ -1,6 +1,9 @@
+const os = require('os');
+const { exec } = require('child_process');
 const { Exp, User } = require('../../colors/schema');
-const { mongo } = require('../../colors/setup');
+const { mongo, botname, cpyear, mode } = require('../../colors/setup');
 const mongoose = require('mongoose');
+
 const LEVELS = [
     { name: '👶 Baby', min: 0 },
 { name: '🌱 Beginner', min: 10 },
@@ -13,7 +16,8 @@ const LEVELS = [
 { name: '🧠 Master', min: 1000 },
 { name: '🔥 Grandmaster', min: 1500 },
 { name: '🔮 Archmage', min: 2200 },
-{ name: '🧙 Wizard', min: 3000 } ];
+{ name: '🧙 Wizard', min: 3000 }
+];
 
 mongoose.connect(mongo, {
     useNewUrlParser: true,
@@ -21,298 +25,220 @@ mongoose.connect(mongo, {
     serverSelectionTimeoutMS: 5000
 }).catch(err => console.error('MongoDB connection error:', err));
 
-function getLevel(points) {
-    let current = LEVELS[0];
-    for (let i = 1; i < LEVELS.length; i++) {
-        if (points >= LEVELS[i].min) current = LEVELS[i];
-        else break;
-    }
-    return current.name;
-}
-function getLeve(points) {
+const getCurrentDate = () => new Date().toLocaleString();
+const runtime = ms => {
+    const sec = Math.floor(ms / 1000 % 60);
+    const min = Math.floor(ms / (1000 * 60) % 60);
+    const hrs = Math.floor(ms / (1000 * 60 * 60));
+    return `${hrs}h ${min}m ${sec}s`;
+};
+
+const getLevelData = (points) => {
     let current = LEVELS[0], next = null;
     for (let i = 1; i < LEVELS.length; i++) {
-        if (points >= LEVELS[i].min) {
-            current = LEVELS[i];
-        } else {
-            next = LEVELS[i];
-            break;
-        }
-    }
-    return { current, next };
-}
-
-function getLevelInfo(points) {
-    let current = LEVELS[0];
-    let next = null;
-    for (let i = 1; i < LEVELS.length; i++) {
-        if (points >= LEVELS[i].min) {
-            current = LEVELS[i];
-        } else {
-            next = LEVELS[i];
-            break;
-        }
+        if (points >= LEVELS[i].min) current = LEVELS[i];
+        else { next = LEVELS[i]; break; }
     }
     return {
-        current: current.name,
-        next: next ? next.name : 'MAX LEVEL',
+        current,
+        next,
+        name: current.name,
+        nextName: next?.name || 'MAX LEVEL',
         toNext: next ? next.min - points : 0
     };
-}
+};
 
-function msToTime(ms) {
-    const seconds = Math.floor((ms / 1000) % 60);
-    const minutes = Math.floor((ms / (1000 * 60)) % 60);
-    const hours = Math.floor((ms / (1000 * 60 * 60)) % 24);
-    return `${hours}h ${minutes}m ${seconds}s`;
-}
+const msToTime = ms => {
+    const sec = Math.floor((ms / 1000) % 60);
+    const min = Math.floor((ms / (1000 * 60)) % 60);
+    const hrs = Math.floor((ms / (1000 * 60 * 60)) % 24);
+    return `${hrs}h ${min}m ${sec}s`;
+};
+
+const createProgressBar = (percent) => {
+    const filled = '▓'.repeat(Math.floor(percent / 5));
+    const empty = '░'.repeat(20 - Math.floor(percent / 5));
+    return `[${filled}${empty}]`;
+};
 
 module.exports = {
+    status: {
+        type: 'user',
+        desc: 'Show system status',
+        run: async (Bloom, message, fulltext, commands) => {
+            const uptime = process.uptime() * 1000;
+            const mem = process.memoryUsage();
+            const disk = await new Promise(res => exec('df -h', (_,stdout) => {
+                const line = stdout.split('\n').find(l => l.includes('/'));
+                res(line.split(/\s+/).slice(1,4));
+            }));
 
-        exp: {
-            type: 'user',
-            desc: 'Check your EXP and get daily bonus',
-            run: async (Bloom, message) => {
-                try {
-                    // Check MongoDB connection
-                    if (mongoose.connection.readyState !== 1) {
-                        throw new Error('Database not connected');
-                    }
+            const statusMessage = `----🌼 ${botname} 🌼---
+╭──────────────────── 🧠
+│  \`\`\`${getCurrentDate()}
+│ Uptime: ${runtime(uptime)}
+│ Commands: ${Object.keys(commands).length}
+│ Platform: ${os.platform()}
+│ Server: ${os.hostname()}
+│ Memory: ${(os.totalmem()/1e9-os.freemem()/1e9).toFixed(2)} GB / ${(os.totalmem()/1e9).toFixed(2)} GB
+│ Heap Mem: ${(mem.heapUsed/1e6).toFixed(2)} MB / ${(mem.heapTotal/1e6).toFixed(2)} MB
+│ External Mem: ${(mem.external/1e6).toFixed(2)} MB
+│ Disk: ${disk[1]} / ${disk[0]} (Free: ${disk[2]})
+│ Mode: ${process.env.NODE_ENV||'development'} | ${mode}\`\`\`
+╰─────────────────────── 🚀
+> (c) ${cpyear} FioNode - 🦑 •|•`;
 
-                    const jid = message.key?.participant || message.key?.remoteJid;
-                    const now = new Date();
+            await Bloom.sendMessage(message.key.remoteJid, {text: statusMessage}, {quoted: message});
+        }
+    },
+    exp: {
+        type: 'user',
+        desc: 'Check your EXP and get daily bonus',
+        run: async (Bloom, message) => {
+            try {
+                if (mongoose.connection.readyState !== 1) throw new Error('Database not connected');
+                const jid = message.key?.participant || message.key?.remoteJid;
+                const now = new Date();
+                let expData = await Exp.findOne({ jid }) || new Exp({ jid, points: 0, streak: 0 });
 
-                    let expData = await Exp.findOne({ jid });
-
-                    if (!expData) {
-                        expData = new Exp({ jid, points: 0, streak: 0 });
-                    }
-
-                    let bonusGiven = false;
-                    if (!expData.lastDaily || now - new Date(expData.lastDaily) > 86400000) {
-                        expData.points += 5; // daily bonus
-                        expData.lastDaily = now;
-                        expData.streak = (expData.streak || 0) + 1;
-                        bonusGiven = true;
-                    }
-
-                    await expData.save();
-
-                    const { current, next } = getLeve(expData.points);
-
-                    let response = `╭───────📊 EXP REPORT───────\n` +
-                    `│ 🔢 *${expData.points}* points\n` +
-                    `│ 🎖️ Level: *${current.name}*\n`;
-
-                    if (next) {
-                        const needed = next.min - expData.points;
-                        response += `│ ⬆️ *${needed}* more to *${next.name}*\n`;
-                    } else {
-                        response += `│ 🏆 *MAX LEVEL*: ${current.name}\n`;
-                    }
-
-                    if (bonusGiven) {
-                        response += `│ 🎁 Daily bonus claimed! (+5 EXP)\n` +
-                        `│ 🔥 Streak: *${expData.streak} days*\n`;
-                    } else {
-                        const waitTime = 86400000 - (now - new Date(expData.lastDaily));
-                        response += `│ 🕒 Daily bonus in: ${msToTime(waitTime)}\n`;
-                    }
-
-                    response += `╰─────────────────────────`;
-
-                    await Bloom.sendMessage(message.key.remoteJid, { text: response });
-                } catch (err) {
-                    console.error('EXP Command Error:', err);
-                    await Bloom.sendMessage(message.key.remoteJid, {
-                        text: '❌ Error checking EXP. Please try again later.'
-                    });
+                let bonusGiven = false;
+                if (!expData.lastDaily || now - new Date(expData.lastDaily) > 86400000) {
+                    expData.points += 5;
+                    expData.lastDaily = now;
+                    expData.streak = (expData.streak || 0) + 1;
+                    bonusGiven = true;
                 }
+
+                await expData.save();
+                const { current, next, toNext } = getLevelData(expData.points);
+
+                const response = `╭───────📊 EXP REPORT───────
+                │ 🔢 *${expData.points}* points
+                │ 🎖️ Level: *${current.name}*
+                ${next ? `│ ⬆️ *${toNext}* more to *${next.name}*` : `│ 🏆 *MAX LEVEL*: ${current.name}`}
+                ${bonusGiven ? `│ 🎁 Daily bonus claimed! (+5 EXP)\n│ 🔥 Streak: *${expData.streak} days*` : `│ 🕒 Daily bonus in: ${msToTime(86400000 - (now - new Date(expData.lastDaily)))}`}
+                ╰─────────────────────────`;
+
+                await Bloom.sendMessage(message.key.remoteJid, { text: response });
+            } catch (err) {
+                console.error('EXP Command Error:', err);
+                await Bloom.sendMessage(message.key.remoteJid, { text: '❌ Error checking EXP' });
             }
-        },
+        }
+    },
     leader: {
+        type: 'user',
+        desc: 'See leaderboard for top 10 users',
         run: async (Bloom, message) => {
             const topUsers = await Exp.find().sort({ points: -1 }).limit(10);
-
-            if (!topUsers.length) {
-                return await Bloom.sendMessage(message.key.remoteJid, { text: "No users found in the leaderboard yet." });
-            }
+            if (!topUsers.length) return await Bloom.sendMessage(message.key.remoteJid, { text: "No users found in the leaderboard yet." });
 
             const leaderboardText = topUsers.map((user, index) => {
-                const tag = user.jid.split('@')[0];
-                const level = getLevel(user.points);
-                return `${index + 1}. @${tag} — *${user.points} pts* (${level})`;
+                const { name } = getLevelData(user.points);
+                return `${index + 1}. @${user.jid.split('@')[0]} — *${user.points} pts* (${name})`;
             }).join('\n');
 
             await Bloom.sendMessage(message.key.remoteJid, {
                 text: `🏆 *Leaderboard: Top 10*\n\n${leaderboardText}`,
                 mentions: topUsers.map(u => u.jid)
             });
-        },
-        type: 'user',
-        desc: 'See leaderboard for top 10 user'
+        }
     },
-        jid: {
-            type: 'user',
-            desc: 'Returns the group or user JID of the chat',
-            run: async (Bloom, message) => {
-                const jid = message.key.remoteJid;
-                await Bloom.sendMessage(jid, { text: `🆔 Chat JID:\n\n${jid}` });
-            }
-        },
-  level: {
-                run: async (Bloom, message, fulltext) => {
-                    const text = fulltext.trim().split(' ').slice(1).join(' ').trim();
+    jid: {
+        type: 'user',
+        desc: 'Returns the group or user JID of the chat',
+        run: async (Bloom, message) => {
+            await Bloom.sendMessage(message.key.remoteJid, { text: `🆔 Chat JID:\n\n${message.key.remoteJid}` });
+        }
+    },
+    level: {
+        type: 'user',
+        desc: 'See rank/level of another user',
+        run: async (Bloom, message, fulltext) => {
+            const text = fulltext.trim().split(' ').slice(1).join(' ').trim();
+            let targetJid = message.message?.extendedTextMessage?.contextInfo?.participant;
 
-                    let targetJid;
+            if (!targetJid && /^\d{8,15}$/.test(text)) targetJid = `${text}@s.whatsapp.net`;
+            if (!targetJid) return await Bloom.sendMessage(message.key.remoteJid, { text: "❗ Please tag a user or provide a valid number." });
 
-                    if (message.message?.extendedTextMessage?.contextInfo?.participant) {
-                        targetJid = message.message.extendedTextMessage.contextInfo.participant;
-                    } else if (/^\d{8,15}$/.test(text)) {
-                        targetJid = `${text}@s.whatsapp.net`;
-                    } else {
-                        return await Bloom.sendMessage(message.key.remoteJid, {
-                            text: "❗ Please tag a user or provide a valid number."
-                        });
-                    }
+            const exp = await Exp.findOne({ jid: targetJid });
+            if (!exp) return await Bloom.sendMessage(message.key.remoteJid, { text: `🙁 That user has no EXP yet.` });
 
-                    const exp = await Exp.findOne({ jid: targetJid });
+            const { name, nextName, toNext } = getLevelData(exp.points);
+            await Bloom.sendMessage(message.key.remoteJid, {
+                text: `📊 *User:* @${targetJid.split('@')[0]}\n🏅 *Level:* ${name}\n💠 *Points:* ${exp.points} pts\n📈 *To next level:* ${toNext} pts → ${nextName}`,
+                                    mentions: [targetJid]
+            });
+        }
+    },
+    rank: {
+        run: async (...args) => module.exports.level.run(...args),
+        type: 'user',
+        desc: 'See rank/level of another user'
+    },
+    profile: {
+        type: 'user',
+        desc: 'View your full profile statistics',
+        run: async (Bloom, message) => {
+            const jid = message.key?.participant || message.key?.remoteJid;
+            const [expData, userData] = await Promise.all([
+                Exp.findOne({ jid }),
+                                                          User.findOne({ _id: jid })
+            ]);
 
-                    if (!exp) {
-                        return await Bloom.sendMessage(message.key.remoteJid, {
-                            text: `🙁 That user has no EXP yet.`
-                        });
-                    }
+            if (!expData) return await Bloom.sendMessage(message.key.remoteJid, { text: "❗ No profile found." });
 
-                    const levelInfo = getLevelInfo(exp.points);
+            const { current, next, toNext } = getLevelData(expData.points);
+            const inventory = userData?.inventory || {};
+            const counts = Object.entries(inventory).map(([k,v]) => `│ ${getIcon(k)} *${k.charAt(0).toUpperCase()+k.slice(1)} Items:* ${v.length}`).join('\n');
 
-                    const reply = `📊 *User:* @${targetJid.split('@')[0]}\n` +
-                    `🏅 *Level:* ${levelInfo.current}\n` +
-                    `💠 *Points:* ${exp.points} pts\n` +
-                    `📈 *To next level:* ${levelInfo.toNext} pts → ${levelInfo.next}`;
+            const profile = `╭─────── User Profile ───────
+            │ 🧑‍💻 *Username:* @${jid.split('@')[0]}
+            │ 🔢 *Points:* ${expData.points}
+            │ 🎖️ *Level:* ${current.name}
+            ${next ? `│ ⬆️ *${toNext}* to reach *${next.name}*` : `│ 🏆 *MAX LEVEL*: ${current.name}`}
+            │ 🗓️ *Join Date:* ${expData.createdAt?.toLocaleDateString() || 'N/A'}
+            │ 💰 *Wallet:* ${userData?.walletBalance || 0} 🪙
+            │ 🏦 *Bank:* ${userData?.bankBalance || 0} 🏦
+            │ 📊 *Messages:* ${expData.messageCount || 0}
+            │ 🔥 *Streak:* ${expData.streak || 0} day(s)
+            ${counts}
+            ╰────────────────────────`;
 
-                    await Bloom.sendMessage(message.key.remoteJid, {
-                        text: reply,
-                        mentions: [targetJid]
-                    });
-                },
-                type: 'user',
-                desc: 'See rank / level of another user',
-            },
-            rank: {
-                run: async (...args) => module.exports.level.run(...args),
-                type: 'user',
-                desc: 'See rank / level of another user'
-            },
-            profile: {
-                run: async (Bloom, message) => {
-                    const jid = message.key?.participant || message.key?.remoteJid;
-                    const expData = await Exp.findOne({ jid });
+            await Bloom.sendMessage(message.key.remoteJid, { text: profile, mentions: [jid] });
+        }
+    },
+    progress: {
+        type: 'user',
+        desc: 'Shows your EXP progress bar',
+        run: async (Bloom, message) => {
+            const jid = message.key?.participant || message.key?.remoteJid;
+            const expData = await Exp.findOne({ jid });
+            if (!expData) return await Bloom.sendMessage(message.key.remoteJid, { text: "Start using commands to earn EXP!" });
 
-                    if (!expData) {
-                        return await Bloom.sendMessage(message.key.remoteJid, {
-                            text: "❗ No profile found. You haven't started using the system yet."
-                        });
-                    }
+            const { current, next } = getLevelData(expData.points);
+            if (!next) return await Bloom.sendMessage(message.key.remoteJid, { text: `╭───────────────\n│ 🏆 Max Level: *${current.name}*\n╰───────────────` });
 
-                    // Get user's experience level
-                    const { points } = expData;
-                    const { current, next } = getLeve(points);
-
-                    // Fetch additional data from the User schema
-                    const userData = await User.findOne({ _id: jid });
-
-                    if (!userData) {
-                        return await Bloom.sendMessage(message.key.remoteJid, {
-                            text: "❗ No user data found."
-                        });
-                    }
-
-                    // Extract counts for various items
-                    const miningCount = userData.inventory.mining.length;
-                    const healingCount = userData.inventory.healing.length;
-                    const fishingCount = userData.inventory.fishing.length;
-                    const animalsCount = userData.inventory.animals.length;
-                    const stonesCount = userData.inventory.stones.length;
-                    const pokemonsCount = userData.inventory.pokemons.length;
-                    const walletBalance = userData.walletBalance || 0;
-                    const bankBalance = userData.bankBalance || 0;
-                    const messageCount = expData.messageCount || 0;
-                    const streak = expData.streak || 0;
-
-                    const joinDate = expData.createdAt ? new Date(expData.createdAt).toLocaleDateString() : 'N/A';
-
-                    let profile = `╭─────── User Profile ───────\n`;
-                    profile += `│ 🧑‍💻 *Username:* @${jid.split('@')[0]}\n`;
-                    profile += `│ 🔢 *Points:* ${expData.points}\n`;
-                    profile += `│ 🎖️ *Level:* ${current.name}\n`;
-                    profile += `│ ⬆️ *Next Level:* ${next ? next.name : 'MAX LEVEL'}\n`;
-
-                    if (next) {
-                        const needed = next.min - expData.points;
-                        profile += `│ ⬆️ *${needed}* to reach *${next.name}*.\n`;
-                    } else {
-                        profile += `│ 🏆 *MAX LEVEL*: ${current.name}\n`;
-                    }
-
-                    profile += `│ 🗓️ *Join Date:* ${joinDate}\n`;
-                    profile += `│ 💰 *Wallet Balance:* ${walletBalance} 🪙\n`;
-                    profile += `│ 🏦 *Bank Balance:* ${bankBalance} 🏦\n`;
-                    profile += `│ 📊 *Message Count:* ${messageCount}\n`;
-                    profile += `│ 🔥 *Daily Streak:* ${streak > 0 ? streak : 'N/A'} day(s)\n`;
-
-                    // Adding inventory counts
-                    profile += `│ 🛠️ *Mining Items:* ${miningCount}\n`;
-                    profile += `│ 💉 *Healing Items:* ${healingCount}\n`;
-                    profile += `│ 🎣 *Fishing Items:* ${fishingCount}\n`;
-                    profile += `│ 🐶 *Animals:* ${animalsCount}\n`;
-                    profile += `│ 💎 *Stones:* ${stonesCount}\n`;
-                    profile += `│ 🐾 *Pokemons:* ${pokemonsCount}\n`;
-
-                    profile += `╰────────────────────────`;
-
-                    await Bloom.sendMessage(message.key.remoteJid, {
-                        text: profile,
-                        mentions: [jid]
-                    });
-                },
-                type: 'user',
-                desc: 'View your full profile statistics based on usage'
-            },
-            progress: {
-                run: async (Bloom, message) => {
-                    const jid = message.key?.participant || message.key?.remoteJid;
-                    const expData = await Exp.findOne({ jid });
-                    if (!expData) {
-                        return await Bloom.sendMessage(message.key.remoteJid, {
-                            text: "You don't have any EXP yet. Start using commands to earn some!"
-                        });
-                    }
-
-                    const { points } = expData;
-                    const { current, next } = getLeve(points);
-
-                    if (!next) {
-                        return await Bloom.sendMessage(message.key.remoteJid, {
-                            text: `╭───────────────\n│ 🏆 You are at the highest level: *${current.name}*\n╰───────────────`
-                        });
-                    }
-
-                    const range = next.min - current.min;
-                    const gained = points - current.min;
-                    const percentage = Math.floor((gained / range) * 100);
-                    const bar = createProgressBar(percentage);
-
-                    const msg =
-                    `╭───────────────
-                    │ 🎖️ Level: *${current.name}*
-                    │ 🔋 Progress: ${bar} ${percentage}%
-                    │ ⬆️ *${next.name}* unlocks at *${next.min}* points
-                    ╰───────────────`;
-
-                    await Bloom.sendMessage(message.key.remoteJid, { text: msg });
-                },
-                type: 'user',
-                desc: 'Shows your EXP progress bar'
-            }
+            const percent = Math.floor(((expData.points - current.min) / (next.min - current.min)) * 100);
+            await Bloom.sendMessage(message.key.remoteJid, {
+                text: `╭───────────────
+                │ 🎖️ Level: *${current.name}*
+                │ 🔋 Progress: [${'▓'.repeat(percent/5)}${'░'.repeat(20-percent/5)}] ${percent}%
+                │ ⬆️ *${next.name}* at *${next.min}* points
+                ╰───────────────`
+            });
+        }
+    }
 };
+
+function getIcon(type) {
+    const icons = {
+        mining: '🛠️',
+        healing: '💉',
+        fishing: '🎣',
+        animals: '🐶',
+        stones: '💎',
+        pokemons: '🐾'
+    };
+    return icons[type] || '▪️';
+}
