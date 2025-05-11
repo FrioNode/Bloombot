@@ -2,6 +2,7 @@ const os = require('os');
 const { exec } = require('child_process');
 const { Exp, User } = require('../../colors/schema');
 const { mongo, botname, cpyear, mode } = require('../../colors/setup');
+const mess = require('../../colors/mess');
 const mongoose = require('mongoose');
 
 const LEVELS = [
@@ -62,6 +63,23 @@ const createProgressBar = (percent) => {
 };
 
 module.exports = {
+    test: {
+        type: 'user',
+        desc: 'A user testing command',
+        usage: 'test',
+        run: async (Bloom, message, fulltext) => {
+            console.log("📨 Executing testf...");
+            await Bloom.sendMessage(message.key.remoteJid, { text: "Test passed!" });
+        }
+    },
+    about: {
+        type: 'user',
+        desc: 'About this bot',
+        run:    async (Bloom, message) => {
+            let april = message.key.remoteJid;
+            await Bloom.sendMessage(april, { text: mess.about });
+        }
+    },
     status: {
         type: 'user',
         desc: 'Show system status',
