@@ -192,18 +192,18 @@ ${bonusGiven ? `│ 🎁 Daily bonus claimed! (+5 EXP)\n│ 🔥 Streak: *${expD
             const inventory = userData?.inventory || {};
             const counts = Object.entries(inventory).map(([k,v]) => `│ ${getIcon(k)} *${k.charAt(0).toUpperCase()+k.slice(1)} Items:* ${v.length}`).join('\n');
 
-            const profile = `╭─────── User Profile ───────
-            │ 🧑‍💻 *Username:* @${jid.split('@')[0]}
-            │ 🔢 *Points:* ${expData.points}
-            │ 🎖️ *Level:* ${current.name}
-            ${next ? `│ ⬆️ *${toNext}* to reach *${next.name}*` : `│ 🏆 *MAX LEVEL*: ${current.name}`}
-            │ 🗓️ *Join Date:* ${expData.createdAt?.toLocaleDateString() || 'N/A'}
-            │ 💰 *Wallet:* ${userData?.walletBalance || 0} 🪙
-            │ 🏦 *Bank:* ${userData?.bankBalance || 0} 🏦
-            │ 📊 *Messages:* ${expData.messageCount || 0}
-            │ 🔥 *Streak:* ${expData.streak || 0} day(s)
-            ${counts}
-            ╰────────────────────────`;
+            const profile = `╭──── User Profile ─────
+│ 🧑‍💻 *Username:* @${jid.split('@')[0]}
+│ 🔢 *Points:* ${expData.points}
+│ 🎖️ *Level:* ${current.name}
+${next ? `│ ⬆️ *${toNext}* to reach *${next.name}*` : `│ 🏆 *MAX LEVEL*: ${current.name}`}
+│ 🗓️ *Join Date:* ${expData.createdAt?.toLocaleDateString() || 'N/A'}
+│ 💰 *Wallet:* ${userData?.walletBalance || 0} 🪙
+│ 🏦 *Bank:* ${userData?.bankBalance || 0} 🏦
+│ 📊 *Messages:* ${expData.messageCount || 0}
+│ 🔥 *Streak:* ${expData.streak || 0} day(s)
+${counts}
+╰───────────────────`;
 
             await Bloom.sendMessage(message.key.remoteJid, { text: profile, mentions: [jid] });
         }
@@ -222,10 +222,10 @@ ${bonusGiven ? `│ 🎁 Daily bonus claimed! (+5 EXP)\n│ 🔥 Streak: *${expD
             const percent = Math.floor(((expData.points - current.min) / (next.min - current.min)) * 100);
             await Bloom.sendMessage(message.key.remoteJid, {
                 text: `╭───────────────
-                │ 🎖️ Level: *${current.name}*
-                │ 🔋 Progress: [${'▓'.repeat(percent/5)}${'░'.repeat(20-percent/5)}] ${percent}%
-                │ ⬆️ *${next.name}* at *${next.min}* points
-                ╰───────────────`
+│ 🎖️ Level: *${current.name}*
+│ 🔋 Progress: [${'▓'.repeat(percent/5)}${'░'.repeat(20-percent/5)}] ${percent}%
+│ ⬆️ *${next.name}* at *${next.min}* points
+╰───────────────`
             });
         }
     }
