@@ -2,7 +2,7 @@ const yts = require("yt-search");
 const ytdl = require("ytdl-core");
 const fs = require('fs');
 const path = require('path');
-const { proto } = require('@whiskeysockets/baileys');
+const { proto } = require('baileys');
 
 module.exports = {
     ytsearch: {
