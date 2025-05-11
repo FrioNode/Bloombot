@@ -126,7 +126,6 @@ module.exports = {
                     expData.streak = (expData.streak || 0) + 1;
                     bonusGiven = true;
                 }
-
                 await expData.save();
                 const { current, next, toNext } = getLevelData(expData.points);
 
