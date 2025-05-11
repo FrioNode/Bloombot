@@ -4,6 +4,9 @@ const { Exp } = require('../../colors/schema');
 const { exec } = require('child_process');
 const { promisify } = require('util');
 const execPromise = promisify(exec);
+const fs = require('fs');
+const path = require('path');
+const configPath = path.join(__dirname, '../../colors/config.json');
 
 const isOwner = (sender, message) => {
     if (sender.endsWith('@g.us')) {
@@ -134,6 +137,94 @@ module.exports = {
             desc: 'Set EXP for a user manually',
             usage: '*setxp (quote user) 1234*\nor\n*setxp 254700000000 1234*'
         },
+        xpreset: {
+            run: async (Bloom, message, fulltext) => {
+                const sender = message.key.participant || message.key.remoteJid;
+                if (sender !== sudochat) {
+                    return await Bloom.sendMessage(message.key.remoteJid, {
+                        text: "🚫 Only the bot owner can reset EXP."
+                    });
+                }
+                const mentionedJid = message.message?.extendedTextMessage?.contextInfo?.participant;
+                if (!mentionedJid) {
+                    return await Bloom.sendMessage(message.key.remoteJid, {
+                        text: "❓ Please mention the user whose EXP you want to reset."
+                    });
+                }
 
+                const result = await Exp.findOneAndUpdate(
+                    { jid: mentionedJid },
+                    {
+                        $set: {
+                            points: 0,
+                            messageCount: 0,
+                            streak: 0,
+                            lastDaily: null
+                        }
+                    },
+                    { new: true }
+                );
 
+                if (!result) {
+                    return await Bloom.sendMessage(message.key.remoteJid, {
+                        text: "⚠️ No EXP data found for that user."
+                    });
+                }
+
+                await Bloom.sendMessage(message.key.remoteJid, {
+                    text: `🔄 EXP for @${mentionedJid.split('@')[0]} has been reset.`,
+                                        mentions: [mentionedJid]
+                });
+            },
+            type: 'owner',
+            desc: 'Reset a user’s EXP (admin only)'
+        },
+        set: {
+            type: 'owner',
+            desc: 'Set config variables in config.json (Owner only)',
+            usage: 'set <key> <value>',
+            async run(Bloom, message, fulltext) {
+                const sender = message.key.participant || message.key.remoteJid;
+                const [arg, ...rest] = fulltext.split(' ').slice(1);
+                const value = rest.join(' ');
+
+                if (sender !== sudochat) {
+                    return await Bloom.sendMessage(message.key.remoteJid, {
+                        text: mess.owner
+                    }, { quoted: message });
+                }
+
+                if (!arg || !value) {
+                    return await Bloom.sendMessage(message.key.remoteJid, {
+                        text: 'Usage: set <key> <value>'
+                    }, { quoted: message });
+                }
+
+                try {
+                    const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+
+                    if (!(arg in configData)) {
+                        return await Bloom.sendMessage(message.key.remoteJid, {
+                            text: `❌ Key "${arg}" does not exist in config.json.`
+                        }, { quoted: message });
+                    }
+
+                    configData[arg] = isNaN(value)
+                    ? (value === 'true' ? true : value === 'false' ? false : value)
+                    : Number(value);
+
+                    fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
+
+                    await Bloom.sendMessage(sender, {
+                        text: `✅ Config updated!\n"${arg}" = ${value}`
+                    }, { quoted: message });
+
+                } catch (error) {
+                    console.error('Config update failed:', error);
+                    await Bloom.sendMessage(message.key.remoteJid, {
+                        text: `❌ Failed to update config: ${error.message}`
+                    }, { quoted: message });
+                }
+            }
+        }
 };
