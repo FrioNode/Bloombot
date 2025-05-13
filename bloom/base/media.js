@@ -1,4 +1,4 @@
-/*const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 const yts = require('yt-search');
 const YtDlpWrap = require('yt-dlp-wrap').default;
@@ -221,9 +221,9 @@ module.exports = {
         }
     }
 };
-*/
 
 
+/*
 
 const play = require('play-dl');
 const fs = require('fs');
@@ -408,4 +408,4 @@ module.exports = {
             }
         }
     }
-};
+}; */
