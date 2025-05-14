@@ -25,8 +25,10 @@ mongoose.connect(mongo, {
     useUnifiedTopology: true,
     serverSelectionTimeoutMS: 5000
 }).catch(err => console.error('MongoDB connection error:', err));
-
-const getCurrentDate = () => new Date().toLocaleString();
+const locale = process.env.TZ || 'Africa/Nairobi';
+const getCurrentDate = () => {
+    return new Date().toLocaleString('en-US', { timeZone: locale });
+};
 const runtime = ms => {
     const sec = Math.floor(ms / 1000 % 60);
     const min = Math.floor(ms / (1000 * 60) % 60);
