@@ -1,5 +1,5 @@
 const { makeWASocket, Browsers, fetchLatestBaileysVersion, DisconnectReason, useMultiFileAuthState } = require('baileys');
-const {session,botname,mode,react,emoji,image,errorchat,channel,channelid} = require('./colors/setup');
+const {botname,mode,react,emoji,image,errorchat,channel,channelid} = require('./colors/setup');
 const { bloomCmd, initCommandHandler } = require('./bloom/brain'); // 🔥 Updated import
 const pino = require('pino');
 const fs = require('fs');
@@ -19,6 +19,7 @@ const serverStartTime = Date.now();
 let useQR = false;
 let initialConnection = true;
 const PORT = process.env.PORT || 3000;
+const session = process.env.SESSION;
 
 const sessionDir = path.join(__dirname, 'heart');
 const credsPath = path.join(sessionDir, 'creds.json');
@@ -52,7 +53,7 @@ function setupConfigWatcher(Bloom) {
 
 async function downloadSessionData() {
     if (!session) {
-        console.error('Please add your session to SESSION_ID env !!');
+        console.error('Please add your session to SESSION env !!');
         return false;
     }
     const sessdata = session.split("BLOOM~")[1];

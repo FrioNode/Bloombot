@@ -1,6 +1,17 @@
 const fs = require('fs');
 const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+const dotenv = require('dotenv');
+
+// Load .env only in local/dev environments
+if (process.env.NODE_ENV !== 'production') {
+    const envPath = path.resolve(process.cwd(), '.env');
+    if (fs.existsSync(envPath)) {
+        dotenv.config({ path: envPath });
+        console.log('[ENV] Loaded .env from', envPath);
+    } else {
+        console.warn('[ENV] .env not found at', envPath);
+    }
+}
 
 const Bot = require('../package.json');
 const configPath = path.join(__dirname, 'config.json');
@@ -34,6 +45,7 @@ function getAll() {
         cpyear: new Date().getFullYear()
     };
 }
+
 // Get the initial config
 const config = getAll();
 
