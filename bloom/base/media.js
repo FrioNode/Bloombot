@@ -2,16 +2,16 @@ const fs = require('fs');
 const path = require('path');
 const ytdl = require('@distube/ytdl-core');
 const yts = require('yt-search');
-
+const { PassThrough } = require('stream');
 // Helper function to format duration
+
 function formatDuration(seconds) {
     const h = Math.floor(seconds / 3600);
-    const m = Math.floor(seconds % 3600 / 60);
-    const s = Math.floor(seconds % 3600 % 60);
-    return [h, m > 9 ? m : h ? '0' + m : m || '0', s > 9 ? s : '0' + s]
-    .filter(Boolean)
-    .join(':');
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return [h, h ? String(m).padStart(2, '0') : m, String(s).padStart(2, '0')].filter(Boolean).join(':');
 }
+
 
 module.exports = {
     ytsearch: {
@@ -107,65 +107,68 @@ module.exports = {
         }
     },
 
-    ytmp4: {
-        type: 'user',
-        desc: 'Download YouTube video',
-        usage: 'ytmp4 <url>',
-        run: async (Bloom, message, fulltext) => {
-            const url = fulltext.split(' ')[1]?.trim();
-            if (!url || !ytdl.validateURL(url)) {
-                return await Bloom.sendMessage(message.key.remoteJid, {
-                    text: '❌ Invalid YouTube URL\n\nExample: !ytmp4 https://youtu.be/dQw4w9WgXcQ'
-                }, { quoted: message });
-            }
 
-            const tempFile = path.join(__dirname, `../../temp/${Date.now()}.mp4`);
-            fs.mkdirSync(path.dirname(tempFile), { recursive: true });
 
-            try {
-                await Bloom.sendMessage(message.key.remoteJid, {
-                    text: '⏳ Downloading video... This may take a moment.'
-                }, { quoted: message });
+        ytmp4: {
+            type: 'user',
+            desc: 'Stream YouTube video (max 10 min, 50MB)',
+            usage: 'ytmp4 <url>',
+            run: async (Bloom, message, fulltext) => {
+                const url = fulltext.split(' ')[1]?.trim();
+                const jid = message.key.remoteJid;
 
-                const info = await ytdl.getInfo(url);
-                const videoStream = ytdl(url, { quality: '18' }); // 360p mp4 is usually format 18
-
-                await new Promise((resolve, reject) => {
-                    const file = fs.createWriteStream(tempFile);
-                    videoStream.pipe(file);
-                    videoStream.on('error', reject);
-                    file.on('finish', resolve);
-                    file.on('error', reject);
-                });
-
-                const stats = fs.statSync(tempFile);
-                if (stats.size > 50 * 1024 * 1024) {
-                    fs.unlinkSync(tempFile);
-                    return await Bloom.sendMessage(message.key.remoteJid, {
-                        text: '❌ File too large to send (limit is 50MB).'
-                    }, { quoted: message });
+                if (!url || !ytdl.validateURL(url)) {
+                    return await Bloom.sendMessage(jid, { text: '❌ Invalid YouTube URL' }, { quoted: message });
                 }
 
-                const caption =
-                `🎬 *${info.videoDetails.title}*\n` +
-                `👤 *Author:* ${info.videoDetails.author.name}\n` +
-                `⏱ *Duration:* ${formatDuration(parseInt(info.videoDetails.lengthSeconds))}\n` +
-                `👀 *Views:* ${Number(info.videoDetails.viewCount).toLocaleString()}`;
+                try {
+                    const info = await ytdl.getInfo(url);
+                    const duration = parseInt(info.videoDetails.lengthSeconds);
 
-                await Bloom.sendMessage(message.key.remoteJid, {
-                    video: { url: tempFile },
-                    caption: caption,
-                    fileName: `video.mp4`,
-                    gifPlayback: false
-                }, { quoted: message });
+                    if (duration > 600) {
+                        return await Bloom.sendMessage(jid, { text: '❌ Video too long. Max 10 minutes allowed.' }, { quoted: message });
+                    }
 
-                fs.unlink(tempFile, () => {});
-            } catch (err) {
-                console.error('YTMP4 Error:', err);
-                await Bloom.sendMessage(message.key.remoteJid, {
-                    text: `❌ Failed to download video:\n${err.message}`
-                }, { quoted: message });
+                    await Bloom.sendMessage(jid, { text: '⏳ Fetching and streaming video (max 50MB)...' }, { quoted: message });
+
+                    let downloaded = 0;
+                    const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+                    const stream = new PassThrough();
+
+                    const video = ytdl(url, { quality: '18' });
+                    video.on('data', chunk => {
+                        downloaded += chunk.length;
+                        if (downloaded > MAX_SIZE) {
+                            video.destroy();
+                            stream.end();
+                        } else {
+                            stream.write(chunk);
+                        }
+                    });
+
+                    video.on('end', () => stream.end());
+                    video.on('error', err => {
+                        console.error('Stream error:', err);
+                        Bloom.sendMessage(jid, { text: '❌ Error while streaming video.' }, { quoted: message });
+                    });
+
+                    const caption =
+                    `🎬 *${info.videoDetails.title}*\n` +
+                    `👤 *Author:* ${info.videoDetails.author.name}\n` +
+                    `⏱ *Duration:* ${formatDuration(duration)}\n` +
+                    `👀 *Views:* ${Number(info.videoDetails.viewCount).toLocaleString()}`;
+
+                    await Bloom.sendMessage(jid, {
+                        video: stream,
+                        mimetype: 'video/mp4',
+                        fileName: 'video.mp4',
+                        caption: caption
+                    }, { quoted: message });
+
+                } catch (err) {
+                    console.error('ytmp4 error:', err);
+                    await Bloom.sendMessage(jid, { text: `❌ Failed to process video: ${err.message}` }, { quoted: message });
+                }
             }
         }
-    }
 };
