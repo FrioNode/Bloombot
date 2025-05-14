@@ -107,67 +107,84 @@ module.exports = {
         }
     },
 
-
-
         ytmp4: {
             type: 'user',
-            desc: 'Stream YouTube video (max 10 min, 50MB)',
+            desc: 'Download YouTube video',
             usage: 'ytmp4 <url>',
             run: async (Bloom, message, fulltext) => {
                 const url = fulltext.split(' ')[1]?.trim();
-                const jid = message.key.remoteJid;
-
                 if (!url || !ytdl.validateURL(url)) {
-                    return await Bloom.sendMessage(jid, { text: '❌ Invalid YouTube URL' }, { quoted: message });
+                    return await Bloom.sendMessage(message.key.remoteJid, {
+                        text: '❌ Invalid YouTube URL\n\nExample: !ytmp4 https://youtu.be/dQw4w9WgXcQ'
+                    }, { quoted: message });
                 }
+
+                const tempFile = path.join(__dirname, `../../temp/${Date.now()}.mp4`);
+                fs.mkdirSync(path.dirname(tempFile), { recursive: true });
 
                 try {
                     const info = await ytdl.getInfo(url);
-                    const duration = parseInt(info.videoDetails.lengthSeconds);
+                    const durationSeconds = parseInt(info.videoDetails.lengthSeconds || 0);
 
-                    if (duration > 600) {
-                        return await Bloom.sendMessage(jid, { text: '❌ Video too long. Max 10 minutes allowed.' }, { quoted: message });
+                    if (durationSeconds > 600) {
+                        return await Bloom.sendMessage(message.key.remoteJid, {
+                            text: '❌ Video is longer than 10 minutes. Cannot process.'
+                        }, { quoted: message });
                     }
 
-                    await Bloom.sendMessage(jid, { text: '⏳ Fetching and streaming video (max 50MB)...' }, { quoted: message });
+                    await Bloom.sendMessage(message.key.remoteJid, {
+                        text: '⏳ Downloading video... This may take a moment.'
+                    }, { quoted: message });
 
-                    let downloaded = 0;
-                    const MAX_SIZE = 50 * 1024 * 1024; // 50MB
-                    const stream = new PassThrough();
+                    const videoStream = ytdl(url, { quality: '18' }); // mp4 360p
 
-                    const video = ytdl(url, { quality: '18' });
-                    video.on('data', chunk => {
-                        downloaded += chunk.length;
-                        if (downloaded > MAX_SIZE) {
-                            video.destroy();
-                            stream.end();
-                        } else {
-                            stream.write(chunk);
+                    const fileStream = fs.createWriteStream(tempFile);
+                    let totalSize = 0;
+                    let limitExceeded = false;
+
+                    videoStream.on('data', (chunk) => {
+                        totalSize += chunk.length;
+                        if (totalSize > 50 * 1024 * 1024) {
+                            limitExceeded = true;
+                            videoStream.destroy();
+                            fileStream.destroy();
+                            fs.unlink(tempFile, () => {});
                         }
                     });
 
-                    video.on('end', () => stream.end());
-                    video.on('error', err => {
-                        console.error('Stream error:', err);
-                        Bloom.sendMessage(jid, { text: '❌ Error while streaming video.' }, { quoted: message });
+                    videoStream.pipe(fileStream);
+
+                    await new Promise((resolve, reject) => {
+                        videoStream.on('end', resolve);
+                        videoStream.on('error', reject);
+                        fileStream.on('error', reject);
                     });
+
+                    if (limitExceeded) {
+                        return await Bloom.sendMessage(message.key.remoteJid, {
+                            text: '❌ File too large to send (limit is 50MB).'
+                        }, { quoted: message });
+                    }
 
                     const caption =
                     `🎬 *${info.videoDetails.title}*\n` +
-                    `👤 *Author:* ${info.videoDetails.author.name}\n` +
-                    `⏱ *Duration:* ${formatDuration(duration)}\n` +
-                    `👀 *Views:* ${Number(info.videoDetails.viewCount).toLocaleString()}`;
+                    `👤 *Author:* ${info.videoDetails.author?.name || 'Unknown'}\n` +
+                    `⏱ *Duration:* ${formatDuration(durationSeconds)}\n` +
+                    `👀 *Views:* ${Number(info.videoDetails.viewCount || 0).toLocaleString()}`;
 
-                    await Bloom.sendMessage(jid, {
-                        video: stream,
-                        mimetype: 'video/mp4',
-                        fileName: 'video.mp4',
-                        caption: caption
+                    await Bloom.sendMessage(message.key.remoteJid, {
+                        video: { url: tempFile },
+                        caption: caption,
+                        fileName: `video.mp4`,
+                        gifPlayback: false
                     }, { quoted: message });
 
+                    fs.unlink(tempFile, () => {});
                 } catch (err) {
-                    console.error('ytmp4 error:', err);
-                    await Bloom.sendMessage(jid, { text: `❌ Failed to process video: ${err.message}` }, { quoted: message });
+                    console.error('YTMP4 Error:', err);
+                    await Bloom.sendMessage(message.key.remoteJid, {
+                        text: `❌ Failed to process video:\n${err.message || err.toString()}`
+                    }, { quoted: message });
                 }
             }
         }
