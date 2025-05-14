@@ -52,24 +52,26 @@ function setupConfigWatcher(Bloom) {
 }
 
 async function downloadSessionData() {
-    if (!session) {
-        console.error('Please add your session to SESSION env !!');
+    if (!session || !session.startsWith("BLOOM~")) {
+        console.warn("⚠️ No valid SESSION env found (expected format: BLOOM~XXXXXX)");
         return false;
     }
-    const sessdata = session.split("BLOOM~")[1];
-    const url = `https://pastebin.com/raw/${sessdata}`;
+
+    const pasteId = session.split("BLOOM~")[1];
+    const url = `https://pastebin.com/raw/${pasteId}`;
+
     try {
         const response = await axios.get(url);
         const data = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+
         await fs.promises.writeFile(credsPath, data);
-        console.log("🔒 Session Successfully Loaded !!");
+        console.log("✅ Session successfully downloaded and saved from Pastebin.");
         return true;
     } catch (error) {
-        console.error('Failed to download session data');
+        console.error("❌ Failed to download session from Pastebin:", error.message);
         return false;
     }
 }
-
 async function start() {
     try {
         const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
@@ -181,14 +183,23 @@ async function start() {
     }
 }
 
+
 async function init() {
     if (fs.existsSync(credsPath)) {
-        console.log("🔒 Session file found, proceeding without QR code.");
+        console.log("🔒 Existing session file found. Starting without QR...");
         await start();
     } else {
-        console.log("No session found, generating QR code for authentication...");
-        useQR = true;
-        await start();
+        console.log("🔍 Session file not found. Trying SESSION env...");
+
+        const downloaded = await downloadSessionData();
+        if (downloaded && fs.existsSync(credsPath)) {
+            console.log("🔄 Starting with downloaded session...");
+            await start();
+        } else {
+            console.log("📸 Falling back to QR code login...");
+            useQR = true;
+            await start();
+        }
     }
 }
 
