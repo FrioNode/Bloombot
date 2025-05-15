@@ -395,13 +395,36 @@ module.exports = {
         run: async (Bloom, message) => {
             const senderID = message.key.participant || message.key.remoteJid;
             const user = await User.findById(senderID);
+
+            // Check if user is registered
+            if (!user) {
+                return Bloom.sendMessage(
+                    message.key.remoteJid,
+                    { text: 'You need to register first to use the work command. Use !reg <name> to register.' },
+                    { quoted: message }
+                );
+            }
+
             const currentTime = new Date();
             const lastWorkTime = new Date(user.lastWork);
             const timeDifference = currentTime - lastWorkTime;
 
-            if (timeDifference < 3600000) return Bloom.sendMessage(message.key.remoteJid, {text: `You can work again in an hour.`}, {quoted: message});
+            if (timeDifference < 3600000) {
+                return Bloom.sendMessage(
+                    message.key.remoteJid,
+                    { text: '⏳ You can work again in an hour.' },
+                    { quoted: message }
+                );
+            }
 
-            const jobs = { 'scientist': 400, 'miner': 200, 'farmer': 150, 'fisher': 100, 'blacksmith': 300, 'dentist': 350 };
+            const jobs = {
+                'scientist': 400,
+                'miner': 200,
+                'farmer': 150,
+                'fisher': 100,
+                'blacksmith': 300,
+                'dentist': 350
+            };
             const jobKeys = Object.keys(jobs);
             const randomJob = jobKeys[Math.floor(Math.random() * jobKeys.length)];
             const earnings = jobs[randomJob];
@@ -411,7 +434,11 @@ module.exports = {
             user.transactionHistory.push({ type: 'work', arg: earnings, result: 'success' });
             await user.save();
 
-            Bloom.sendMessage(message.key.remoteJid, { text: `You worked as a ${randomJob} and earned ${earnings} 💰. Your new wallet balance is ${user.walletBalance} 💰.` }, { quoted: message });
+            Bloom.sendMessage(
+                message.key.remoteJid,
+                { text: `👷‍♂️ You worked as a ${randomJob} and earned ${earnings} 💰. Your new wallet balance is ${user.walletBalance} 💰.` },
+                { quoted: message }
+            );
         }
     },
 
