@@ -106,7 +106,7 @@ module.exports = {
 │ Disk: ${disk[1]} / ${disk[0]} (Free: ${disk[2]})
 │ Mode: ${process.env.NODE_ENV||'development'} | ${mode}\`\`\`
 ╰─────────────────────── 🚀
-> (c) ${cpyear} FioNode - 🦑 •|•`;
+> (c) ${cpyear} FrioNode - 🦑 •|•`;
 
             await Bloom.sendMessage(message.key.remoteJid, {text: statusMessage}, {quoted: message});
         }
