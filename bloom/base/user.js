@@ -29,11 +29,13 @@ const locale = process.env.TZ || 'Africa/Nairobi';
 const getCurrentDate = () => {
     return new Date().toLocaleString('en-US', { timeZone: locale });
 };
+
 const runtime = ms => {
     const sec = Math.floor(ms / 1000 % 60);
     const min = Math.floor(ms / (1000 * 60) % 60);
-    const hrs = Math.floor(ms / (1000 * 60 * 60));
-    return `${hrs}h ${min}m ${sec}s`;
+    const hrs = Math.floor(ms / (1000 * 60 * 60) % 24);
+    const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+    return `${days}d ${hrs}h ${min}m ${sec}s`;
 };
 
 const getLevelData = (points) => {
