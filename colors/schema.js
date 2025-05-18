@@ -112,7 +112,16 @@ const TicTacToeSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now },
     timeoutAt: { type: Date }
 });
+const reminderSchema = new mongoose.Schema({
+    userId: { type: String, required: true },
+    chatId: { type: String, required: true },
+    text: { type: String, required: true },
+    remindAt: { type: Date, required: true },
+    createdAt: { type: Date, default: Date.now },
+    reminded: { type: Boolean, default: false }
+});
 
+const Reminder = mongoose.model('Reminder', reminderSchema);
 const TicTacToe = mongoose.model('TicTacToe', TicTacToeSchema);
 const AFK = mongoose.model('AFK', afkSchema);
 const Pokemon = mongoose.model('Pokemon', pokemonSchema);
@@ -121,4 +130,4 @@ const User = mongoose.model('User', userSchema);
 const Settings = mongoose.model('Settings', settingsSchema);
 const Exp = mongoose.model('Exp', expSchema);
 
-module.exports = { Pokemon, UserCounter, User , Settings, Exp, AFK, TicTacToe };
+module.exports = { Pokemon, UserCounter, User , Settings, Exp, AFK, TicTacToe, Reminder };

@@ -4,7 +4,7 @@ const { isSenderAdmin, isBotAdmin } = require('../colors/auth');
 const { mongo, node, sudochat, mode, _reload } = require('../colors/setup'); _reload();
 const mess = require('../colors/mess');
 const { trackUsage } = require('../colors/exp');
-const { tttmove } = require('./tttmove');
+const { tttmove } = require('./ttthandle');
 const options = { serverSelectionTimeoutMS: 30000, socketTimeoutMS: 45000 };
 const fs = require('fs'), path = require('path');
 
