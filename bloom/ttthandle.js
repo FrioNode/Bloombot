@@ -248,7 +248,7 @@ function initializeCleanup() {
 }
 //---- tttmove
 
-    async function tttmove(Bloom, message, fulltext) => {
+    async function tttmove(Bloom, message, fulltext){
         try {
             const sender = message.key.participant || message.key.remoteJid;
             const group = message.key.remoteJid;
@@ -325,6 +325,24 @@ function initializeCleanup() {
             }
         }
     }
+// --- foregn code ]]]] reminders
+
+const { Reminder } = require('../colors/schema');
+
+function startReminderChecker(Bloom) {
+    setInterval(async () => {
+        const now = new Date();
+        const dueReminders = await Reminder.find({ remindAt: { $lte: now }, reminded: false });
+        for (const r of dueReminders) {
+            try {
+                await Bloom.sendMessage(r.userId, { text: `⏰ Reminder: ${r.text}` });
+                r.reminded = true;
+                await r.save();
+            } catch (e) { console.error('Failed to send reminder:', e); }
+        }
+    }, 60000);
+}
+
 
 // Start the system
 cleanupStaleGames();
@@ -338,5 +356,6 @@ module.exports = {
     renderBoard,
     checkWinner,
     cleanupStaleGames,
-    tttmove
+    tttmove,
+    startReminderChecker
 };

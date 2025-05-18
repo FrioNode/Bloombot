@@ -1,6 +1,6 @@
 const { makeWASocket, Browsers, fetchLatestBaileysVersion, DisconnectReason, useMultiFileAuthState } = require('baileys');
 const {botname,mode,react,emoji,image,errorchat,channel,channelid} = require('./colors/setup');
-const { bloomCmd, initCommandHandler } = require('./bloom/brain'); // 🔥 Updated import
+const { bloomCmd, initCommandHandler, startReminderChecker } = require('./bloom/brain');
 const pino = require('pino');
 const fs = require('fs');
 const path = require('path');
@@ -138,6 +138,7 @@ async function start() {
                             },
                         };
                         await Bloom.sendMessage(errorchat, Payload);
+                        await startReminderChecker(Bloom);
                         (async () => {
                             stopPokemonGame = await _autoStartGame(Bloom);
                         })();
@@ -156,18 +157,38 @@ async function start() {
             }
         });
 
+        const reactionQueue = [];
+        let isProcessingQueue = false;
+        const REACTION_DELAY = 1000; // 1 second delay between reactions
+
+        async function processReactionQueue(Bloom) {
+            if (isProcessingQueue) return;
+            isProcessingQueue = true;
+
+            while (reactionQueue.length > 0) {
+                const { emoji, message } = reactionQueue.shift();
+                try {
+                    await doReact(Bloom, emoji, message);
+                } catch (err) {
+                    console.error('Error during auto reaction:', err);
+                }
+                await new Promise(res => setTimeout(res, REACTION_DELAY));
+            }
+
+            isProcessingQueue = false;
+        }
+
         Bloom.ev.on('creds.update', saveCreds);
         Bloom.ev.on("messages.upsert", async (chatUpdate) => {
             const message = chatUpdate.messages?.[0];
             if (!message || !message.message || message.key.fromMe) return;
+
             if (react) {
-                try {
-                    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-                    await doReact(Bloom, randomEmoji, message);
-                } catch (err) {
-                    console.error('Error during auto reaction:', err);
-                }
+                const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                reactionQueue.push({ emoji: randomEmoji, message });
+                processReactionQueue(Bloom); // start processing if not already
             }
+
             await bloomCmd(Bloom, message);
         });
 
