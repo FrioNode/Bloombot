@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { Settings, UserCounter, AFK } = require('../colors/schema');
+const { isSenderAdmin, isBotAdmin } = require('../colors/auth');
 const { mongo, node, sudochat, mode, _reload } = require('../colors/setup'); _reload();
 const mess = require('../colors/mess');
 const { trackUsage } = require('../colors/exp');
@@ -73,22 +74,6 @@ function extractCommand(message) {
     } catch (e) { return { command: '', fulltext: '' }; }
 }
 
-async function getGroupRoles(Bloom, jid, groupId) {
-    try {
-        if (!Bloom || !jid || !groupId) return { isAdmin: false, isSuperAdmin: false };
-        const metadata = await Bloom.groupMetadata(groupId);
-        const participant = metadata.participants.find(p => p.id === jid);
-        return { isAdmin: participant?.admin === 'admin', isSuperAdmin: participant?.admin === 'superadmin' };
-    } catch (e) { return { isAdmin: false, isSuperAdmin: false }; }
-}
-
-async function getBotRoles(Bloom, groupId) {
-    try {
-        if (!Bloom?.user?.id || !groupId) return { isAdmin: false, isSuperAdmin: false };
-        const botJid = Bloom.user.id.split(':')[0] + '@s.whatsapp.net';
-        return await getGroupRoles(Bloom, botJid, groupId);
-    } catch (e) { return { isAdmin: false, isSuperAdmin: false }; }
-}
 
 async function checkMode(Bloom, message) {
     try {
@@ -130,8 +115,8 @@ async function checkMessageType(Bloom, message) {
         if (!sender) return true;
         const settings = await Settings.findOne({ group: groupId });
         if (!settings) return true;
-        const { isAdmin: senderIsAdmin } = await getGroupRoles(Bloom, sender, groupId);
-        const { isAdmin: botIsAdmin } = await getBotRoles(Bloom, groupId);
+        const senderIsAdmin = await isSenderAdmin(Bloom,message);
+        const botIsAdmin = await isBotAdmin(Bloom,message);
         const messageType = Object.keys(message.message)[0] || '';
         const text = message.message?.conversation || message.message?.extendedTextMessage?.text || '';
         const linkRegex = /(?:https?:\/\/|www\.)[^\s]+|(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[^\s]*)?/gi;
@@ -206,4 +191,4 @@ const bloomCmd = async (Bloom, message) => {
 };
 
 if (node !== 'production') setupHotReload();
-module.exports = { bloomCmd, initCommandHandler, commands: commandRegistry, getGroupRoles, getBotRoles };
+module.exports = { bloomCmd, initCommandHandler, commands: commandRegistry };
