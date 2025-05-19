@@ -183,10 +183,11 @@ async function start() {
             const message = chatUpdate.messages?.[0];
             if (!message || !message.message || message.key.fromMe) return;
 
-            if (react) {
+            // 🔥 Feature toggle using environment variable
+            if (process.env.REACT === 'true') {
                 const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
                 reactionQueue.push({ emoji: randomEmoji, message });
-                processReactionQueue(Bloom); // start processing if not already
+                processReactionQueue(Bloom);
             }
 
             await bloomCmd(Bloom, message);
