@@ -1,5 +1,5 @@
 const { sudochat, _reload } = require('./setup'); _reload();
-const { mess } = require('./mess');
+const mess = require('./mess');
 const fetchGroupMetadata = async (Bloom, message) => {
     const groupId = message.key.remoteJid;
     if (!groupId.endsWith('@g.us')) {
