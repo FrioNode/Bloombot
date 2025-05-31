@@ -1,4 +1,5 @@
 const { sudochat, bloom, _reload } = require('../../colors/setup'); _reload();
+const { isBloomKing } = require('../../colors/auth');
 const mess = require('../../colors/mess');
 const { Exp } = require('../../colors/schema');
 const { exec } = require('child_process');
@@ -8,12 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const configPath = path.join(__dirname, '../../colors/config.json');
 
-const isOwner = (sender, message) => {
-    if (sender.endsWith('@g.us')) {
-        return message.key.participant === sudochat;
-    }
-    return sender === sudochat;
-};
+const isOwner =isBloomKing;
     module.exports = {
         join: {
             type: 'owner',
