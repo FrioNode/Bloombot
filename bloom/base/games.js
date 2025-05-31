@@ -3,8 +3,7 @@ const mongoose = require('mongoose');
 const { User, Pokemon, TicTacToe, connectDB } = require('../../colors/schema');
 const { createGame, joinGame, endGame, renderBoard } = require('../ttthandle');
 const { pokemon } = require('../../colors/pokemon');
-const { mongo, openchat }= require('../../colors/setup');
-const options = { serverSelectionTimeoutMS: 30000, socketTimeoutMS: 45000 };
+const { openchat }= require('../../colors/setup');
 
  connectDB('Game Module')
 const pokemonNames = ['Pikachu', 'Charmander', 'Bulbasaur', 'Squirtle', 'Jigglypuff', 'Meowth', 'Psyduck', 'Eevee', 'Snorlax', 'Mewtwo'];

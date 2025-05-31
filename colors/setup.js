@@ -19,6 +19,7 @@ function getAll() {
     return {
         session: process.env.SESSION,
         mongo: process.env.MONGO,
+        redisurl: process.env.REDIS_URL,
         node: process.env.NODE_ENV || 'development',
         sudochat: `${process.env.OWNERNUMBER}@s.whatsapp.net`,
         devname: process.env.DEVNAME,
