@@ -29,6 +29,13 @@ module.exports = {
 
                 const metadata = await Bloom.groupMetadata(groupJid);
                 if (metadata.participants.some(p => p.id === jid)) return await Bloom.sendMessage(groupJid, { text: '❌ Already in group' });
+                // Detect LID-based group
+                const isLidGroup = metadata.participants.some(p => p.id.endsWith('@lid'));
+                if (isLidGroup) {
+                    return await Bloom.sendMessage(groupJid, {
+                        text: '❌ This group uses Linked Identity (LID), and adding users by number is not supported yet.'
+                    });
+                }
 
                 const result = await Bloom.groupParticipantsUpdate(groupJid, [jid], 'add');
 

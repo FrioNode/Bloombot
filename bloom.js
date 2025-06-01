@@ -56,6 +56,8 @@ async function start() {
             if (connection === 'open') { log("✅ Connected successfully");
                 if (initialConnection) {
                     log(`${emoji} ${botname} is now online`);
+                 //   const { inspectBloom } = require('./test');
+                  //  inspectBloom(Bloom);
                     if (!botname || !logschat || !image) {
                         throw new Error("Missing essential config in colors/setup.js"); }
 
