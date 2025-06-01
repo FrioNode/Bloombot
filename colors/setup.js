@@ -18,7 +18,6 @@ function getAll() {
     return {
         session: process.env.SESSION,
         mongo: process.env.MONGO,
-        redisurl: process.env.REDIS_URL,
         node: process.env.NODE_ENV || 'development',
         sudochat: `${process.env.OWNERNUMBER || '254718241545'}@s.whatsapp.net`,
         devname: process.env.DEVNAME || 'FrioNode',
@@ -31,7 +30,6 @@ function getAll() {
         botname: process.env.BOTNAME || 'Bloom',
         image: process.env.IMAGE || 'https://raw.githubusercontent.com/FrioNode/Bloombot/main/colors/bloom.jpg',
         lang: process.env.LANG || 'EN',
-        antilink: process.env.ANTILINK || 'OFF',
         react: process.env.REACT === 'true',
         emoji: process.env.EMOJI || '🌼',
         reboot: process.env.REBOOT === 'true',
