@@ -54,10 +54,45 @@ function setupHotReload() {
         try { delete require.cache[require.resolve(filePath)]; require(filePath); if (!filePath.includes('colors')) await loadCommands(); }
         catch (err) { } } }
 
+const bloomCmd = async (Bloom, message) => {
+    try {
+        if (!Bloom || !message?.key) return false;
+        if (!activeBloomInstance) await initCommandHandler(Bloom);
+
+        const { command, fulltext } = extractCommand(message);
+        if (/^[1-9]$/.test(command)) { await tttmove(Bloom, message, fulltext); return true; }
+
+        const checks = [
+            () => checkMode(Bloom, message), () => checkGroupCommandLock(Bloom, message), () => checkMessageType(Bloom, message),
+            () => checkCommandTypeFlags(Bloom, message), () => checkAFK(Bloom, message),
+        ];
+        let shouldProceed = true;
+        for (const [i, check] of checks.entries()) {
+            try {
+                const result = await check();
+                shouldProceed = shouldProceed && result;
+                if (!shouldProceed) break;
+            } catch (e) {
+                shouldProceed = false;  break; }  }
+
+        if (shouldProceed && command && commandRegistry[command]) {
+            await bloomCm(Bloom, message, fulltext, commandRegistry);
+        }   return shouldProceed;  } catch (e) {  return false;  } };
+
+function extractTextFromMessage(msg) {
+    if (!msg) return '';
+    if (msg.conversation) return msg.conversation;
+    if (msg.extendedTextMessage && msg.extendedTextMessage.text) return msg.extendedTextMessage.text;
+    if (msg.ephemeralMessage) return extractTextFromMessage(msg.ephemeralMessage.message);
+    if (msg.viewOnceMessage) return extractTextFromMessage(msg.viewOnceMessage.message);
+    // Add more cases as needed for other message types
+    return '';
+}
+
 function extractCommand(message) {
     try {
         if (!message?.message) return { command: '', fulltext: '' };
-        const text = message.message.conversation || message.message.extendedTextMessage?.text || '';
+        const text = extractTextFromMessage(message.message);
         const fulltext = text.trim().replace(/^\s*!/, '').replace(/\s+/g, ' ');
         const command = fulltext.split(' ')[0].toLowerCase();
         return { command, fulltext };
@@ -164,30 +199,6 @@ async function checkAFK(Bloom, message) {
         if (afk) {
             await Bloom.sendMessage(message.key.remoteJid, { text: `💤 That user is AFK: ${afk.reason || 'No reason'}`, mentions: [quotedUser] });
             return false; }  return true;  } catch (e) { return true; } }
-
-const bloomCmd = async (Bloom, message) => {
-    try {
-        if (!Bloom || !message?.key) return false;
-        if (!activeBloomInstance) await initCommandHandler(Bloom);
-
-        const { command, fulltext } = extractCommand(message);
-        if (/^[1-9]$/.test(command)) { await tttmove(Bloom, message, fulltext); return true; }
-
-        const checks = [
-            () => checkMode(Bloom, message), () => checkGroupCommandLock(Bloom, message), () => checkMessageType(Bloom, message),
-            () => checkCommandTypeFlags(Bloom, message), () => checkAFK(Bloom, message),
-        ];
-        let shouldProceed = true;
-        for (const check of checks) {
-            try {
-                shouldProceed = shouldProceed && await check();
-                if (!shouldProceed) break;
-            } catch (e) {
-                shouldProceed = false;  break; }  }
-
-        if (shouldProceed && command && commandRegistry[command]) {
-            await bloomCm(Bloom, message, fulltext, commandRegistry);
-        }   return shouldProceed;  } catch (e) {  return false;  } };
 
 if (node !== 'production') setupHotReload();
 module.exports = { bloomCmd, initCommandHandler, commands: commandRegistry,startReminderChecker };

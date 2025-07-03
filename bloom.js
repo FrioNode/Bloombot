@@ -116,7 +116,9 @@ async function start() {
                 const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
                 reactionQueue.push({ emoji: randomEmoji, message }); processReactionQueue(Bloom);   }
 
-            try {  await bloomCmd(Bloom, message);  } catch (err) { log("Bloom Commands Error:", err); }  });
+            try {
+                await bloomCmd(Bloom, message);
+            } catch (err) { log("Bloom Commands Error:", err); }  });
 
         if (mode === "public") {  Bloom.public = true; } else if (mode === "private") {
             Bloom.public = false;  } } catch (error) {

@@ -793,10 +793,16 @@ module.exports._autoStartGame = startGame;
 
 async function loadPokemons(Bloom) {
     let randomPokemon;
+
     try {
         randomPokemon = await pokemon();
     } catch (error) {
-        console.error("Error fetching pokemon", error);
+        console.error("❌ Error fetching Pokémon:", error.message);
+        return;
+    }
+
+    if (!randomPokemon || !randomPokemon.name) {
+        console.error("❌ No Pokémon returned. Likely null or malformed response.");
         return;
     }
 
@@ -810,13 +816,14 @@ async function loadPokemons(Bloom) {
     });
 
     await newPokemon.save();
-    console.log(`Pokémon ${newPokemon.name} added to the database.`);
+    console.log(`✅ Pokémon ${newPokemon.name} added to the database.`);
 
     await Bloom.sendMessage(openchat, {
         image: { url: newPokemon.image },
         caption: `A new Pokémon has appeared! Use *!catch ${newPokemon.name}* to add it to your inventory.\n\nClue: ${newPokemon.description}`
     });
 }
+
 
 async function handleExpiredPokemons(Bloom) {
     const expiredPokemons = await Pokemon.find({ timeout: { $lt: new Date() } });
