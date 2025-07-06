@@ -194,10 +194,10 @@ module.exports = {
             const category = itemCategories[itemName];
 
             if (category) {
-                if (category === "mining" || category === "fishing" || category === "healing") {
+                if (["mining", "fishing", "healing", "magic"].includes(category)) {
                     user.inventory[category].push({ name: itemName, miningUses: 0 });
                 } else {
-                    user.inventory[category].push(itemName);
+                    user.inventory[category].push({ name: itemName });
                 }
             } else {
                 return Bloom.sendMessage(message.key.remoteJid, {text: 'Error: Item category not found.'}, {quoted: message});
