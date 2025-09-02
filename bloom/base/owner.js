@@ -38,9 +38,22 @@ const isOwner =isBloomKing;
 
                 try {
                     const groupInfo = await Bloom.groupAcceptInvite(code);
-                    return await Bloom.sendMessage(remoteJid, {
-                        text: `✅ Successfully joined group:\n*${groupInfo.subject || 'Unnamed Group'}*`
-                    }, { quoted: message });
+console.log('groupInfo:', groupInfo);
+
+let groupName = 'Unnamed Group';
+try {
+    // groupInfo might be a string (jid) or an object with .id
+    const groupJid = typeof groupInfo === 'string' ? groupInfo : groupInfo.id;
+    const meta = await Bloom.groupMetadata(groupJid);
+    groupName = meta.subject || groupName;
+   // console.log('groupMetadata:', meta);
+} catch (e) {
+    console.error('Failed to fetch group metadata:', e);
+}
+
+return await Bloom.sendMessage(remoteJid, {
+    text: `✅ Successfully joined group:\n${groupName}`
+}, { quoted: message });
                 } catch (err) {
                     let reason = '❌ Failed to join group.';
 
