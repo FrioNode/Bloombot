@@ -175,6 +175,7 @@ ${bonusGiven ? `│ 🎁 Daily bonus claimed! (+5 EXP)\n│ 🔥 Streak: *${expD
     level: {
         type: 'user',
         desc: 'See rank/level of another user',
+        usage: 'level @user',
         run: async (Bloom, message, fulltext) => {
             const text = fulltext.trim().split(' ').slice(1).join(' ').trim();
             let targetJid = message.message?.extendedTextMessage?.contextInfo?.participant;
@@ -195,7 +196,8 @@ ${bonusGiven ? `│ 🎁 Daily bonus claimed! (+5 EXP)\n│ 🔥 Streak: *${expD
     rank: {
         run: async (...args) => module.exports.level.run(...args),
         type: 'user',
-        desc: 'See rank/level of another user'
+        desc: 'See rank/level of another user',
+        usage: 'level @user'
     },
     profile: {
         type: 'user',

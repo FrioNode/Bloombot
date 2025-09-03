@@ -44,6 +44,51 @@ module.exports = {
             }
         }
     },
+    urban: {
+    type: 'fun',
+    desc: 'Search Urban Dictionary and get a definition',
+    usage: 'urban <term>',
+    run: async (Bloom, message, fulltext) => {
+        const sender = message.key.remoteJid;
+        const query = fulltext.split(' ').slice(1).join(' ').trim();
+
+        if (!query) {
+            return await Bloom.sendMessage(sender, {
+                text: '❓ Please provide a term to search. Example: `urban lit`'
+            }, { quoted: message });
+        }
+
+        try {
+            const apiUrl = `https://api.urbandictionary.com/v0/define?term=${encodeURIComponent(query)}`;
+            const { data } = await axios.get(apiUrl);
+
+            if (!data.list || data.list.length === 0) {
+                return await Bloom.sendMessage(sender, {
+                    text: `❌ Couldn't find any definition for *${query}*.`
+                }, { quoted: message });
+            }
+
+            // Take first definition
+            const first = data.list[0];
+            const snippet = first.definition.length > 500
+                ? first.definition.slice(0, 500) + '...'
+                : first.definition;
+
+            const example = first.example ? `\n\n💬 Example:\n${first.example}` : '';
+            const link = first.permalink;
+
+            await Bloom.sendMessage(sender, {
+                text: `📖 *${first.word}*\n\n${snippet}${example}\n\n🔗 ${link}`
+            }, { quoted: message });
+
+        } catch (err) {
+            console.error('Urban search error:', err.message);
+            await Bloom.sendMessage(sender, {
+                text: `❌ Failed to fetch definition for *${query}*.` 
+            }, { quoted: message });
+        }
+    }
+},
     number: {
         type: 'fun',
         desc: 'Sends a random number trivia fact',
