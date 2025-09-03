@@ -43,6 +43,7 @@ module.exports = {
     reg: {
         type: 'economy',
         desc: 'Register or update your economy profile',
+        reg: 'reg <name>',
         run: async (Bloom, message, fulltext) => {
             const senderID = message.key.participant || message.key.remoteJid;
             const arg = fulltext.trim().split(/\s+/)[1];
@@ -66,6 +67,7 @@ module.exports = {
     dep: {
         type: 'economy',
         desc: 'Deposit money into your bank account',
+        uasage: 'dep <amount>',
         run: async (Bloom, message, fulltext) => {
             const senderID = message.key.participant || message.key.remoteJid;
             const arg = parseFloat(fulltext.trim().split(/\s+/)[1]);
@@ -88,6 +90,7 @@ module.exports = {
     withd: {
         type: 'economy',
         desc: 'Withdraw money from your bank account',
+        usage: 'withd <amount>',
         run: async (Bloom, message, fulltext) => {
             const senderID = message.key.participant || message.key.remoteJid;
             const arg = parseFloat(fulltext.trim().split(/\s+/)[1]);
@@ -115,6 +118,7 @@ module.exports = {
     trans: {
         type: 'economy',
         desc: 'Transfer money to another user',
+        usage: 'trans <amount> <user_id> or\ntrans @user <amount>',
         run: async (Bloom, message, fulltext) => {
             const senderID = message.key.participant || message.key.remoteJid;
             const value = fulltext.trim().split(/\s+/)[2];
@@ -181,6 +185,7 @@ module.exports = {
     buy: {
         type: 'economy',
         desc: 'Purchase an item from the shop',
+        usage: 'buy <item_name>',
         run: async (Bloom, message, fulltext) => {
             const senderID = message.key.participant || message.key.remoteJid;
             const itemName = fulltext.trim().split(/\s+/)[1]?.toLowerCase();
@@ -349,7 +354,8 @@ module.exports = {
 
     gamble: {
         type: 'economy',
-        desc: 'Gamble your money on colors',
+        desc: 'Gamble your money on colours',
+        usage: 'gamble <colour> <amount>',
         run: async (Bloom, message, fulltext) => {
             const senderID = message.key.participant || message.key.remoteJid;
             const parts = fulltext.trim().split(/\s+/);
@@ -472,6 +478,7 @@ module.exports = {
     sell: {
         type: 'economy',
         desc: 'Sell items from your inventory',
+        usage: 'sell <animal> or <stone>',
         run: async (Bloom, message, fulltext) => {
             const senderID = message.key.participant || message.key.remoteJid;
             const arg = fulltext.trim().split(/\s+/)[1];
@@ -585,6 +592,7 @@ module.exports = {
     catch: {
         type: 'pokemon',
         desc: 'Catch a Pokémon that has appeared',
+        usage: 'catch <pokemon_name>',
         run: async (Bloom, message, fulltext) => {
             const senderID = message.key.participant || message.key.remoteJid;
             const arg = fulltext.trim().split(/\s+/)[1];
@@ -646,6 +654,7 @@ module.exports = {
     pokedex: {
         type: 'pokemon',
         desc: 'View any Pokémon details by name or ID',
+        usage: 'pokedex <pokemon_name> or <ID>',
         run: async (Bloom, message, fulltext) => {
             const input = fulltext.trim().split(/\s+/)[1]?.toLowerCase();
             const chatId = message.key.remoteJid;
