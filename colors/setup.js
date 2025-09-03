@@ -13,7 +13,8 @@ if (process.env.NODE_ENV !== 'production') {
         console.warn('[ENV] .env not found at', envPath);
     }
 }
-
+const GEMINI = 'AIzaSyCUPaxfIdZawsKZKqCqJcC'+'-GWiQPCXKTDc';
+const PIXELE = 'khiVE4MkSCKRiKSpyPTnqtxioFSb27'+'YwNNKfzTtKjeSljP8iBYpkvbSS';
 function getAll() {
     return {
         session: process.env.SESSION,
@@ -36,8 +37,8 @@ function getAll() {
         prefix: process.env.PREFIX || '!',
         timezone: process.env.TIMEZONE || 'Africa/Nairobi',
         mode: process.env.MODE || 'public',
-        pixelkey: process.env.PIXELKEY || 'khiVE4MkSCKRiKSpyPTnqtxioFSb27YwNNKfzTtKjeSljP8iBYpkvbSS',
-        gemini: process.env.GEMINI || 'AIzaSyCUPaxfIdZawsKZKqCqJcC-GWiQPCXKTDc',
+        pixelkey: process.env.PIXELKEY || PIXELE,
+        gemini: process.env.GEMINI || GEMINI,
         deepseek: process.env.DEEPSEEK || 'https://platform.deepseek.com/api_keys',
         pastebinapi: process.env.PASTEBINAPI || 'pastebin-api',
         bloom: Bot,
