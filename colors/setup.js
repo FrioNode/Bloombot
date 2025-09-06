@@ -39,7 +39,7 @@ function getAll() {
         mode: process.env.MODE || 'public',
         weatherKey: process.env.WEATHERKEY,         // https://openweathermap.org/api
         pixelkey: process.env.PIXELKEY || PIXELE,
-        ninjaKey: procee.env.NINJAKEY,              // https://api-ninjas.com/api
+        ninjaKey: process.env.NINJAKEY,              // https://api-ninjas.com/api
         gemini: process.env.GEMINI || GEMINI,
         deepseek: process.env.DEEPSEEK,             // https://platform.deepseek.com/api_keys
         pastebinapi: process.env.PASTEBINAPI || 'pastebin-api',

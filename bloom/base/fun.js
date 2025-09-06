@@ -108,7 +108,7 @@ module.exports = {
                 const apiUrl = 'https://api.api-ninjas.com/v1/quotes';
                 const config = {
                     headers: {
-                        'X-Api-Key': ninjakey.trim()
+                        'X-Api-Key': ninjaKey.trim()
                     },
                     timeout: 10000 // 10 second timeout
                 };
