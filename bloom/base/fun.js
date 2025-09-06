@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { pixelkey } =require('../../colors/setup');
+const { pixelkey, ninjaKey } =require('../../colors/setup');
 const { footer } = require('../../colors/mess');
 module.exports = {
     wiki: {
@@ -89,6 +89,84 @@ module.exports = {
         }
     }
 },
+
+    quote: {
+        type: 'fun',
+        desc: 'Get a random inspirational quote',
+        usage: 'quote',
+        run: async (Bloom, message, fulltext) => {
+            const sender = message.key.remoteJid;
+
+            if (!ninjaKey || ninjaKey === '') {
+                console.error('API Key is missing or invalid.');
+                return await Bloom.sendMessage(sender, {
+                    text: '❌ Quote service is misconfigured. Please report this to the bot owner.'
+                }, { quoted: message });
+            }
+
+            try {
+                const apiUrl = 'https://api.api-ninjas.com/v1/quotes';
+                const config = {
+                    headers: {
+                        'X-Api-Key': ninjakey.trim()
+                    },
+                    timeout: 10000 // 10 second timeout
+                };
+
+                const response = await axios.get(apiUrl, config);
+                const quoteData = response.data[0]; // Data is an array with one object
+
+                const formattedQuote = `
+💬 *Random Quote*
+ ────────────────
+"${quoteData.quote}"
+- *${quoteData.author}*
+ ────────────────
+*Category:* ${quoteData.category}`.trim();
+
+                await Bloom.sendMessage(sender, {
+                    text: formattedQuote
+                }, { quoted: message });
+
+            } catch (err) {
+                console.error('Quote API error:', err.message);
+                if (err.response) {
+                    // Server responded with an error status (4xx, 5xx)
+                    switch (err.response.status) {
+                        case 400:
+                            await Bloom.sendMessage(sender, {
+                                text: '🔑 Invalid API Key configured. Please contact the bot owner.'
+                            }, { quoted: message });
+                            break;
+                        case 403:
+                            await Bloom.sendMessage(sender, {
+                                text: '🔑 Access denied. The API key may be invalid or expired.'
+                            }, { quoted: message });
+                            break;
+                        case 429:
+                            await Bloom.sendMessage(sender, {
+                                text: '📊 Daily quote limit reached. Please try again tomorrow.'
+                            }, { quoted: message });
+                            break;
+                        default:
+                            await Bloom.sendMessage(sender, {
+                                text: '❌ The quote service is currently unavailable. Please try again later.'
+                            }, { quoted: message });
+                    }
+                } else if (err.request) {
+                    // Request was made but no response received (network error)
+                    await Bloom.sendMessage(sender, {
+                        text: '🌐 Network error. Could not connect to the quote service.'
+                    }, { quoted: message });
+                } else {
+                    // Something else happened
+                    await Bloom.sendMessage(sender, {
+                        text: '❌ An unexpected error occurred while fetching a quote.'
+                    }, { quoted: message });
+                }
+            }
+        }
+    },
     number: {
         type: 'fun',
         desc: 'Sends a random number trivia fact',
