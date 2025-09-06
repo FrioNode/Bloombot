@@ -1,4 +1,5 @@
 const axios = require('axios');
+const figlet = require('figlet');
 const { pixelkey, ninjaKey } =require('../../colors/setup');
 const { footer } = require('../../colors/mess');
 module.exports = {
@@ -332,5 +333,82 @@ module.exports = {
                 );
             }
         }
-    }
+    },
+        ascii: {
+            type: 'fun',
+            desc: 'Convert text to ASCII art with optional font',
+            usage: 'ascii [font] <text>\n• Available fonts: Standard, Block, Big, Small, Ghost, Graffiti, Digital, Bubble, Slant, Shadow, Script, Mini, Banner, Doom, 3D, 4Max',
+            run: async (Bloom, message, fulltext) => {
+                const sender = message.key.remoteJid;
+                const args = fulltext.split(' ').slice(1);
+
+                if (args.length < 1) {
+                    return await Bloom.sendMessage(sender, {
+                        text: '❓ Please provide text to convert. Example: `ascii Hello` or `ascii Block Sample Text`'
+                    }, { quoted: message });
+                }
+
+                // List of available fonts for validation
+                const availableFonts = [
+                    'Standard', 'Block', 'Big', 'Small', 'Ghost', 'Graffiti',
+                    'Digital', 'Bubble', 'Slant', 'Shadow', 'Script', 'Mini',
+                    'Banner', 'Doom', '3D', '3D Diagonal', '4Max', '5 Line Oblique'
+                ];
+
+                let font = 'Standard'; // Default font
+                let text;
+
+                // Check if first argument is a valid font
+                if (args.length >= 2 && availableFonts.includes(args[0])) {
+                    font = args[0];
+                    text = args.slice(1).join(' ');
+                } else {
+                    text = args.join(' ');
+                }
+
+                // Limit input length
+                if (text.length > 15) {
+                    return await Bloom.sendMessage(sender, {
+                        text: '❌ Text too long! Please use 15 characters or less for better formatting.'
+                    }, { quoted: message });
+                }
+
+                try {
+                    // Generate ASCII art with the selected font
+                    figlet.text(text, {
+                        font: font,
+                        horizontalLayout: 'default',
+                        verticalLayout: 'default'
+                    }, (err, asciiArt) => {
+                        if (err) {
+                            console.error('Figlet error:', err);
+                            Bloom.sendMessage(sender, {
+                                text: '❌ Failed to generate ASCII art. The font might not support all characters.'
+                            }, { quoted: message });
+                            return;
+                        }
+
+                        const responseText = `
+ ✨ *ASCII Art [${font} Font]*
+ 🔤 Text: "${text}"
+ ────────────────
+\`\`\`
+${asciiArt}
+\`\`\`
+ ────────────────
+ 💡 Tip: Use \`ascii <font> <text>\` to try different styles!`.trim();
+
+                        Bloom.sendMessage(sender, {
+                            text: responseText
+                        }, { quoted: message });
+                    });
+
+                } catch (err) {
+                    console.error('ASCII generation error:', err.message);
+                    await Bloom.sendMessage(sender, {
+                        text: '❌ Failed to generate ASCII art. Please try again.'
+                    }, { quoted: message });
+                }
+            }
+        }
 };
