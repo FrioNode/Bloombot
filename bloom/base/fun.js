@@ -337,7 +337,7 @@ module.exports = {
         ascii: {
             type: 'fun',
             desc: 'Convert text to ASCII art with optional font',
-            usage: 'ascii [font] <text>\n• Available fonts: Standard, Block, Big, Small, Ghost, Graffiti, Digital, Bubble, Slant, Shadow, Script, Mini, Banner, Doom, 3D, 4Max',
+            usage: 'ascii [font] <text>\n• Available fonts: Standard, Block, Big, Small, Ghost, Graffiti, Digital, Bubble, Slant, Shadow, Script, Mini, Banner, Doom, 4Max',
             run: async (Bloom, message, fulltext) => {
                 const sender = message.key.remoteJid;
                 const args = fulltext.split(' ').slice(1);
