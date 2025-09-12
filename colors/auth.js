@@ -1,4 +1,4 @@
-const { sudochat, _reload } = require('./setup'); _reload();
+const { sudochat, sudolid, _reload } = require('./setup'); _reload();
 const mess = require('./mess');
 const fs = require('fs').promises;
 const path = require('path');
@@ -80,7 +80,7 @@ const isSenderAdmin = async (Bloom, message) => {
 
 const isBloomKing = (sender, message) => {
     const checkId = sender.endsWith('@g.us') ? message.key.participant : sender;
-    return idsMatch(checkId, sudochat);
+    return idsMatch(checkId, sudochat) || (sudolid && idsMatch(checkId, sudolid));
 };
 
 const isGroupAdminContext = async (Bloom, message) => {
