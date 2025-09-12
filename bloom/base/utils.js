@@ -1,3 +1,8 @@
+  const QRCode = require('qrcode');
+  const { downloadMediaMessage } = require('baileys');
+  const { Jimp } = require('jimp');
+  const jsQR = require('jsqr')
+
 let mess, logschat, timezone, Ticket, TicketId, connectDB, isBloomKing, getCurrentDate, Reminder;
 
 try {
@@ -7,6 +12,7 @@ try {
   ({ isBloomKing } = require('../../colors/auth'));
 
   const moment = require('moment-timezone');
+
   getCurrentDate = () => moment().tz(timezone).format('MMMM Do YYYY, h:mm:ss a');
 } catch (err) {
   console.error('❌ Module pre-load error:', err.message);
@@ -88,8 +94,95 @@ module.exports = {
         await Bloom.sendMessage(message.key.remoteJid, { text: '❌ Failed to set reminder.' });
       }
     }
+  },
+    qr: {
+    type: 'utility',
+    desc: 'Generate QR code from text or decode QR code from image',
+    usage: 'qr <text> OR reply to an image with qr',
+    run: async (Bloom, message, fulltext) => {
+      const sender = message.key.remoteJid;
+      const quoted = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+      const stanzaId = message.message?.extendedTextMessage?.contextInfo?.stanzaId;
+      const contextKey = message.message?.extendedTextMessage?.contextInfo?.participant || message.key.remoteJid;
+
+      if (quoted?.imageMessage) {
+        try {
+          const fullQuotedMsg = {
+            key: {
+              remoteJid: contextKey,
+              id: stanzaId || message.key.id,
+              fromMe: false,
+              participant: contextKey,
+            },
+            message: quoted
+          };
+
+          const buffer = await downloadMediaMessage(
+            fullQuotedMsg,
+            'buffer',
+            {},
+            { reuploadRequest: Bloom.updateMediaMessage }
+          );
+
+          const image = await Jimp.read(buffer);
+          image.greyscale().contrast(0.5).normalize();
+
+          const qrCode = jsQR(
+            new Uint8ClampedArray(image.bitmap.data),
+                              image.bitmap.width,
+                              image.bitmap.height
+          );
+
+          if (qrCode) {
+            await Bloom.sendMessage(sender, {
+              text: `📷 *QR Code Decoded*\n────────────────\n${qrCode.data}\n────────────────\n✅ Successfully decoded with jsQR`
+            }, { quoted: message });
+          } else {
+            throw new Error('No QR code found by jsQR');
+          }
+        } catch (err) {
+          console.error('QR decode error:', err.message);
+          await Bloom.sendMessage(sender, {
+            text: '❌ No QR code detected or failed to decode.\n💡 Make sure:\n• The image contains a clear QR code\n• The QR code is not too small\n• The image is not blurry\n• Try a different QR code image'
+          }, { quoted: message });
+        }
+        return;
+      }
+
+      // QR generation mode (text to QR)
+      const text = fulltext.split(' ').slice(1).join(' ').trim();
+      if (!text) {
+        await Bloom.sendMessage(sender, {
+          text: '❓ Please provide text to generate QR code OR reply to an image to decode QR.\n💡 Example: `qr https://example.com`\n💡 Or reply to a QR image with `qr`'
+        }, { quoted: message });
+        return;
+      }
+
+      try {
+        const qrDataUrl = await QRCode.toDataURL(text, {
+          width: 300,
+          margin: 1,
+          errorCorrectionLevel: 'L',
+          color: { dark: '#000000', light: '#FFFFFF' }
+        });
+
+        const base64Data = qrDataUrl.replace(/^data:image\/png;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+
+        await Bloom.sendMessage(sender, {
+          image: buffer,
+          caption: `✅ *QR Code Generated*\n📝 Content: ${text}\n────────────────\n💡 Scan this QR code with any scanner app.`
+        }, { quoted: message });
+
+      } catch (err) {
+        console.error('QR generation error:', err);
+        await Bloom.sendMessage(sender, {
+          text: `❌ QR generation failed:\n${err.message}\n\n💡 Try simpler text.`
+        }, { quoted: message });
+      }
+    }
   }
-};
+  };
 
 // ===== Sub-functions ===== //
 
