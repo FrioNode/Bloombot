@@ -1,4 +1,4 @@
-const { sudochat, bloom, _reload } = require('../../colors/setup'); _reload();
+const { sudochat, bloom,isdocker, _reload } = require('../../colors/setup'); _reload();
 const { isBloomKing } = require('../../colors/auth');
 const mess = require('../../colors/mess');
 const { Exp } = require('../../colors/schema');
@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const configPath = path.join(__dirname, '../../colors/config.json');
 // ------FRIONODE------
-const isDocker = process.env.IS_DOCKER === 'true' || require('is-docker')();
+const isDocker = isdocker === 'true' || require('is-docker').default();
 const restartCommand = isDocker ? bloom.scripts.warm : bloom.scripts.restart;
 const stopCommand = isDocker ? bloom.scripts.cool : bloom.scripts.stop;
 // ------BENSON---------

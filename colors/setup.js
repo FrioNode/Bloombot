@@ -35,6 +35,7 @@ function getAll() {
         react: process.env.REACT === 'true',
         emoji: process.env.EMOJI || '🌼',
         reboot: process.env.REBOOT === 'true',
+        isdocker: process.env.IS_DOCKER,
         prefix: process.env.PREFIX || '!',
         timezone: process.env.TIMEZONE || 'Africa/Nairobi',
         mode: process.env.MODE || 'public',
