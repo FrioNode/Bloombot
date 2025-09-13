@@ -175,5 +175,56 @@ ${footer}`.trim();
                 }
             }
         }
+    },
+    meme: {
+        type: 'fun',
+        desc: 'Fetches a hot meme from Reddit (default or specified subreddit)',
+        usage: 'meme or meme [subreddit]',
+        run: async (Bloom, message, fulltext) => {
+            const sender = message.key.remoteJid;
+            const args = fulltext.split(' ').slice(1);
+            const subreddit = args.length > 0 ? args[0] : 'memes';
+
+            try {
+                const apiUrl = `https://www.reddit.com/r/${subreddit}/hot.json?limit=50`;
+                const { data } = await axios.get(apiUrl, {
+                    headers: {
+                        'User-Agent': 'Bloom-Bot/1.0'
+                    }
+                });
+
+                const posts = data.data.children
+                .filter(post => !post.data.stickied)
+                .filter(post => {
+                    const url = post.data.url;
+                    return url.match(/\.(jpeg|jpg|png|gif)$/) !== null;
+                });
+
+                if (posts.length === 0) {
+                    return await Bloom.sendMessage(sender, {
+                        text: `❌ No memes found in r/${subreddit}. Try another subreddit.`
+                    }, { quoted: message });
+                }
+                const randomPost = posts[Math.floor(Math.random() * posts.length)].data;
+                const caption = `😂 *${randomPost.title}* (r/${subreddit})\n\n⬆️ ${randomPost.ups} upvotes`;
+                await Bloom.sendMessage(sender, {
+                    image: { url: randomPost.url },
+                    caption: caption
+                }, { quoted: message });
+
+            } catch (err) {
+                console.error('Meme fetch error:', err.message);
+
+                if (err.response && err.response.status === 404) {
+                    await Bloom.sendMessage(sender, {
+                        text: `❌ Subreddit r/${subreddit} not found. Try a different one.`
+                    }, { quoted: message });
+                } else {
+                    await Bloom.sendMessage(sender, {
+                        text: `❌ Failed to fetch meme from r/${subreddit}. Please try again later.`
+                    }, { quoted: message });
+                }
+            }
+        }
     }
 };
