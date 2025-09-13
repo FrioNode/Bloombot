@@ -1,17 +1,18 @@
 const path = require('path');
 const fs = require('fs');
-const { sudochat } = require('../../colors/setup');
+const mess = require('../../colors/mess');
+const { isBloomKing } = require('../../colors/auth');
 
 module.exports = {
     reload: {
         type: 'owner',
-        desc: 'Force reload all commands (Bot admin only)',
+        desc: 'Force reload all commands (Bot owner only)',
         run: async (Bloom, message) => {
             const sender = message.key.participant || message.key.remoteJid;
-            // Bot Admin check
-            if (sender !== sudochat) {
+            // Bot owner check
+            if (!isBloomKing(sender,message)) {
                 return await Bloom.sendMessage(message.key.remoteJid, {
-                    text: '❌ This command is restricted to bot admins.'
+                    text: `${mess.owner}`
                 });
             }
 
