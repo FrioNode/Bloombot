@@ -10,7 +10,7 @@ function getWindDirection(degrees) {
 }
 module.exports = {
     weather: {
-        type: 'apis',
+        type: 'utility',
         desc: 'Get current weather for a city',
         usage: 'weather <city>',
         run: async (Bloom, message, fulltext) => {
