@@ -3,7 +3,7 @@ const {botname, session, mode,react,emoji,image,logschat,channel,channelid} = re
 const { bloomCmd, initCommandHandler, startReminderChecker } = require('./bloom/brain');
 const pino = require('pino'); const fs = require('fs'); const path = require('path'); const axios = require('axios');
 const { emojis, doReact } = require('./colors/react'); const mess = require('./colors/mess');
-const qrCode = require('qrcode-terminal'); const express = require('express');
+const qrCode = require('qrcode-terminal'); const express = require('express'); const isDocker = require('is-docker');
 const { _autoStartGame } = require('./bloom/base/games');
 const log = (...args) => console.log('Bloom:',new Date().toLocaleString(), '|', ...args);
 let stopPokemonGame; const app = express();
@@ -154,3 +154,5 @@ app.get('/uptime', (req, res) => {
     res.json({ days, hours, minutes, seconds });
 });
 app.get('/status', (_, res) => res.send(`✅ ${botname} bot is online`));
+
+if (isDocker()) { log('Running inside Docker container'); } else { log('Running locally'); }
