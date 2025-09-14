@@ -1,4 +1,4 @@
-const { sudochat, bloom,isdocker, _reload } = require('../../colors/setup'); _reload();
+const { sudochat, bloom, _reload } = require('../../colors/setup'); _reload();
 const { isBloomKing } = require('../../colors/auth');
 const mess = require('../../colors/mess');
 const { Exp } = require('../../colors/schema');
@@ -8,11 +8,7 @@ const execPromise = promisify(exec);
 const fs = require('fs');
 const path = require('path');
 const configPath = path.join(__dirname, '../../colors/config.json');
-// ------FRIONODE------
-const isDocker = isdocker === 'true' || require('is-docker').default();
-const restartCommand = isDocker ? bloom.scripts.warm : bloom.scripts.restart;
-const stopCommand = isDocker ? bloom.scripts.cool : bloom.scripts.stop;
-// ------BENSON---------
+// ------FRIONODE-----
 
 const isOwner =isBloomKing;
     module.exports = {
@@ -121,7 +117,7 @@ return await Bloom.sendMessage(remoteJid, {
 
             try {
                 await Bloom.sendMessage(sender, { text: mess.restarting }, { quoted: message });
-                await execPromise(restartCommand);
+                await execPromise(bloom.scripts.restart);
             } catch (err) {
                 console.error('Reboot error:', err);
                 await Bloom.sendMessage(sender, { text: `❌ Failed to reboot the bot: ${err.message}` }, { quoted: message });
@@ -141,7 +137,7 @@ return await Bloom.sendMessage(remoteJid, {
             try {
                 // Stopping bot (PM2 process)
                 await Bloom.sendMessage(sender, { text: '🛑 Bot has been stopped.' }, { quoted: message });
-                await execPromise(stopCommand);
+                await execPromise(bloom.scripts.stop);
             } catch (err) {
                 console.error('Stop error:', err);
                 await Bloom.sendMessage(sender, { text: `❌ Failed to stop the bot: ${err.message}` }, { quoted: message });

@@ -7,9 +7,7 @@
     "start": "node bloom.js",
     "stop": "pm2 stop bloom",
     "restart": "pm2 restart bloom",
-    "test": "node test.js",
-    "warm": "docker restart",
-    "cool": "docker stop"
+    "test": "node test.js"
   },
   "keywords": [
     "bloom",
