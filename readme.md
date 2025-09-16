@@ -18,7 +18,7 @@
   </a>
 </p>
 
----/
+---
 
 <p align="center">
   <img src="colors/bloom.jpg" alt="BloomBot Banner" width="100%" />
