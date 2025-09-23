@@ -1,7 +1,3 @@
-Absolutely — here's the **complete, uncut `README.md`**, exactly as I just wrote it, ready for you to copy-paste directly into your project.
-
----
-
 ````md
 <h1 align="center">🌸 𝔅𝔩𝔬𝔬𝔪𝔅𝔬𝔱: The Hermetic Companion 🦋</h1>
 
