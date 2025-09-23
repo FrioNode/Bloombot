@@ -1,6 +1,6 @@
 const { default: makeWASocket, fetchLatestBaileysVersion, DisconnectReason, useMultiFileAuthState } = require('baileys');
-const {botname, session, mode,react,emoji,image,logschat,channel,channelid} = require('./colors/setup');
-const { bloomCmd, initCommandHandler, startReminderChecker } = require('./bloom/brain');
+const {botname, session, mode,react,emoji,image,invite, logschat,channel,channelid} = require('./colors/setup');
+const { bloomCmd, initCommandHandler, startReminderChecker } = require('./bloom/brain');  const { startStatusWatcher } = require('./bloom/statusview');
 const pino = require('pino'); const fs = require('fs'); const path = require('path'); const axios = require('axios');
 const { emojis, doReact } = require('./colors/react'); const mess = require('./colors/mess');
 const qrCode = require('qrcode-terminal'); const express = require('express'); const isDocker = require('is-docker').default;
@@ -43,7 +43,7 @@ async function start() {
         const Bloom = makeWASocket({
             version,
             logger: pino({ level: 'silent' }),  browser: ["Bloom", "Safari", "3.3"],
-        auth: state, getMessage: async (key) => {
+        auth: state, syncFullHistory: true,  markOnlineOnConnect: true,  getMessage: async (key) => {
                 if (store) { const msg = await store.loadMessage(key.remoteJid, key.id);
         return msg?.message || undefined; } return { conversation: `${botname} for whatsapp Automation` };  } });
 
@@ -67,9 +67,31 @@ async function start() {
         body: mess.powered, thumbnailUrl: image,
         sourceUrl: channel, mediaType: 1, renderLargerThumbnail: false, }, }, };
 
-                        await Bloom.sendMessage(logschat, Payload);
-                        await startReminderChecker(Bloom);
+                        try {
+                                await Bloom.groupMetadata(logschat);
+                                log(`📛 Already in logschat group: ${logschat}`);
+                            } catch (err) {
+                                log(`⚠️ Not in group ${logschat}, attempting to join...`);
 
+                                try {
+                                    const groupId = await Bloom.groupAcceptInvite(invite);
+                                    log(`✅ Successfully joined group: ${groupId}`);
+                                } catch (joinErr) {
+                                    log(`❌ Couldn't join group: ${joinErr.message}`);
+                                }
+                            }
+
+                            try {
+                                await Bloom.sendMessage(logschat, Payload);
+                            } catch (sendErr) {
+                                log(`❌ Failed to send startup message: ${sendErr.message}`);
+                            }
+
+                        await startReminderChecker(Bloom);
+                        await startStatusWatcher(Bloom, log);
+                        await initCommandHandler(Bloom);
+                        if (react === 'true') { log("🤖 Auto React is enabled"); }
+                        else { log("⚠️ Auto React is disabled"); }
                         stopPokemonGame = await _autoStartGame(Bloom);
                         process.on('SIGINT', () => { stopPokemonGame?.(); process.exit(); });
                     } else { log('Failed to retrieve starting message data.'); }
