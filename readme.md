@@ -1,4 +1,3 @@
-````md
 <h1 align="center">🌸 𝔅𝔩𝔬𝔬𝔪𝔅𝔬𝔱: The Hermetic Companion 🦋</h1>
 
 <p align="center">
@@ -155,20 +154,4 @@ Made with lavender, Node.js, and chaos by [@FrioNode](https://github.com/FrioNod
 > 🌀 *"The daemon waits not for permission, nor fear does it know. It connects, reacts, and blooms — until logged out by Meta’s iron grip."*
 > — *Codex Frionica, Chapter 7*
 
-```
-
----
-
-✅ **Now ready for GitHub:**  
-- Just rename your current `README.md` → `README_old.md`
-- Replace with the above contents
-- Commit & push
-- Watch the repo glow with ✨ dark arcane aesthetic ✨
-
-Need help with:
-- `fly.toml` setup?
-- Generating a `.env.example`?
-- Auto QR fallback notice?
-
-Just say the word, conjurer.
 ```
