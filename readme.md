@@ -1,7 +1,7 @@
 <h1 align="center">🌸 𝔅𝔩𝔬𝔬𝔪𝔅𝔬𝔱: The Hermetic Companion 🦋</h1>
 
 <p align="center">
-  <a href="https://chat.whatsapp.com/DlQmSxwD5IsA3xE4Wtczgh">
+  <a href="https://chat.whatsapp.com/FJOQhhYlQfR3sv5WxkhWZO">
     <img src="https://img.shields.io/badge/Join_Our_Conclave-25D366?style=for-the-badge&logo=whatsapp&logoColor=white">
   </a>
   <a href="https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d">
@@ -61,7 +61,7 @@ Its heart beats in the cloud — beyond time, beyond borders.
 
    ```env
    SESSION=BLOOM~a1b2c3d4
-   INVITE=FJOQhhYlQfR3sv5WxkhWZO
+   OWNERNUMBER=254718241545
    LOGSCHAT=123456789-123456@g.us
    CHANNEL=https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d
    CHANNELID=12345@newsletter
@@ -86,7 +86,7 @@ Scan it fast — the veil does not stay open forever.
 | ---------- | ----------------------------------------- |
 | `SESSION`  | Your scroll of immortality (Pastebin key) |
 | `LOGSCHAT` | Group JID where the bot speaks first      |
-| `INVITE`   | Invite code if bot is not in `LOGSCHAT`   |
+| `OWNERNUMBER`   | Bot Controler or owner   |
 
 ---
 
@@ -119,8 +119,7 @@ Scan it fast — the veil does not stay open forever.
 
 > When your spells backfire or your bot forgets itself...
 
-🧭 **Join our Group**:
-[💬 BloomBot Support](https://chat.whatsapp.com/DlQmSxwD5IsA3xE4Wtczgh)
+🧭 **Join our Group**(https://chat.whatsapp.com/FJOQhhYlQfR3sv5WxkhWZO)
 
 📢 **Follow Updates**:
 [📡 BloomBot Channel](https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d)
@@ -153,5 +152,3 @@ Made with lavender, Node.js, and chaos by [@FrioNode](https://github.com/FrioNod
 
 > 🌀 *"The daemon waits not for permission, nor fear does it know. It connects, reacts, and blooms — until logged out by Meta’s iron grip."*
 > — *Codex Frionica, Chapter 7*
-
-```
