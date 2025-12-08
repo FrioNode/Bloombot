@@ -30,7 +30,7 @@ function getAll() {
         invite: process.env.INVITE || 'FJOQhhYlQfR3sv5WxkhWZO',
         channelid: process.env.CHANNELID || '120363321675231023@newsletter',
         channel: process.env.CHANNEL || 'https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d',
-        botname: process.env.BOTNAME || 'Bloom',
+        botname: process.env.BOTNAME || 'Luna',
         image: process.env.IMAGE || 'https://raw.githubusercontent.com/FrioNode/Bloombot/main/colors/bloom.jpg',
         lang: process.env.LANG || 'EN',
         react: process.env.REACT === 'true',

@@ -16,10 +16,10 @@ function saveViewed(set) {
     fs.writeFileSync(DB_PATH, JSON.stringify([...set], null, 2));
 }
 
-async function startStatusWatcher(sock, log) {
+async function startStatusWatcher(Luna, log) {
     const viewed = loadViewed(); // 🔥 persistent
 
-    sock.ev.on('messages.upsert', async ({ messages }) => {
+    Luna.ev.on('messages.upsert', async ({ messages }) => {
         for (const msg of messages) {
             if (msg.key.remoteJid !== 'status@broadcast') continue;
 
@@ -33,12 +33,12 @@ async function startStatusWatcher(sock, log) {
             saveViewed(viewed);
 
             try {
-                await sock.readMessages([msg.key]);
+                await Luna.readMessages([msg.key]);
                 log(`👁️ Viewed status from ${sender}`);
 
                 const emoji = emojis[Math.floor(Math.random() * emojis.length)];
 
-                await sock.sendMessage(sender, {
+                await Luna.sendMessage(sender, {
                     react: { text: emoji, key: msg.key }
                 });
 

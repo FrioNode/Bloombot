@@ -188,7 +188,7 @@ setInterval(() => store.writeToFile(), storeWriteInterval || 10000);
 if (isDocker()) { log(`${emoji} ${botname} is running inside a Docker container`); } else { log(`${emoji} ${botname} is running locally`); }
 
 app.use(express.static(path.join(__dirname, 'colors')));
-app.get('/', (req, res) => {  res.sendFile(path.join(__dirname, 'colors', 'bloom.html')); });
+app.get('/', (req, res) => {  res.sendFile(path.join(__dirname, 'colors', 'luna.html')); });
 
 app.listen(PORT, () => { log(`🔒 ${botname} Server is running on port ${PORT}`); });
 

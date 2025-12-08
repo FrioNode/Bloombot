@@ -1,4 +1,4 @@
-app = "bloombot"
+app = "luna"
 primary_region = "ams"
 
 [vm]

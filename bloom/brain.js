@@ -8,9 +8,9 @@ const { tttmove,startReminderChecker } = require('./ttthandle');
 const fs = require('fs'), path = require('path');
 
 connectDB('Brain Module');
-let commandRegistry = {}, activeBloomInstance = null;
+let commandRegistry = {}, activeLunaInstance = null;
 
-async function initCommandHandler(Bloom) { activeBloomInstance = Bloom; commandRegistry = {}; await loadCommands(); console.log('♻️ Command handler initialized'); }
+async function initCommandHandler(Luna) { activeLunaInstance = Luna; commandRegistry = {}; await loadCommands(); console.log('♻️ Command handler initialized'); }
 
 async function loadCommands() {
     try { const currentDir = __dirname;
@@ -29,7 +29,7 @@ async function loadCommands() {
                             } } catch (err) { } } } } catch (e) { } }
 console.log(`📦 Total loaded commands: ${Object.keys(commandRegistry).length}`); } catch (e) { } }
 
-async function bloomCm(Bloom, message, fulltext, commands) {
+async function bloomCm(Luna, message, fulltext, commands) {
     const senderJid = message.key?.participant || message.key?.remoteJid;
     if (senderJid) await trackUsage(senderJid);
 
@@ -38,10 +38,10 @@ async function bloomCm(Bloom, message, fulltext, commands) {
     if (!commandModule || typeof commandModule.run !== 'function') return;
 
     try {
-        await commandModule.run(Bloom, message, fulltext, commands);
+        await commandModule.run(Luna, message, fulltext, commands);
     } catch (err) {
         console.error(`❌ Fatal error: Command "${commandName}" failed:`, err);
-        await Bloom.sendMessage(message.key.remoteJid, {
+        await Luna.sendMessage(message.key.remoteJid, {
             text: '❗ An error occurred while executing the command.' });  } }
 
 function setupHotReload() {
@@ -54,18 +54,18 @@ function setupHotReload() {
         try { delete require.cache[require.resolve(filePath)]; require(filePath); if (!filePath.includes('colors')) await loadCommands(); }
         catch (err) { } } }
 
-const bloomCmd = async (Bloom, message) => {
+const bloomCmd = async (Luna, message) => {
     try {
-        if (!Bloom || !message?.key) return false;
-        if (!activeBloomInstance) await initCommandHandler(Bloom);
+        if (!Luna || !message?.key) return false;
+        if (!activeLunaInstance) await initCommandHandler(Luna);
          if (message.key.remoteJid === 'status@broadcast') { return false; }
 
         const { command, fulltext } = extractCommand(message);
-        if (/^[1-9]$/.test(command)) { await tttmove(Bloom, message, fulltext); return true; }
+        if (/^[1-9]$/.test(command)) { await tttmove(Luna, message, fulltext); return true; }
 
         const checks = [
-            () => checkMode(Bloom, message), () => checkGroupCommandLock(Bloom, message), () => checkMessageType(Bloom, message),
-            () => checkCommandTypeFlags(Bloom, message), () => checkAFK(Bloom, message),
+            () => checkMode(Luna, message), () => checkGroupCommandLock(Luna, message), () => checkMessageType(Luna, message),
+            () => checkCommandTypeFlags(Luna, message), () => checkAFK(Luna, message),
         ];
         let shouldProceed = true;
         for (const [i, check] of checks.entries()) {
@@ -77,7 +77,7 @@ const bloomCmd = async (Bloom, message) => {
                 shouldProceed = false;  break; }  }
 
         if (shouldProceed && command && commandRegistry[command]) {
-            await bloomCm(Bloom, message, fulltext, commandRegistry);
+            await bloomCm(Luna, message, fulltext, commandRegistry);
         }   return shouldProceed;  } catch (e) {  return false;  } };
 
 function extractTextFromMessage(msg) {
@@ -99,9 +99,9 @@ function extractCommand(message) {
         return { command, fulltext };
     } catch (e) { return { command: '', fulltext: '' }; } }
 
-async function checkMode(Bloom, message) {
+async function checkMode(Luna, message) {
     try {
-        if (!Bloom || !message?.key) return false;
+        if (!Luna || !message?.key) return false;
         const sender = message.key.participant || message.key.remoteJid;
         if (!sender) return false;
         const isGroup = message.key.remoteJid?.endsWith('@g.us') || false;
@@ -114,35 +114,35 @@ async function checkMode(Bloom, message) {
             if (!user) user = await UserCounter.create({ user: sender, count: 1 });
             else user.count += 1;
             if (user.count >= 3) {
-                await Bloom.sendMessage(sender, { text: mess.blocked });
-                await Bloom.updateBlockStatus(sender, 'block');  return false;
+                await Luna.sendMessage(sender, { text: mess.blocked });
+                await Luna.updateBlockStatus(sender, 'block');  return false;
             }
             await user.save();
-            await Bloom.sendMessage(sender, { text: mess.privateMode });
+            await Luna.sendMessage(sender, { text: mess.privateMode });
             return false;  }
 
         if (mode === 'group' && (!isGroup && sender !== sudochat)) {
-            await Bloom.sendMessage(sender, { text: mess.groupOnly });
+            await Luna.sendMessage(sender, { text: mess.groupOnly });
             return false;  } return true; } catch (e) { return false; } }
 
-async function checkMessageType(Bloom, message) {
+async function checkMessageType(Luna, message) {
     try {
-        if (!Bloom || !message?.key || !message.message) return true;
+        if (!Luna || !message?.key || !message.message) return true;
         const groupId = message.key.remoteJid;
         if (!groupId?.endsWith('@g.us')) return true;
         const sender = message.key.participant;
         if (!sender) return true;
         const settings = await Settings.findOne({ group: groupId });
         if (!settings) return true;
-        const senderIsAdmin = await isSenderAdmin(Bloom,message);
-        const botIsAdmin = await isBotAdmin(Bloom,message);
+        const senderIsAdmin = await isSenderAdmin(Luna,message);
+        const botIsAdmin = await isBotAdmin(Luna,message);
         const messageType = Object.keys(message.message)[0] || '';
         const text = message.message?.conversation || message.message?.extendedTextMessage?.text || '';
         const linkRegex = /(?:https?:\/\/|www\.)[^\s]+|(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[^\s]*)?/gi;
         if (settings.antiLink && !senderIsAdmin) {
             const matches = text.match(linkRegex);
             if (matches && matches.length > 0) {
-                if (botIsAdmin) await Bloom.groupParticipantsUpdate(groupId, [sender], 'remove');
+                if (botIsAdmin) await Luna.groupParticipantsUpdate(groupId, [sender], 'remove');
                 return false;  } }
 
         if (settings.noImage && messageType === 'imageMessage' && !senderIsAdmin) {
@@ -151,17 +151,17 @@ async function checkMessageType(Bloom, message) {
             const currentWarn = settings.warns.get(safeSender) || 0, newWarn = currentWarn + 1;
             settings.warns.set(safeSender, newWarn);
             if (newWarn >= 3) {
-                if (botIsAdmin) await Bloom.groupParticipantsUpdate(groupId, [sender], 'remove');
+                if (botIsAdmin) await Luna.groupParticipantsUpdate(groupId, [sender], 'remove');
                 settings.warns.delete(safeSender);
                 await settings.save();
                 return false;
             }
-            await Bloom.sendMessage(groupId, { text: `⚠️ @${sender.split('@')[0]}, no images allowed! Warning ${newWarn}/3.`, mentions: [sender] });
+            await Luna.sendMessage(groupId, { text: `⚠️ @${sender.split('@')[0]}, no images allowed! Warning ${newWarn}/3.`, mentions: [sender] });
             await settings.save(); }  return true;  } catch (err) { return true; } }
 
-async function checkCommandTypeFlags(Bloom, message) {
+async function checkCommandTypeFlags(Luna, message) {
     try {
-        if (!Bloom || !message?.key) return true;
+        if (!Luna || !message?.key) return true;
         const groupId = message.key.remoteJid;
         if (!groupId?.endsWith('@g.us')) return true;
         const { command } = extractCommand(message);
@@ -170,13 +170,13 @@ async function checkCommandTypeFlags(Bloom, message) {
         if (!cmdData) return true;
         const settings = await Settings.findOne({ group: groupId });
         if (!settings) return true;
-        if (cmdData.type === 'game' && !settings.gameEnabled) { await Bloom.sendMessage(groupId, { text: mess.games }); return false; }
-        if (cmdData.type === 'nsfw' && !settings.nsfwEnabled) { await Bloom.sendMessage(groupId, { text: mess.nsfwoff }); return false; }
+        if (cmdData.type === 'game' && !settings.gameEnabled) { await Luna.sendMessage(groupId, { text: mess.games }); return false; }
+        if (cmdData.type === 'nsfw' && !settings.nsfwEnabled) { await Luna.sendMessage(groupId, { text: mess.nsfwoff }); return false; }
         return true;   } catch (e) { return true; } }
 
-async function checkGroupCommandLock(Bloom, message) {
+async function checkGroupCommandLock(Luna, message) {
     try {
-        if (!Bloom || !message?.key) return true;
+        if (!Luna || !message?.key) return true;
         const groupId = message.key.remoteJid;
         if (!groupId?.endsWith('@g.us')) return true;
 
@@ -188,17 +188,17 @@ async function checkGroupCommandLock(Bloom, message) {
 
         const overrideCommand = 'cmds';
         if (!settings.commandsEnabled && command !== overrideCommand) {
-        //    await Bloom.sendMessage(groupId, { text: '🚫 Commands are currently disabled in this group by an admin.' });
+        //    await Luna.sendMessage(groupId, { text: '🚫 Commands are currently disabled in this group by an admin.' });
             return false;  }  return true;  } catch (err) {  return true;  } }
 
-async function checkAFK(Bloom, message) {
+async function checkAFK(Luna, message) {
     try {
-        if (!Bloom || !message?.key || !message.message?.extendedTextMessage?.contextInfo) return true;
+        if (!Luna || !message?.key || !message.message?.extendedTextMessage?.contextInfo) return true;
         const quotedUser = message.message.extendedTextMessage.contextInfo.participant;
         if (!quotedUser) return true;
         const afk = await AFK.findOne({ user: quotedUser });
         if (afk) {
-            await Bloom.sendMessage(message.key.remoteJid, { text: `💤 That user is AFK: ${afk.reason || 'No reason'}`, mentions: [quotedUser] });
+            await Luna.sendMessage(message.key.remoteJid, { text: `💤 That user is AFK: ${afk.reason || 'No reason'}`, mentions: [quotedUser] });
             return false; }  return true;  } catch (e) { return true; } }
 
 if (node !== 'production') setupHotReload();
