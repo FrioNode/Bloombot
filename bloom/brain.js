@@ -58,6 +58,7 @@ const bloomCmd = async (Bloom, message) => {
     try {
         if (!Bloom || !message?.key) return false;
         if (!activeBloomInstance) await initCommandHandler(Bloom);
+         if (message.key.remoteJid === 'status@broadcast') { return false; }
 
         const { command, fulltext } = extractCommand(message);
         if (/^[1-9]$/.test(command)) { await tttmove(Bloom, message, fulltext); return true; }

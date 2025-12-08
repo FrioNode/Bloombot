@@ -47,6 +47,8 @@ function getAll() {
         deepseek: process.env.DEEPSEEK,             // https://platform.deepseek.com/api_keys
         pastebinapi: process.env.PASTEBINAPI || 'pastebin-api',
         bloom: Bot,
+        maxStoreMessages: process.env.MAXSROREMESSAGES || 20,
+        storeWriteInterval: process.env.STOREWRITEINTERVAL || 10000,
         cpyear: new Date().getFullYear()
     };
 }

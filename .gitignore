@@ -3,4 +3,5 @@ heart/*
 *.env
 *.yaml
 *-lock.json
+*.bak
 test.js
