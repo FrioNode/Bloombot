@@ -18,7 +18,7 @@ const PIXELE = 'khiVE4MkSCKRiKSpyPTnqtxioFSb27'+'YwNNKfzTtKjeSljP8iBYpkvbSS';
 function getAll() {
     return {
         session: process.env.SESSION,
-        mongo: process.env.MONGO,
+        mongo: process.env.MONGO || 'mongodb://frio:node@localhost:27017/luna?authSource=admin',
         node: process.env.NODE_ENV || 'development',
         sudochat: `${process.env.OWNERNUMBER || '254718241545'}@s.whatsapp.net`,
         sudolid: process.env.SUDOLID || '93282663153890@lid',

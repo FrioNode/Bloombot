@@ -5,6 +5,7 @@
   "main": "luna.js",
   "scripts": {
     "start": "node luna.js",
+    "ignite": "pm2 start luna.js --name luna && pm2 logs",
     "stop": "pm2 stop luna",
     "restart": "pm2 restart luna",
     "test": "node test.js"
