@@ -19,6 +19,7 @@ function getAll() {
     return {
         session: process.env.SESSION,
         mongo: process.env.MONGO || 'mongodb://frio:node@localhost:27017/luna?authSource=admin',
+        redisurl: process.env.REDIS || 'redis://localhost:6379',
         node: process.env.NODE_ENV || 'development',
         sudochat: `${process.env.OWNERNUMBER || '254718241545'}@s.whatsapp.net`,
         sudolid: process.env.SUDOLID || '93282663153890@lid',

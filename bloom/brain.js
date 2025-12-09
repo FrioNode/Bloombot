@@ -30,9 +30,6 @@ async function loadCommands() {
 console.log(`📦 Total loaded commands: ${Object.keys(commandRegistry).length}`); } catch (e) { } }
 
 async function bloomCm(Luna, message, fulltext, commands) {
-    const senderJid = message.key?.participant || message.key?.remoteJid;
-    if (senderJid) await trackUsage(senderJid);
-
     let commandName = fulltext.split(' ')[0].toLowerCase();
     const commandModule = commands[commandName];
     if (!commandModule || typeof commandModule.run !== 'function') return;
@@ -64,9 +61,10 @@ const bloomCmd = async (Luna, message) => {
         if (/^[1-9]$/.test(command)) { await tttmove(Luna, message, fulltext); return true; }
 
         const checks = [
-            () => checkMode(Luna, message), () => checkGroupCommandLock(Luna, message), () => checkMessageType(Luna, message),
-            () => checkCommandTypeFlags(Luna, message), () => checkAFK(Luna, message),
-        ];
+    async () => (await trackUsage(Luna, message)).shouldProceed, async () => checkMode(Luna, message),
+    async () => checkGroupCommandLock(Luna, message), async () => checkMessageType(Luna, message),
+    async () => checkCommandTypeFlags(Luna, message), async () => checkAFK(Luna, message), ];
+
         let shouldProceed = true;
         for (const [i, check] of checks.entries()) {
             try {

@@ -69,6 +69,7 @@ const expSchema = new mongoose.Schema({
     lastDaily: Date,
     streak: { type: Number, default: 0 },
     messageCount: { type: Number, default: 0 },
+    isBanned: { type: Boolean, default: false},
 }, { timestamps: true });
 
 const settingsSchema = new mongoose.Schema({

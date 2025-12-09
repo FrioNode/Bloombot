@@ -25,7 +25,14 @@ const gambleMultipliers = {
     orange: Math.floor(Math.random() * 1101) - 100,
     pink: Math.floor(Math.random() * 1101) - 100,
     black: Math.floor(Math.random() * 1101) - 100,
-    white: Math.floor(Math.random() * 1101) - 100
+    white: Math.floor(Math.random() * 1101) - 100,
+    magenta: Math.floor(Math.random() * 1101) - 100,
+    cyan: Math.floor(Math.random() * 1101) - 100,
+    indigo: Math.floor(Math.random() * 1101) - 100,
+    violet: Math.floor(Math.random() * 1101) - 100,
+    grey: Math.floor(Math.random() * 1101) - 100,
+    brown: Math.floor(Math.random() * 1101) - 100,
+    maloon: Math.floor(Math.random() * 1101) - 100,
 };
 
 module.exports = {
@@ -167,7 +174,7 @@ reg: {
 
             await Bloom.sendMessage(message.key.remoteJid, { text: `You successfully transferred ${arg} 💰 to ${receiver.name}. Transaction fee: ${transactionFee} 💰. New wallet balance: ${user.walletBalance}` }, { quoted: message });
             console.log(receiver._id);
-            await Bloom.sendMessage(receiver._id, { text: `You received ${arg} 💰 from ${user.name}.` });
+            await Bloom.sendMessage(message.key.remoteJid, { text: `[ ${receiver.name}] 🎮 Hello Gamer @${receiver._id.split('@')[0]} You received ${arg} 💰 from ${user.name}.` },  { quoted: message });
         }
     },
 
@@ -331,36 +338,82 @@ reg: {
             Bloom.sendMessage(message.key.remoteJid, {text: `You went for a hunt and caught a ${size} ${animalEmojis[animal]} ${animal} worth ${finalPrice} 💰.`}, {quoted: message});
         }
     },
+fish: {
+    type: 'economy',
+    desc: 'Go fishing for aquatic animals',
+    run: async (Bloom, message) => {
 
-    fish: {
-        type: 'economy',
-        desc: 'Go fishing for aquatic animals',
-        run: async (Bloom, message) => {
-            const senderID = message.key.participant || message.key.remoteJid;
-            const user = await User.findById(senderID);
-            const currentDate = new Date();
-            const lastCatchTime = new Date(user.lastFishCatch);
-            const timeDifference = currentDate - lastCatchTime;
+        const senderID = message.key.participant || message.key.remoteJid;
+        const user = await User.findById(senderID);
+        if (!user)
+            return Bloom.sendMessage(message.key.remoteJid, { text: "You don't exist in the economy." }, { quoted: message });
 
-            if (timeDifference < 600000) return Bloom.sendMessage(message.key.remoteJid, {text: 'You need to wait a bit before you can fish again! Patience is key.'}, {quoted: message});
+        const currentDate = new Date();
+        const lastCatchTime = new Date(user.lastFishCatch);
+        const timeDifference = currentDate - lastCatchTime;
 
-            user.lastFishCatch = currentDate;
-            const randomAnimalIndex = Math.floor(Math.random() * aquaticAnimals.length);
-            const aquaticAnimal = aquaticAnimals[randomAnimalIndex];
-            const size = sizes[Math.floor(Math.random() * sizes.length)];
-            const basePrice = Math.floor(Math.random() * 1000) + 100;
-            const priceMultiplier = size === 'small' ? 0.5 : size === 'medium' ? 1 : 1.5;
-            const finalPrice = basePrice * priceMultiplier;
+        if (timeDifference < 600000)
+            return Bloom.sendMessage(message.key.remoteJid, { text: "You need to wait a bit before you can fish again!" }, { quoted: message });
+        const toolLimits = {
+            fish_hook: 10,
+            spear: 15,
+            fish_net: 20
+        };
 
-            user.inventory.animals.push({ name: aquaticAnimal, value: finalPrice });
-            user.transactionHistory.push({ type: 'catch_fish', arg: finalPrice, animal: aquaticAnimal, result: 'caught' });
+        const catchTypes = {
+            fish_hook: ['fish', 'frog'],
+            spear: ['fish', 'frog', 'blowfish'],
+            fish_net: ['fish', 'frog', 'blowfish', 'tropical_fish', 'shark']
+        };
+        const fishingTool = user.inventory.fishing.find(tool => tool.name);
+
+        if (!fishingTool)
+            return Bloom.sendMessage(message.key.remoteJid, { text: "You don't have any fishing tools! Buy one using *shop*." }, { quoted: message });
+
+        const tool = fishingTool.name;
+        const availableCatches = catchTypes[tool];
+        const randomAnimal = availableCatches[Math.floor(Math.random() * availableCatches.length)];
+        const size = sizes[Math.floor(Math.random() * sizes.length)];
+        const basePrice = Math.floor(Math.random() * 1000) + 100;
+        const multiplier = size === 'small' ? 0.5 : size === 'medium' ? 1 : 1.5;
+        const finalPrice = Math.floor(basePrice * multiplier);
+        user.inventory.animals.push({ name: randomAnimal, value: finalPrice });
+
+        // Track tool usage
+        let toolUsage = fishingTool.miningUses || 0;
+        toolUsage++;
+        fishingTool.miningUses = toolUsage;
+
+        user.lastFishCatch = currentDate;
+        user.transactionHistory.push({
+            type: 'catch_fish',
+            item: randomAnimal,
+            arg: finalPrice,
+            result: 'caught'
+        });
+        if (toolUsage >= toolLimits[tool]) {
+
+            const toolIndex = user.inventory.fishing.findIndex(t => t.name === tool);
+            if (toolIndex !== -1)
+                user.inventory.fishing.splice(toolIndex, 1);
+
             await user.save();
 
-            Bloom.sendMessage(message.key.remoteJid, {text: `You went fishing and caught a ${size} ${aquaticAnimalEmojis[aquaticAnimal]} ${aquaticAnimal} worth ${finalPrice} 💰.`}, {quoted: message});
-        }
-    },
+            return Bloom.sendMessage(message.key.remoteJid, {
+                text:
+                    `🎣 You used your *${tool}* and caught a ${size} ${aquaticAnimalEmojis[randomAnimal]} ${randomAnimal} worth ${finalPrice} 💰.\n\n` +
+                    `⚠️ Your ${tool} broke after ${toolUsage} uses!`
+            }, { quoted: message }); }
+        await user.save();
 
-    gamble: {
+        return Bloom.sendMessage(message.key.remoteJid, {
+            text:
+                `🎣 You used your *${tool}* and caught a ${size} ${aquaticAnimalEmojis[randomAnimal]} ${randomAnimal} worth ${finalPrice} 💰.\n` +
+                `🛠️ Your ${tool} has *${toolLimits[tool] - toolUsage} uses left*.`
+        }, { quoted: message });
+    }
+},
+       gamble: {
         type: 'economy',
         desc: 'Gamble your money on colours',
         usage: 'gamble <colour> <amount>',
@@ -369,16 +422,40 @@ reg: {
             const parts = fulltext.trim().split(/\s+/);
             const color = parts[1];
             const betAmountStr = parts[2];
-            console.log(color)
-            console.log(betAmountStr)
             const betAmount = parseInt(betAmountStr, 10);
-
-            if (!gambleMultipliers[color]) return Bloom.sendMessage(message.key.remoteJid, { text: 'Invalid color. Please choose a valid color to gamble with.\neg: red, blue, green, yellow, purple, orange, pink, black, white' }, { quoted: message });
-            if (isNaN(betAmount)) return Bloom.sendMessage(message.key.remoteJid, { text: 'Invalid bet amount. Please provide a valid positive number.' }, { quoted: message });
-
             const user = await User.findById(senderID);
-            if (user.walletBalance < betAmount) return Bloom.sendMessage(message.key.remoteJid, { text: 'You do not have enough funds to gamble.' }, { quoted: message });
-            if (betAmount > 10000) return Bloom.sendMessage(message.key.remoteJid, { text: 'You cannot gamble more than 10,000 💰.' }, { quoted: message });
+            const now = new Date();
+            const lastGambleTime = new Date(user.lastGamble || 0);
+            const diff = now - lastGambleTime;
+            if (diff < 10000) {
+                const remaining = ((10000 - diff) / 1000).toFixed(1);
+                return Bloom.sendMessage(
+                    message.key.remoteJid,
+                    { text: `⏳ You must wait **${remaining}s** before gambling again!` },
+                    { quoted: message }
+                );
+            }
+            if (!gambleMultipliers[color])
+                return Bloom.sendMessage(message.key.remoteJid, {
+                    text: 'Invalid color. Please choose a valid color to gamble with.\neg: red, blue, green, yellow, purple, orange, pink, black, white'
+                }, { quoted: message });
+
+            if (isNaN(betAmount))
+                return Bloom.sendMessage(message.key.remoteJid, {
+                    text: 'Invalid bet amount. Please provide a valid positive number.'
+                }, { quoted: message });
+
+            if (user.walletBalance < betAmount)
+                return Bloom.sendMessage(message.key.remoteJid, {
+                    text: 'You do not have enough funds to gamble.'
+                }, { quoted: message });
+
+            if (betAmount > 10000)
+                return Bloom.sendMessage(message.key.remoteJid, {
+                    text: 'You cannot gamble more than 10,000 💰.'
+                }, { quoted: message });
+
+            user.lastGamble = now;
 
             user.walletBalance -= betAmount;
             const multiplier = gambleMultipliers[color];
@@ -387,13 +464,23 @@ reg: {
 
             if (winnings > 0) {
                 user.walletBalance += winnings;
-                user.transactionHistory.push({type: 'gamble', arg: betAmount, result: 'win', transactionFee: 0 });
+                user.transactionHistory.push({
+                    type: 'gamble',
+                    arg: betAmount,
+                    result: 'win',
+                    transactionFee: 0
+                });
                 await user.save();
-                resultMessage += `Congratulations! You won ${winnings.toFixed(2)} 💰. Your new wallet balance is ${user.walletBalance} 💰.`;
+                resultMessage += `🎉 You won ${winnings.toFixed(2)} 💰!\nNew balance: ${user.walletBalance} 💰.`;
             } else {
-                user.transactionHistory.push({ type: 'gamble', arg: betAmount, result: 'lose', transactionFee: 0 });
+                user.transactionHistory.push({
+                    type: 'gamble',
+                    arg: betAmount,
+                    result: 'lose',
+                    transactionFee: 0
+                });
                 await user.save();
-                resultMessage += `Sorry, you lost ${betAmount} 💰. Your new wallet balance is ${user.walletBalance} 💰.`;
+                resultMessage += `❌ You lost ${betAmount} 💰.\nNew balance: ${user.walletBalance} 💰.`;
             }
 
             Bloom.sendMessage(message.key.remoteJid, { text: resultMessage }, { quoted: message });
@@ -788,8 +875,6 @@ reg: {
         }
     }
 };
-
-
 
 
 // 👇 Auto-start function — NOT exported above

@@ -1,4 +1,4 @@
-<h1 align="center">🌸 𝔅𝔩𝔬𝔬𝔪𝔅𝔬𝔱: The Hermetic Companion 🦋</h1>
+<h1 align="center">🌸 Luna: The Hermetic Companion 🦋</h1>
 
 <p align="center">
   <a href="https://chat.whatsapp.com/FJOQhhYlQfR3sv5WxkhWZO">
@@ -9,13 +9,13 @@
   </a>
 </p>
 
-> 🌐 Official Portal: [https://bloombot.fly.dev](https://bloombot.fly.dev)
+> 🌐 Official Portal: [https://lunabot.fly.dev](https://lunabot.fly.dev)
 
 ---
 
-## 🌌 What Is BloomBot?
+## 🌌 What Is Luna?
 
-**BloomBot** is not a "bot" — it is a **multi-dimensional entity**.
+**Luna** is not a "bot" — it is a **multi-dimensional entity**.
 
 It whispers into your WhatsApp groups through 400+ incantations.  
 It sees status updates.  
@@ -44,7 +44,7 @@ Then deploy with a single whisper:
 fly deploy
 ```
 
-Your magical bot shall awaken at: `https://bloombot.fly.dev`
+Your magical bot shall awaken at: `https://lunabot.fly.dev`
 Its heart beats in the cloud — beyond time, beyond borders.
 
 ---
@@ -122,7 +122,7 @@ Scan it fast — the veil does not stay open forever.
 🧭 **Join our Group**(https://chat.whatsapp.com/FJOQhhYlQfR3sv5WxkhWZO)
 
 📢 **Follow Updates**:
-[📡 BloomBot Channel](https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d)
+[📡 Luna Channel](https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d)
 
 ---
 
@@ -146,7 +146,7 @@ Use wisely. The guild protects no fool.
 
 Made with lavender, Node.js, and chaos by [@FrioNode](https://github.com/FrioNode)
 
-🌐 Website: [bloombot.fly.dev](https://bloombot.fly.dev)
+🌐 Website: [lunabot.fly.dev](https://lunabot.fly.dev)
 
 ---
 
