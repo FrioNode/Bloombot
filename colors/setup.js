@@ -27,19 +27,19 @@ function getAll() {
         bloomchat: process.env.BLOOMCHAT || '120363154923982755@g.us',
         logschat: process.env.LOGSCHAT || '120363154923982755@g.us',
         openchat: process.env.OPENCHAT || '120363154923982755@g.us',
-        invite: process.env.INVITE || 'FJOQhhYlQfR3sv5WxkhWZO',
+        invite: process.env.INVITE || 'L952Zbo6M2KGlAcGHRk4m8',
         channelid: process.env.CHANNELID || '120363321675231023@newsletter',
         channel: process.env.CHANNEL || 'https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d',
         botname: process.env.BOTNAME || 'Luna',
         image: process.env.IMAGE || 'https://raw.githubusercontent.com/FrioNode/Bloombot/main/colors/luna.png',
         lang: process.env.LANG || 'EN',
-        react: process.env.REACT === 'true',
+        react: process.env.REACT || 'false', // reduces useless reactions
         emoji: process.env.EMOJI || '🌼',
         reboot: process.env.REBOOT === 'true',
         isdocker: process.env.IS_DOCKER,
-        prefix: process.env.PREFIX || '!',
+        prefix: process.env.PREFIX || '!', // Just incase but doesnt work
         timezone: process.env.TIMEZONE || 'Africa/Nairobi',
-        mode: process.env.MODE || 'public',
+        mode: process.env.MODE || 'group', // default mode to avoid spamming
         weatherKey: process.env.WEATHERKEY,         // https://openweathermap.org/api
         pixelkey: process.env.PIXELKEY || PIXELE,
         ninjaKey: process.env.NINJAKEY,              // https://api-ninjas.com/api

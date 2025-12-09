@@ -1,5 +1,6 @@
 const fs = require('fs');
 const mongoose = require('mongoose');
+const { v4: uuidv4 } = require('uuid');
 const { User, Pokemon, TicTacToe, connectDB } = require('../../colors/schema');
 const { createGame, joinGame, endGame, renderBoard } = require('../ttthandle');
 const { pokemon } = require('../../colors/pokemon');
@@ -40,29 +41,36 @@ module.exports = {
         }
     },
 
-    reg: {
-        type: 'economy',
-        desc: 'Register or update your economy profile',
-        reg: 'reg <name>',
-        run: async (Bloom, message, fulltext) => {
-            const senderID = message.key.participant || message.key.remoteJid;
-            const arg = fulltext.trim().split(/\s+/)[1];
-            let name = arg || generateRandomName();
+reg: {
+    type: 'economy',
+    desc: 'Register or update your economy profile',
+    reg: 'reg <name>',
+    run: async (Bloom, message, fulltext) => {
+        const senderID = message.key.participant || message.key.remoteJid;
+        const arg = fulltext.trim().split(/\s+/)[1];
+        let name = arg || generateRandomName();
 
-            if (!isValidName(name)) return Bloom.sendMessage(message.key.remoteJid, { text: 'Invalid name. Name must be at least 4 characters long, contain only letters, and no symbols.' }, { quoted: message });
+        if (!isValidName(name))
+            return Bloom.sendMessage(message.key.remoteJid, {
+                text: 'Invalid name. Name must be at least 4 characters long, contain only letters, and no symbols.'
+            }, { quoted: message });
 
-            let user = await User.findById(senderID);
-            if (user) {
-                user.name = name;
-                await user.save();
-                return Bloom.sendMessage(message.key.remoteJid, { text: `Welcome back! Your name has been updated to ${name}.` }, { quoted: message });
-            } else {
-                user = new User({ _id: senderID, name: name });
-                await user.save();
-                return Bloom.sendMessage(message.key.remoteJid, { text: `Welcome, ${name}! You have been successfully registered in the economy.` }, { quoted: message });
-            }
+        // Generate a unique "email" to avoid duplicates
+        const fakeEmail = `${name}-${uuidv4()}@lunabot.com`;
+
+        let user = await User.findById(senderID);
+        if (user) {
+            user.name = name;
+            user.email = fakeEmail;  // Add fake email here
+            await user.save();
+            return Bloom.sendMessage(message.key.remoteJid, { text: `Welcome back! Your name has been updated to ${name}.` }, { quoted: message });
+        } else {
+            user = new User({ _id: senderID, name, email: fakeEmail });
+            await user.save();
+            return Bloom.sendMessage(message.key.remoteJid, { text: `Welcome, ${name}! You have been successfully registered in the economy.` }, { quoted: message });
         }
-    },
+    }
+},
 
     dep: {
         type: 'economy',
