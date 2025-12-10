@@ -1,4 +1,5 @@
-const { sudochat, bloom, _reload } = require('../../colors/setup'); _reload();
+const luna = require('../../package.json');
+const { get, set } = require('../../colors/setup');
 const { isBloomKing } = require('../../colors/auth');
 const mess = require('../../colors/mess');
 const { Exp } = require('../../colors/schema');
@@ -19,7 +20,7 @@ const isOwner =isBloomKing;
             run: async (Bloom, message, fulltext) => {
                 const remoteJid = message.key.remoteJid;
                 const sender = message.key.participant || remoteJid;
-
+                const sudochat = (await get('OWNERNUMBER')) + '@s.whatsapp.net';
                 if (sender !== sudochat) {
                     return await Bloom.sendMessage(remoteJid, { text: '❌ This command is for the bot owner only.' }, { quoted: message });
                 }
@@ -117,7 +118,7 @@ return await Bloom.sendMessage(remoteJid, {
 
             try {
                 await Bloom.sendMessage(sender, { text: mess.restarting }, { quoted: message });
-                await execPromise(bloom.scripts.restart);
+                await execPromise(luna.scripts.restart);
             } catch (err) {
                 console.error('Reboot error:', err);
                 await Bloom.sendMessage(sender, { text: `❌ Failed to reboot the bot: ${err.message}` }, { quoted: message });
@@ -137,7 +138,7 @@ return await Bloom.sendMessage(remoteJid, {
             try {
                 // Stopping bot (PM2 process)
                 await Bloom.sendMessage(sender, { text: '🛑 Bot has been stopped.' }, { quoted: message });
-                await execPromise(bloom.scripts.stop);
+                await execPromise(luna.scripts.stop);
             } catch (err) {
                 console.error('Stop error:', err);
                 await Bloom.sendMessage(sender, { text: `❌ Failed to stop the bot: ${err.message}` }, { quoted: message });
@@ -229,6 +230,7 @@ return await Bloom.sendMessage(remoteJid, {
         xpreset: {
             run: async (Bloom, message, fulltext) => {
                 const sender = message.key.participant || message.key.remoteJid;
+                const sudochat = (await get('OWNERNUMBER')) + '@s.whatsapp.net';
                 if (sender !== sudochat) {
                     return await Bloom.sendMessage(message.key.remoteJid, {
                         text: "🚫 Only the bot owner can reset EXP."
@@ -269,51 +271,47 @@ return await Bloom.sendMessage(remoteJid, {
             desc: 'Reset a user’s EXP (admin only)'
         },
         set: {
-            type: 'owner',
-            desc: 'Set config variables in config.json (Owner only)',
-            usage: 'set <key> <value>',
-            async run(Bloom, message, fulltext) {
-                const sender = message.key.participant || message.key.remoteJid;
-                const [arg, ...rest] = fulltext.split(' ').slice(1);
-                const value = rest.join(' ');
+    type: 'owner',
+    desc: 'Set config variables in MongoDB setup (Owner only)',
+    usage: 'set <key> <value>',
+    async run(Bloom, message, fulltext) {
+        const sender = message.key.participant || message.key.remoteJid;
+        const replypath = message.key.remoteJid
+        const [argRaw, ...rest] = fulltext.split(' ').slice(1);
+        const value = rest.join(' ');
+        const arg = argRaw?.toUpperCase(); // <-- convert only the argument to uppercase
 
-                if (sender !== sudochat) {
-                    return await Bloom.sendMessage(message.key.remoteJid, {
-                        text: mess.owner
-                    }, { quoted: message });
-                }
-
-                if (!arg || !value) {
-                    return await Bloom.sendMessage(message.key.remoteJid, {
-                        text: 'Usage: set <key> <value>'
-                    }, { quoted: message });
-                }
-
-                try {
-                    const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-
-                    if (!(arg in configData)) {
-                        return await Bloom.sendMessage(message.key.remoteJid, {
-                            text: `❌ Key "${arg}" does not exist in config.json.`
-                        }, { quoted: message });
-                    }
-
-                    configData[arg] = isNaN(value)
-                    ? (value === 'true' ? true : value === 'false' ? false : value)
-                    : Number(value);
-
-                    fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
-
-                    await Bloom.sendMessage(sender, {
-                        text: `✅ Config updated!\n"${arg}" = ${value}`
-                    }, { quoted: message });
-
-                } catch (error) {
-                    console.error('Config update failed:', error);
-                    await Bloom.sendMessage(message.key.remoteJid, {
-                        text: `❌ Failed to update config: ${error.message}`
-                    }, { quoted: message });
-                }
-            }
+        if (!isBloomKing(sender, message)){
+            return await Bloom.sendMessage(message.key.remoteJid, {
+                text: mess.owner
+            }, { quoted: message });
         }
+
+        if (!arg || !value) {
+            return await Bloom.sendMessage(message.key.remoteJid, {
+                text: 'Usage: set <key> <value>'
+            }, { quoted: message });
+        }
+
+        try {
+            // Convert value to proper type (boolean or number)
+            const typedValue = isNaN(value)
+                ? (value === 'true' ? true : value === 'false' ? false : value)
+                : Number(value);
+
+            // Use MongoDB setup module
+            await set(arg, typedValue);
+
+            await Bloom.sendMessage(replypath, {
+                text: `✅ Config updated!\n"${arg}" = ${typedValue}`
+            }, { quoted: message });
+
+        } catch (error) {
+            console.error('Config update failed:', error);
+            await Bloom.sendMessage(message.key.remoteJid, {
+                text: `❌ Failed to update config: ${error.message}`
+            }, { quoted: message });
+        }
+    }
+}
 };

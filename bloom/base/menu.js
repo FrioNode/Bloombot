@@ -1,4 +1,4 @@
-const { botname, _reload } = require('../../colors/setup'); _reload();
+const { get } = require('../../colors/setup');
 const { footer } = require('../../colors/mess');
 module.exports = {
     menu: {
@@ -25,6 +25,7 @@ module.exports = {
 
             // If no category argument is provided, show the full menu with total commands
             if (!category) {
+                const botname = await get('BOTNAME');
                 menuText += `📜 *${botname} Menu* (Total: ${totalCommands})\n\n`;
             }
 
@@ -105,4 +106,3 @@ module.exports = {
         }
     }
 };
-_reload();

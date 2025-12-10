@@ -1,204 +1,300 @@
-const { default: makeWASocket, fetchLatestBaileysVersion, DisconnectReason, jidNormalizedUser,
-                useMultiFileAuthState, makeCacheableSignalKeyStore } = require('@whiskeysockets/baileys');
-const {botname, session, mode,react,emoji,image,invite, logschat,channel,channelid, storeWriteInterval} = require('./colors/setup');
-const { bloomCmd, initCommandHandler, startReminderChecker } = require('./bloom/brain');  const { startStatusWatcher } = require('./bloom/statusview');
-const pino = require('pino'); const fs = require('fs'); const path = require('path'); const axios = require('axios'); const NodeCache = require("node-cache");
-const { emojis, doReact } = require('./colors/react'); const mess = require('./colors/mess');
-const qrCode = require('qrcode-terminal'); const express = require('express'); const isDocker = require('is-docker').default;
+/********************************************
+ *  Luna WhatsApp Bot — Dynamic WhatsApp Bot *
+ *********************************************/
+
+const {
+    default: makeWASocket,
+    fetchLatestBaileysVersion,
+    DisconnectReason,
+    jidNormalizedUser,
+    useMultiFileAuthState,
+    makeCacheableSignalKeyStore
+} = require('baileys');
+
+const { get } = require('./colors/setup');
+const { bloomCmd, initCommandHandler, startReminderChecker } = require('./bloom/brain');
+const { startStatusWatcher } = require('./bloom/statusview');
+
+const pino = require('pino');
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
+const NodeCache = require("node-cache");
+const qrCode = require('qrcode-terminal');
+const express = require('express');
+const isDocker = require('is-docker').default;
+const { emojis, doReact } = require('./colors/react');
+const mess = require('./colors/mess');
 const { _autoStartGame } = require('./bloom/base/games');
-//const log = (...args) => console.log('Luna:',new Date().toLocaleString(), '|', ...args);
 
-const log = (...args) => {
-  const stack = new Error().stack.split('\n');
-  const callerLine = stack[2]; // line where log() was called
-  const fileMatch = callerLine.match(/\/([^\/\)]+):\d+:\d+\)?$/);
-  const file = fileMatch ? fileMatch[1] : 'unknown';
-
-  console.log(`Luna: ${new Date().toLocaleString()} | [${file}]`, ...args);
-};
-// ------
-let stopPokemonGame; const app = express();
-const serverStartTime = Date.now(); let useQR = false; let initialConnection = true;
-const PORT = process.env.PORT || 3000;
-
-const sessionDir = path.join(__dirname, 'heart');
-const credsPath = path.join(sessionDir, 'creds.json');
 const store = require('./colors/luna_store');
 
-if (!fs.existsSync(sessionDir)) {
-    fs.mkdirSync(sessionDir, { recursive: true }); }
+async function preloadConfig() {
+    const KEYS = [
+        "SESSION", "MONGO", "REDIS", "NODE",
+        "OWNERNUMBER", "SUDOLID", "DEVNAME", "OWNERNAME",
+        "BLOOMCHAT", "LOGSCHAT", "OPENCHAT", "INVITE",
+        "CHANNELID", "CHANNEL", "BOTNAME", "IMAGE",
+        "LANG", "REACT", "EMOJI", "REBOOT",
+        "IS_DOCKER", "PREFIX", "TIMEZONE", "MODE",
+        "WEATHERKEY", "PIXELKEY", "NINJAKEY",
+        "GEMINI", "DEEPSEEK", "PASTEBINAPI",
+        "MAXSTOREMESSAGES", "STOREWRITEINTERVAL"
+    ];
 
-async function downloadSessionData() {
-    if (!session || !session.startsWith("BLOOM~")) {
-        console.warn("⚠️ No valid SESSION env found (expected format: BLOOM~XXXXXX)");
-        return false;   }
+    const config = {};
+    for (const key of KEYS) {
+        config[key.toLowerCase()] = await get(key);
+    }
 
-    const pasteId = session.split("BLOOM~")[1];
-    const url = `https://pastebin.com/raw/${pasteId}`;
+    return config;
+}
 
-    try {
-        const response = await axios.get(url);
-        const data = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
 
-        await fs.promises.writeFile(credsPath, data);
-        log("✅ Session successfully downloaded and saved from Pastebin.");
-        return true;
-    } catch (error) {
-        log("❌ Failed to download session from Pastebin:", error.message);
-        return false; } }
-async function start() {
-    try {
-        const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
-        const msgRetryCounterCache = new NodeCache()
-        const { version, isLatest } = await fetchLatestBaileysVersion();
-        log(`${botname} on Baileys V${version.join('.')}, Is latest ?: ${isLatest}`);
+const log = (...args) => {
+    const stack = new Error().stack.split('\n');
+    const callerLine = stack[2];
+    const fileMatch = callerLine.match(/\/([^\/\)]+):\d+:\d+\)?$/);
+    const file = fileMatch ? fileMatch[1] : 'unknown';
 
-        const Luna = makeWASocket({
-            version,
-            logger: pino({ level: 'silent' }),  browser: ["Luna", "Safari", "3.3"],
-        auth: { creds: state.creds,
-                keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
-            } , syncFullHistory: false,  markOnlineOnConnect: true,
-            getMessage: async (key) => {
-                let jid = jidNormalizedUser(key.remoteJid)
-                let msg = await store.loadMessage(jid, key.id)
-                return msg?.message || `${botname} for whatsapp space mode`
-            }, msgRetryCounterCache,
-            defaultQueryTimeoutMs: 60000,
-            connectTimeoutMs: 60000,
-            keepAliveIntervalMs: 10000 });
+    console.log(`Luna: ${new Date().toLocaleString()} | [${file}]`, ...args);
+};
 
-        Luna.ev.on('connection.update', async (update) => {
-            const { qr, connection, lastDisconnect } = update;
+async function startBot() {
+    const config = await preloadConfig();
 
-            if (qr && useQR) { log("📷 Scan this QR to login:\n");
-                qrCode.generate(qr, { small: true }); }
+    const {
+        session, botname, react, emoji, invite,
+        logschat, channel, channelid, image,
+        mode, storewriteinterval } = config;
 
-            if (connection === 'open') { log("✅ Connected successfully");
-                if (initialConnection) {
-                    log(`${emoji} ${botname} is now online`);
-                    if (!botname || !logschat || !image) {
-                        throw new Error("Missing essential config in colors/setup.js"); }
+    const sessionDir = path.join(__dirname, 'heart');
+    const credsPath = path.join(sessionDir, 'creds.json');
 
-                    if (mess && mess.bloom && mess.powered) {
-                        const Payload = {  image: { url: image }, caption: mess.bloom,
-        contextInfo: { isForwarded: true, forwardingScore: 2, forwardedNewsletterMessageInfo: {
-        newsletterJid: channelid, newsletterName: botname,
-        serverMessageId: -1, }, externalAdReply: {   title: botname,
-        body: mess.powered, thumbnailUrl: image,
-        sourceUrl: channel, mediaType: 1, renderLargerThumbnail: false, }, }, };
+    if (!fs.existsSync(sessionDir)) {
+        fs.mkdirSync(sessionDir, { recursive: true });
+    }
 
-                        try {
-                                await Luna.groupMetadata(logschat);
-                                log(`📛 Already in logschat group: ${logschat}`);
-                            } catch (err) {
-                                log(`⚠️ Not in group ${logschat}, attempting to join...`);
+    async function downloadSessionData() {
+        if (!session || !session.startsWith("BLOOM~")) {
+            console.warn("⚠️ No valid SESSION env found (expected format: BLOOM~XXXXXX)");
+            return false;
+        }
 
-                                try {
-                                    const groupId = await Luna.groupAcceptInvite(invite);
-                                    log(`✅ Successfully joined group: ${groupId}`);
-                                } catch (joinErr) {
-                                    log(`❌ Couldn't join group: ${joinErr.message}`);
-                                }
-                            }
+        const pasteId = session.split("BLOOM~")[1];
+        const url = `https://pastebin.com/raw/${pasteId}`;
 
-                            try {
-                                await Luna.sendMessage(logschat, Payload);
-                            } catch (sendErr) {
-                                log(`❌ Failed to send startup message: ${sendErr.message}`);
-                            }
+        try {
+            const response = await axios.get(url);
+            const data = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
 
-                        await startReminderChecker(Luna);
-                        await startStatusWatcher(Luna, log);
-                        await initCommandHandler(Luna);
-                        if (react === 'true') { log("🤖 Auto React is enabled"); }
-                        else { log("⚠️ Auto React is disabled"); }
-                        stopPokemonGame = await _autoStartGame(Luna);
-                        process.on('SIGINT', () => { stopPokemonGame?.(); process.exit(); });
-                    } else { log('Failed to retrieve starting message data.'); }
+            await fs.promises.writeFile(credsPath, data);
+            log("✅ Session successfully downloaded and saved from Pastebin.");
+            return true;
+        } catch (error) {
+            log("❌ Failed to download session from Pastebin:", error.message);
+            return false;
+        }
+    }
 
-                    initialConnection = false;
-                } else {  log("♻️ Connection re-established after restart.");    } }
+    async function start() {
+        try {
+            const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+            const msgRetryCounterCache = new NodeCache();
+            const { version, isLatest } = await fetchLatestBaileysVersion();
 
-            if (connection === 'close') {
-                log("❌ Connection closed.");
-                const statusCode = lastDisconnect?.error?.output?.statusCode;
+            log(`${botname} on Baileys V${version.join('.')}, Latest: ${isLatest}`);
 
-                if (statusCode !== DisconnectReason.loggedOut) {
-                    log('♻️ Attempting reconnect...');
-                    start();
-                } else { console.warn('🚫 You have been logged out.');  }  }  });
+            const Luna = makeWASocket({
+                version,
+                logger: pino({ level: 'silent' }),
+                browser: ["Luna", "Safari", "3.3"],
+                auth: {
+                    creds: state.creds,
+                    keys: makeCacheableSignalKeyStore(
+                        state.keys,
+                        pino({ level: "fatal" }).child({ level: "fatal" })
+                    )
+                },
+                syncFullHistory: false,
+                markOnlineOnConnect: true,
+                getMessage: async (key) => {
+                    let jid = jidNormalizedUser(key.remoteJid);
+                    let msg = await store.loadMessage(jid, key.id);
+                    return msg?.message || `${botname} space mode`;
+                },
+                msgRetryCounterCache,
+                defaultQueryTimeoutMs: 60000,
+                connectTimeoutMs: 60000,
+                keepAliveIntervalMs: 10000
+            });
 
-        const reactionQueue = []; let isProcessingQueue = false; const REACTION_DELAY = 1000;
+            Luna.ev.on('connection.update', async (update) => {
+                const { qr, connection, lastDisconnect } = update;
 
-        async function processReactionQueue(Luna) {
-            if (reactionQueue.length > 100) reactionQueue.shift();
-            if (isProcessingQueue) return; isProcessingQueue = true;
+                if (qr) {
+                    log("📷 Scan this QR to login:");
+                    qrCode.generate(qr, { small: true });
+                }
 
-            while (reactionQueue.length > 0) {
-                const { emoji, message } = reactionQueue.shift();
-                try { await doReact(Luna, emoji, message);
-                } catch (err) { log('Error during auto reaction:', err);  }
-                await new Promise(res => setTimeout(res, REACTION_DELAY));
-            }  isProcessingQueue = false; }
+                if (connection === 'open') {
+                    log(`✅ Connected as ${botname}`);
 
-        Luna.ev.on('creds.update', saveCreds); const processedMessages = new Set();
-        Luna.ev.on("messages.upsert", async (chatUpdate) => {
-            if (chatUpdate.type !== 'notify') return;
-            const message = chatUpdate.messages && chatUpdate.messages[0];
-            if (!message || !message.message || message.key.fromMe) return;
+                    // Join logschat
+                    try {
+                        await Luna.groupMetadata(logschat);
+                    } catch {
+                        try { await Luna.groupAcceptInvite(invite); }
+                        catch {}
+                    }
 
-            const msgId = message.key.id;
-            if (processedMessages.has(msgId)) return; processedMessages.add(msgId);
+                    // Send startup message
+                    if (mess?.bloom && mess?.powered) {
+                        const payload = {
+                            image: { url: image },
+                            caption: mess.bloom,
+                            contextInfo: {
+                                isForwarded: true,
+                                forwardingScore: 2,
+                                forwardedNewsletterMessageInfo: {
+                                    newsletterJid: channelid,
+                                    newsletterName: botname,
+                                    serverMessageId: -1,
+                                },
+                                externalAdReply: {
+                                    title: botname,
+                                    body: mess.powered,
+                                    thumbnailUrl: image,
+                                    sourceUrl: channel,
+                                    mediaType: 1,
+                                    renderLargerThumbnail: false,
+                                },
+                            },
+                        };
 
-            if (processedMessages.size > 1000) {
-                const iterator = processedMessages.values();
-                processedMessages.delete(iterator.next().value);  }
+                        try { await Luna.sendMessage(logschat, payload); }
+                        catch {}
+                    }
 
-            if (process.env.REACT === 'true') {
-                const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-                reactionQueue.push({ emoji: randomEmoji, message }); processReactionQueue(Luna);   }
+                    await startReminderChecker(Luna);
+                    await startStatusWatcher(Luna, log);
+                    await initCommandHandler(Luna);
 
-            try {
-                await bloomCmd(Luna, message);
-            } catch (err) { log("Luna Commands Error:", err); }  });
+                    if (react === 'true') log("🤖 Auto React Enabled");
+                }
 
-        if (mode === "public") {  Luna.public = true; } else if (mode === "private") {
-            Luna.public = false;  } } catch (error) {
-        log('Critical Error:', error);
-        process.exit(1); } }
+                if (connection === 'close') {
+                    const statusCode = lastDisconnect?.error?.output?.statusCode;
+                    if (statusCode !== DisconnectReason.loggedOut) {
+                        log("♻️ Attempting Reconnect...");
+                        start();
+                    } else {
+                        console.warn("🚫 Logged Out");
+                    }
+                }
+            });
 
-async function init() {
-    if (fs.existsSync(credsPath)) {
-        log("🔒 Existing session file found. Starting without QR...");
-        await start(); } else {
-            log("🔍 Session file not found. Trying SESSION env...");
-        const downloaded = await downloadSessionData();
-        if (downloaded && fs.existsSync(credsPath)) {
-            log("🔄 Starting with downloaded session...");
-            await start(); } else {
-            log("📸 Falling back to QR code login...");
-            useQR = true; await start(); } } }
+            const processed = new Set();
+            const reactionQueue = [];
+            let processing = false;
 
-init();
+            async function processReactions() {
+                if (processing) return;
+                processing = true;
 
-store.readFromFile();
-setInterval(() => store.writeToFile(), storeWriteInterval || 10000);
+                while (reactionQueue.length) {
+                    const { emoji, message } = reactionQueue.shift();
+                    await doReact(Luna, emoji, message);
+                    await new Promise(r => setTimeout(r, 1000));
+                }
 
-if (isDocker()) { log(`${emoji} ${botname} is running inside a Docker container`); } else { log(`${emoji} ${botname} is running locally`); }
+                processing = false;
+            }
 
-app.use(express.static(path.join(__dirname, 'colors')));
-app.get('/', (req, res) => {  res.sendFile(path.join(__dirname, 'colors', 'luna.html')); });
+            Luna.ev.on("messages.upsert", async (update) => {
+                if (update.type !== "notify") return;
 
-app.listen(PORT, () => { log(`🔒 ${botname} Server is running on port ${PORT}`); });
+                const message = update.messages[0];
+                if (!message || !message.message || message.key.fromMe) return;
 
-app.get('/uptime', (req, res) => {
-    const now = Date.now();
-    const diff = now - serverStartTime;
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    res.json({ days, hours, minutes, seconds });
-});
-app.get('/status', (_, res) => res.send(`✅ ${botname} bot is online`));
+                if (processed.has(message.key.id)) return;
+                processed.add(message.key.id);
+
+                if (processed.size > 1000) {
+                    processed.delete(processed.values().next().value);
+                }
+
+                // auto react
+                if (react === "true") {
+                    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                    reactionQueue.push({ emoji: randomEmoji, message });
+                    processReactions();
+                }
+
+                try { await bloomCmd(Luna, message); }
+                catch (err) { log("Command Error:", err); }
+            });
+
+            Luna.ev.on('creds.update', saveCreds);
+
+            Luna.public = mode === "public";
+
+        } catch (error) {
+            log("Fatal Error:", error);
+            process.exit(1);
+        }
+    }
+
+    async function init() {
+        if (fs.existsSync(credsPath)) {
+            log("🔒 Using existing session…");
+            await start();
+        } else {
+            log("🔍 No session found, checking online…");
+
+            const downloaded = await downloadSessionData();
+            if (downloaded && fs.existsSync(credsPath)) {
+                log("🔄 Starting with downloaded session...");
+                await start();
+            } else {
+                log("📸 Falling back to QR login...");
+                await start();
+            }
+        }
+    }
+
+    init();
+
+    store.readFromFile();
+    setInterval(() => store.writeToFile(), storewriteinterval || 10000);
+
+    const app = express();
+    const PORT = process.env.PORT || 3000;
+
+    if (isDocker()) log(`${emoji} ${botname} running in Docker`);
+    else log(`${emoji} ${botname} running locally`);
+
+    app.use(express.static(path.join(__dirname, 'colors')));
+
+    app.get('/', (req, res) => {
+        res.sendFile(path.join(__dirname, 'colors', 'luna.html'));
+    });
+
+    const serverStartTime = Date.now();
+
+    app.get('/uptime', (req, res) => {
+        const diff = Date.now() - serverStartTime;
+        res.json({
+            days: Math.floor(diff / 86400000),
+            hours: Math.floor((diff % 86400000) / 3600000),
+            minutes: Math.floor((diff % 3600000) / 60000),
+            seconds: Math.floor((diff % 60000) / 1000)
+        });
+    });
+
+    app.get('/status', (_, res) => res.send(`✅ ${botname} bot is online`));
+
+    app.listen(PORT, () => log(`🔒 ${botname} server running on port ${PORT}`));
+}
+
+startBot();

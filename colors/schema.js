@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { mongo } = require('./setup');
+const mongo = process.env.MONGO
 const pokemonSchema = new mongoose.Schema({
     name: { type: String, required: true },
     weight: { type: Number, required: true },

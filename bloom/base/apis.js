@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { weatherKey } =require('../../colors/setup');
+const { get } =require('../../colors/setup');
 const { footer } = require('../../colors/mess');
 
 // Helper function to convert wind degrees to direction
@@ -25,6 +25,7 @@ module.exports = {
             }
 
             try {
+                const weatherKey = await get('WEATHERKEY');
                 const apiUrl = `http://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&units=metric&appid=${weatherKey}`;
 
                 const { data } = await axios.get(apiUrl);

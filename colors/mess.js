@@ -1,55 +1,104 @@
-const { botname, emoji, ownername, mode, devname, prefix, cpyear } = require('./setup');
+const { get } = require('./setup');
 const bloom = require('../package.json');
 
-module.exports = {
-    about: `_Hi, I am ${botname} ${emoji}_\n> A WhatsApp multidevice AI written in JavaScrip based on Baileys. I was developed by Master ${ownername} and LICENSED under ISC licensing policy at ColdNode Labs (Naivasha, Kenya), I am one of the most current advanced Artificial Intelligence user-bot model with more than 400 features and functionalities, you can check other productions from my developer on GitHub (${devname}). You can contact dev ${devname} by opening a ticket here: \n${emoji} To open a ticket send: *(${prefix}ticket)*`,
-    ticket: `Your ticket have been created succsessfully.\n_${devname} will be back to you shortly, in the meantime, check the (${prefix}menu) to see available commands, I\`m glad to serve you_`,
-    bloom: `╭────${emoji} ${botname} ─────\n│   > Version: ${bloom.version} beta\n│   > Global prefix: ${prefix}\n│    _A reason to imagine_\n│    _Operating mode: ${mode}_\n╰─────────────────\n> (c) ${cpyear} ${botname} By @${devname} - ☁️ •|•`,
-    powered: `Powered By ${devname}`,
-    admin: "_This command is meant for group admins only!_",
-    owner: `This Command is meant for ${botname} owner only!`,
-    autorestart: `${botname} Will restart automatically to apply changes, if you don\'t want automatic restarts, you can disable in config file.`,
-    manualrestart: `You need to restart ${botname} manually to apply changes, If you want automatic restarts, you can enable in config file.`,
-    norestart: `_🚫 Only ${botname} owner can restart bot_`,
-    shut: `Shutting down.... You will need to start the ${botname} manually!`,
-    noshut:`Unauthorized`,
-    ping: "_Response time:_",
-    pong: "_Pong!_",
-    search: "_Searching for results, please wait..._",
-    nosearch: "_No matching content found for your query_",
-    broadcast: "_Broadcast sent succsessfully_",
-    restarting: `╭────────────────────\n│> *🔁 Restarting ${emoji} ${botname}....*\n│ _I will notify you once I\'m online_\n│ Restart manually in case I fail.\n╰────────────────────── 🚀`,
-    group: "_This command can only be used in group chats._",
-    agenda: `_Hold on, that is a private agenda unless you are ${botname} owner, you can\`t do that in a group_`,
-    ticketarg: `Please write your issue or ticket ID\nE.g:\n!ticket something is not ok with this... or\n!ticket BB-0000A`,
-    noarg: `Please provide arguments... Your command is incomplete..!`,
-    limited: `⚠️ You can only have up to 3 open tickets at a time.`,
-    gmetafail: "❌ Failed to fetch group metadata",
-    botadmin: `_${botname} needs to be admin first!_\n_I can\`t perform that action_`,
-    youadmin: "_You are not an admin!\nYou can\`t use that command_",
-    wenot: "❌ Neither I nor you are admins in this group.",
-    nsfwoff: `_NSFW are not enabled in current group!_\n_To enable use *${prefix}nsfw on*_`,
-    nsfwon: `_NSFW are already enabled in current group!_\n_To disable use *${prefix}nsfw off*_`,
-    games: `_Games are not enabled in current group!_\n_To enable use *${prefix}act games*_`,
-    economy: `_Economy is not enabled in current group!_\n_To enable use *${prefix}act economy*_`,
-    act: `_A second parameter is required!_\n_> ${prefix}act (economy,games,nsfw,welcome,left) chose one_`,
-    deact: `_A second parameter is required!_\n_> ${prefix}deact (economy,games,nsfw,welcome,left) chose one_`,
-    add: `_To add a user in this group._\n_Type the command as follows ;_\n\n*_${prefix}add 2547xxxxxxxx_*`,
-    joinlink: `_I need a group link or group code_\n\n_${prefix}join your_valid_group_link_or_code_here_`,
-    error404: `_Command not found...! in database_\n\n*_Try ${prefix}menu_* to view available commands`,
-    error: `An error occured..! I will notify the Developer`,
-    bug: "*An error occurred..!*\n\n_I have sent a report to bot developer(s)_",
-    not_a_repo: '❌ This folder is not a Git repository.',
-    no_updates: '✅ Already up to date!',
-    pull_success: '✅ Pulled latest changes successfully!',
-    pull_failed: '❌ Git pull failed!',
-    restart_later: '⏰ Restart cancelled. You can restart manually later.',
-    restarting_now: '♻️ Restarting the bot now...',
-    restart_failed: '❌ Restart failed!',
-    installing_dependencies: '📦 Installing dependencies...',
-    install_failed: '❌ Failed to install dependencies!',
-    privateMode: `Bot set to private for now, please do not disturb`,
-        blocked: `You will be blocked for violating pricacy policy`,
-        groupOnly: `Bot have been set to group only`,
-        footer: `> (c) ${cpyear} ${botname} By @${devname} - ☁️ •|•`
-};
+let botname = 'Luna';
+let emoji = '🌼';
+let ownername = 'Benson';
+let prefix = '!';
+let devname = 'FrioNode';
+let cpyear = new Date().getFullYear();
+let mode = 'group';
+
+// This object will be updated later once config loads from Mongo
+let mess = {};
+
+// Async initializer — runs once but does NOT block require()
+async function initMess() {
+    botname = await get('BOTNAME') || botname;
+    emoji = await get('EMOJI') || emoji;
+    ownername = await get('OWNERNAME') || ownername;
+    prefix = await get('PREFIX') || prefix;
+    devname = await get('DEVNAME') || devname;
+    cpyear = await get('CPYEAR') || cpyear;
+    mode = await get('MODE') || mode;
+
+    mess = {
+        about: `_Hi, I am ${botname} ${emoji}_\n> A WhatsApp multidevice AI written in JavaScript based on Baileys. I was developed by Master ${ownername} and LICENSED under ISC licensing policy at ColdNode Labs (Naivasha, Kenya). I am one of the most advanced AI user-bot models with more than 400 features. Check my developer on GitHub (${devname}).\n\n${emoji} To open a ticket send: *(${prefix}ticket)*`,
+
+        ticket: `Your ticket has been created successfully.\n_${devname} will contact you shortly. Meanwhile check (${prefix}menu)_`,
+
+        bloom: `╭────${emoji} ${botname} ─────
+│   > Version: ${bloom.version} beta
+│   > Global prefix: ${prefix}
+│    _A reason to imagine_
+│    _Operating mode: ${mode}_
+╰─────────────────
+> (c) ${cpyear} ${botname} By @${devname} - ☁️ •|•`,
+
+        powered: `Powered By ${devname}`,
+        admin: "_This command is meant for group admins only!_",
+        owner: `This Command is meant for ${botname} owner only!`,
+        autorestart: `${botname} will restart automatically to apply changes.`,
+        manualrestart: `You need to restart ${botname} manually.`,
+        norestart: `_🚫 Only ${botname} owner can restart bot_`,
+        shut: `Shutting down.... You will need to start ${botname} manually!`,
+        noshut: `Unauthorized`,
+        ping: "_Response time:_",
+        pong: "_Pong!_",
+        search: "_Searching for results..._",
+        nosearch: "_No matching content found_",
+        broadcast: "_Broadcast sent successfully_",
+
+        restarting: `╭────────────────────
+│> *🔁 Restarting ${emoji} ${botname}....*
+│ _I will notify you once online_
+│ Restart manually if something fails.
+╰────────────────────── 🚀`,
+
+        group: "_This command can only be used in group chats._",
+        agenda: `_Only ${botname} owner can do that in a group_`,
+        ticketarg: `Please write your issue or ticket ID\nExample:\n!ticket something is not ok\n!ticket BB-0000A`,
+        noarg: `Provide arguments! Command incomplete.`,
+        limited: `⚠️ Maximum 3 open tickets.`,
+        gmetafail: "❌ Failed to fetch group metadata",
+        botadmin: `_${botname} must be admin first!_`,
+        youadmin: "_You are not an admin!_",
+        wenot: "❌ Neither you nor I am admin.",
+        nsfwoff: `_NSFW not enabled!\nUse *${prefix}nsfw on*`,
+        nsfwon: `_NSFW already enabled! Use *${prefix}nsfw off*`,
+        games: `_Games are disabled! Use *${prefix}act games*`,
+        economy: `_Economy disabled! Use *${prefix}act economy*`,
+        act: `_Second parameter required!\n> ${prefix}act (economy,games,nsfw,welcome,left)`,
+        deact: `_Second parameter required!\n> ${prefix}deact (economy,games,nsfw,welcome,left)`,
+
+        add: `_To add a user:\n${prefix}add 2547xxxxxxx_`,
+        joinlink: `_Need a group link or code_\n${prefix}join link_here`,
+
+        error404: `_Command not found!_\nTry ${prefix}menu`,
+        error: `An error occurred..!`,
+        bug: "*An error occurred..!*\nReport sent.",
+        not_a_repo: '❌ Not a Git repo.',
+        no_updates: '✅ Up to date!',
+        pull_success: '✅ Updated successfully!',
+        pull_failed: '❌ Git pull failed!',
+        restart_later: '⏰ Restart cancelled.',
+        restarting_now: '♻️ Restarting bot...',
+        restart_failed: '❌ Restart failed!',
+        installing_dependencies: '📦 Installing dependencies...',
+        install_failed: '❌ Dependency install failed!',
+
+        privateMode: `Bot in private mode — do not disturb`,
+        blocked: `You will be blocked for violating privacy policy`,
+        groupOnly: `Bot set to group-only mode`,
+
+        footer: `> (c) ${cpyear} ${botname} By @${devname} - ☁️ •|•`,
+    };
+}
+
+// Fire async initialization (not awaited)
+initMess();
+
+// Exported object will be filled later
+module.exports = new Proxy({}, {
+    get: (_, key) => mess[key],
+});

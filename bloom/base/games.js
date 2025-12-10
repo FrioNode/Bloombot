@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const { User, Pokemon, TicTacToe, connectDB } = require('../../colors/schema');
 const { createGame, joinGame, endGame, renderBoard } = require('../ttthandle');
 const { pokemon } = require('../../colors/pokemon');
-const { openchat }= require('../../colors/setup');
+const { get }= require('../../colors/setup');
 
  connectDB('Game Module')
 const pokemonNames = ['Pikachu', 'Charmander', 'Bulbasaur', 'Squirtle', 'Jigglypuff', 'Meowth', 'Psyduck', 'Eevee', 'Snorlax', 'Mewtwo'];
@@ -157,7 +157,7 @@ reg: {
 
             const user = await User.findById(senderID);
             if (user.walletBalance < arg) return Bloom.sendMessage(message.key.remoteJid, { text: 'Insufficient funds in your wallet.' }, { quoted: message });
-            if (arg > 150000) return Bloom.sendMessage(message.key.remoteJid, { text: 'You cannot transfer more than 150,000.' }, { quoted: message });
+            if (arg > 500000) return Bloom.sendMessage(message.key.remoteJid, { text: 'You cannot transfer more than 500,000.' }, { quoted: message });
 
             const transactionFee = calculateTransactionFee(arg);
             const totalAmountToTransfer = arg + transactionFee;
@@ -174,7 +174,9 @@ reg: {
 
             await Bloom.sendMessage(message.key.remoteJid, { text: `You successfully transferred ${arg} 💰 to ${receiver.name}. Transaction fee: ${transactionFee} 💰. New wallet balance: ${user.walletBalance}` }, { quoted: message });
             console.log(receiver._id);
-            await Bloom.sendMessage(message.key.remoteJid, { text: `[ ${receiver.name}] 🎮 Hello Gamer @${receiver._id.split('@')[0]} You received ${arg} 💰 from ${user.name}.` },  { quoted: message });
+            await Bloom.sendMessage(message.key.remoteJid, {
+                text: `[${receiver.name}] 🎮 Hello Gamer,\nYou received ${arg} 💰 from ${user.name}.\n> @${receiver._id.split('@')[0]} BAL: ${receiver.walletBalance}`, mentions: [receiver._id]} );
+
         }
     },
 
@@ -873,7 +875,168 @@ fish: {
                 }
             }
         }
+    },
+    magic: {
+    type: 'economy',
+    desc: 'Use the mysterious magic wand',
+    run: async (Bloom, message) => {
+        const senderID = message.key.participant || message.key.remoteJid;
+        const user = await User.findById(senderID);
+
+        if (!user)
+            return Bloom.sendMessage(message.key.remoteJid, { text: "You are not registered. Use !reg <name>"}, { quoted: message });
+
+        // Check for magic wand
+        const wandIndex = user.inventory.magic.findIndex(i => i.name === 'magic_wand');
+        if (wandIndex === -1)
+            return Bloom.sendMessage(message.key.remoteJid, { text: "❌ You need a *magic wand* to use magic! Buy one from the shop."}, { quoted: message });
+
+        // CHECK: user has at least 1 item in every inventory category OR wallet >= 5000
+        const inv = user.inventory;
+        const hasAllCollateral = inv.mining.length > 0 &&
+                                 inv.magic.length > 0 &&
+                                 inv.fishing.length > 0 &&
+                                 inv.healing.length > 0 &&
+                                 inv.animals.length > 0 &&
+                                 inv.stones.length > 0 &&
+                                 inv.pokemons.length > 0;
+
+        if (!hasAllCollateral && user.walletBalance < 5000) {
+            return Bloom.sendMessage(message.key.remoteJid, { text: "❌ You need at least 1 item in each category OR 5000💰 in wallet to perform magic."}, { quoted: message });
+        }
+
+        const outcomes = [
+            "catch_all_fish",
+            "mine_many_stones",
+            "win_lottery",
+            "burn_zoo",
+            "dry_lake",
+            "kill_pokemons",
+            "infect_pokemons",
+            "delete_bank",
+            "wipe_inventory",
+            "nothing",
+            "earn_magic_wand"
+        ];
+
+        const event = outcomes[Math.floor(Math.random() * outcomes.length)];
+        let resultMsg = `🪄 You performed magic and... `;
+
+        const walletFallback = 5000;
+
+        // HELPER: Deduct collateral or wallet
+        const deductCollateralOrWallet = (collateralType, count=1) => {
+            let lost = 0;
+            switch(collateralType){
+                case "animals":
+                    lost = Math.min(count, user.inventory.animals.length);
+                    user.inventory.animals.splice(0, lost);
+                    break;
+                case "pokemons":
+                    lost = Math.min(count, user.inventory.pokemons.length);
+                    user.inventory.pokemons.splice(0, lost);
+                    break;
+                case "herbs":
+                    const herbs = user.inventory.healing.filter(h => h.name === 'herb').length;
+                    lost = Math.min(count, herbs);
+                    user.inventory.healing = user.inventory.healing.filter(h => h.name !== 'herb');
+                    break;
+                default:
+                    break;
+            }
+            if (lost === 0 && user.walletBalance >= walletFallback) {
+                user.walletBalance -= walletFallback;
+                lost = walletFallback;
+                return `💰 Deducted ${walletFallback} from wallet!`;
+            } else if(lost > 0) {
+                return `❌ Lost ${lost} ${collateralType}!`;
+            }
+            return `⚠️ No collateral or wallet to deduct!`;
+        };
+
+        // --- EVENT HANDLER ---
+        switch(event) {
+
+            case "catch_all_fish":
+                const aquatic = ['fish','frog','blowfish','tropical_fish','shark'];
+                const fishCaught = [];
+                for (let i = 0; i < 5; i++) {
+                    const f = aquatic[Math.floor(Math.random() * aquatic.length)];
+                    const value = Math.floor(Math.random() * 400) + 100;
+                    user.inventory.animals.push({ name: f, value });
+                    fishCaught.push(`${f} (${value}💰)`);
+                }
+                resultMsg += `🎣 you caught ALL fish in the lake!\nReward:\n${fishCaught.join("\n")}`;
+                break;
+
+            case "mine_many_stones":
+                const stoneTypes = ['coal','iron','diamond','gold'];
+                let stoneList = [];
+                for (let i = 0; i < 4; i++) {
+                    const s = stoneTypes[Math.floor(Math.random() * stoneTypes.length)];
+                    const value = Math.floor(Math.random() * 200) + 50;
+                    user.inventory.stones.push({ name: s, value });
+                    stoneList.push(`${s} (${value}💰)`);
+                }
+                resultMsg += `⛏️ you mined tons of stones!\nReward:\n${stoneList.join("\n")}`;
+                break;
+
+            case "win_lottery":
+                const prize = Math.floor(Math.random() * 50000) + 10000;
+                user.walletBalance += prize;
+                resultMsg += `💰 YOU WON THE LOTTERY!!!\nReward: +${prize}💰`;
+                break;
+
+            case "burn_zoo":
+                resultMsg += deductCollateralOrWallet("animals");
+                break;
+
+            case "dry_lake":
+                const removedAquatic = user.inventory.animals.filter(a => ['fish','frog','blowfish','tropical_fish','shark','whale'].includes(a.name)).length;
+                resultMsg += deductCollateralOrWallet("animals", removedAquatic);
+                break;
+
+            case "kill_pokemons":
+                resultMsg += deductCollateralOrWallet("pokemons");
+                break;
+
+            case "infect_pokemons":
+                resultMsg += deductCollateralOrWallet("herbs");
+                break;
+
+            case "delete_bank":
+                if(user.walletBalance >= walletFallback){
+                    user.walletBalance -= walletFallback;
+                    resultMsg += `💰 Deducted ${walletFallback} from wallet!`;
+                } else {
+                    user.walletBalance = 0;
+                    resultMsg += `🏦 Your bank and wallet were emptied!`;
+                }
+                break;
+
+            case "wipe_inventory":
+                user.inventory = { mining: [], magic: [], fishing: [], healing: [], animals: [], stones: [], pokemons: [] };
+                resultMsg += `💨 Your entire inventory was wiped!`;
+                break;
+
+            case "earn_magic_wand":
+                user.inventory.magic.push({ name: 'magic_wand', miningUses: 0 });
+                resultMsg += `🪄 Your wand duplicated! You earned another magic wand.`;
+                break;
+
+            case "nothing":
+            default:
+                resultMsg += `...nothing happened 💀`;
+                break;
+        }
+
+        // Remove the used magic wand (always)
+        user.inventory.magic.splice(wandIndex, 1);
+
+        await user.save();
+        return Bloom.sendMessage(message.key.remoteJid, { text: resultMsg }, { quoted: message });
     }
+}
 };
 
 
@@ -919,7 +1082,7 @@ async function loadPokemons(Bloom) {
 
     await newPokemon.save();
     console.log(`✅ Pokémon ${newPokemon.name} added to the database.`);
-
+    const openchat = await get('OPENCHAT');
     await Bloom.sendMessage(openchat, {
         image: { url: newPokemon.image },
         caption: `A new Pokémon has appeared! Use *!catch ${newPokemon.name}* to add it to your inventory.\n\nClue: ${newPokemon.description}`
@@ -932,7 +1095,8 @@ async function handleExpiredPokemons(Bloom) {
 
     if (expiredPokemons.length > 0) {
         for (const pokemon of expiredPokemons) {
-            await Bloom.sendMessage(openchat, {
+            const gamechat = await get('OPENCHAT');
+            await Bloom.sendMessage(gamechat, {
                 text: `No one claimed the Pokémon ${pokemon.name}. It has expired.\n\nDescription: ${pokemon.description}\nHeight: ${pokemon.height}\t\t\tWeight: ${pokemon.weight}`
             });
 

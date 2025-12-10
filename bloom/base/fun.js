@@ -1,50 +1,59 @@
 const axios = require('axios');
 const figlet = require('figlet');
-const { pixelkey, ninjaKey } =require('../../colors/setup');
+const { get } =require('../../colors/setup');
 const { footer } = require('../../colors/mess');
 module.exports = {
     wiki: {
-        type: 'fun',
-        desc: 'Search Wikipedia and get a summary of a topic',
-        usage: 'wiki <topic>',
-        run: async (Bloom, message, fulltext) => {
-            const sender = message.key.remoteJid;
-            const query = fulltext.split(' ').slice(1).join(' ').trim();
+    type: 'fun',
+    desc: 'Search Wikipedia and get a summary of a topic',
+    usage: 'wiki <topic>',
+    run: async (Bloom, message, fulltext) => {
+        const sender = message.key.remoteJid;
+        const query = fulltext.split(' ').slice(1).join(' ').trim();
 
-            if (!query) {
+        if (!query) {
+            return await Bloom.sendMessage(sender, {
+                text: '❓ Provide a topic. Example: `wiki moon landing`'
+            }, { quoted: message });
+        }
+
+        try {
+            const HEADERS = {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Node; Linux) LunaBot/1.0',
+                    'Accept': 'application/json'
+                }
+            };
+
+            const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json`;
+            const searchRes = await axios.get(searchUrl, HEADERS);
+
+            if (!searchRes.data.query.search.length) {
                 return await Bloom.sendMessage(sender, {
-                    text: '❓ Please provide a topic to search. Example: `wiki moon landing`'
+                    text: `❌ No results found for *${query}*.`
                 }, { quoted: message });
             }
 
-            try {
-                const apiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
-                const { data } = await axios.get(apiUrl);
+            const bestTitle = searchRes.data.query.search[0].title;
+            const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(bestTitle)}`;
+            const { data } = await axios.get(summaryUrl, HEADERS);
 
-                if (data.type === 'https://mediawiki.org/wiki/HyperSwitch/errors/not_found') {
-                    return await Bloom.sendMessage(sender, {
-                        text: `❌ Couldn't find anything on *${query}*.`
-                    }, { quoted: message });
-                }
-
-                const snippet = data.extract.length > 500
+            const snippet = data.extract.length > 500
                 ? data.extract.slice(0, 500) + '...'
                 : data.extract;
 
-                const link = data.content_urls.desktop.page;
+            await Bloom.sendMessage(sender, {
+                text: `🧠 *${data.title}*\n\n${snippet}\n\n🔗 ${data.content_urls.desktop.page}`
+            }, { quoted: message });
 
-                await Bloom.sendMessage(sender, {
-                    text: `🧠 *${data.title}*\n\n${snippet}\n\n🔗 ${link}\n${footer}`
-                }, { quoted: message });
-
-            } catch (err) {
-                console.error('Wiki search error:', err.message);
-                await Bloom.sendMessage(sender, {
-                    text: `❌ Failed to fetch info on *${query}*.`
-                }, { quoted: message });
-            }
+        } catch (err) {
+            console.error('Wiki error:', err.message);
+            await Bloom.sendMessage(sender, {
+                text: `❌ Failed to fetch info on *${query}* (API blocked).`
+            }, { quoted: message });
         }
-    },
+    }
+},
     urban: {
     type: 'fun',
     desc: 'Search Urban Dictionary and get a definition',
@@ -97,7 +106,7 @@ module.exports = {
         usage: 'quote',
         run: async (Bloom, message, fulltext) => {
             const sender = message.key.remoteJid;
-
+            const ninjaKey = await get('NINJAKEY');
             if (!ninjaKey || ninjaKey === '') {
                 console.error('API Key is missing or invalid.');
                 return await Bloom.sendMessage(sender, {
@@ -223,6 +232,7 @@ module.exports = {
             const apiUrl = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=10`;
 
             try {
+                const pixelkey = await get('PIXELKEY');
                 const { data } = await axios.get(apiUrl, {
                     headers: { Authorization: pixelkey }
                 });

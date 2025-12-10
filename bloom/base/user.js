@@ -1,7 +1,7 @@
 const os = require('os');
 const { exec } = require('child_process');
-const { Exp, User } = require('../../colors/schema');
-const { mongo, botname, cpyear, mode } = require('../../colors/setup');
+const { Exp, User, connectDB } = require('../../colors/schema');
+const { get } = require('../../colors/setup');
 const mess = require('../../colors/mess');
 const mongoose = require('mongoose');
 
@@ -20,11 +20,8 @@ const LEVELS = [
 { name: '🧙 Wizard', min: 3000 }
 ];
 
-mongoose.connect(mongo, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000
-}).catch(err => console.error('MongoDB connection error:', err));
+connectDB('User module')
+
 const locale = process.env.TZ || 'Africa/Nairobi';
 const getCurrentDate = () => {
     return new Date().toLocaleString('en-US', { timeZone: locale });
@@ -95,6 +92,9 @@ module.exports = {
                 res(line.split(/\s+/).slice(1,4));
             }));
 
+            const botname = await get('BOTNAME');
+            const cpyear = await get('CPYEAR');
+            const mode = await get('MODE');
             const statusMessage = `----🌼 ${botname} 🌼---
 ╭──────────────────── 🧠
 │  \`\`\`${getCurrentDate()}

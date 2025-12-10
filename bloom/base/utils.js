@@ -1,23 +1,30 @@
-  const QRCode = require('qrcode');
-  const { downloadMediaMessage } = require('baileys');
-  const { Jimp } = require('jimp');
-  const jsQR = require('jsqr')
+const QRCode = require('qrcode');
+const { downloadMediaMessage } = require('baileys');
+const Jimp = require('jimp');
+const jsQR = require('jsqr');
+const { get } = require('../../colors/setup');
 
-let mess, logschat, timezone, Ticket, TicketId, connectDB, isBloomKing, getCurrentDate, Reminder;
+let mess, logschat, Ticket, TicketId, connectDB, isBloomKing, getCurrentDate, Reminder;
 
-try {
-  mess = require('../../colors/mess');
-  ({ logschat, timezone } = require('../../colors/setup'));
-  ({ Ticket, TicketId, Reminder, connectDB } = require('../../colors/schema'));
-  ({ isBloomKing } = require('../../colors/auth'));
+async function initModules() {
+    try {
+        mess = require('../../colors/mess');
+        ({ Ticket, TicketId, Reminder, connectDB } = require('../../colors/schema'));
+        ({ isBloomKing } = require('../../colors/auth'));
 
-  const moment = require('moment-timezone');
+        const moment = require('moment-timezone');
+        const timezone = await get('TIMEZONE');
 
-  getCurrentDate = () => moment().tz(timezone).format('MMMM Do YYYY, h:mm:ss a');
-} catch (err) {
-  console.error('❌ Module pre-load error:', err.message);
-  getCurrentDate = () => new Date().toLocaleString(); // fallback
+        getCurrentDate = () => moment().tz(timezone).format('MMMM Do YYYY, h:mm:ss a');
+
+    } catch (err) {
+        console.error('❌ Module pre-load error:', err.message);
+        getCurrentDate = () => new Date().toLocaleString(); // fallback
+    }
 }
+
+// Immediately run the async initializer
+initModules();
 
 module.exports = {
   ticket: {
@@ -28,6 +35,7 @@ module.exports = {
     ticket <ticketID> - check ticket details
     ticket <ticketID> <del/ongoing/resolved> - to delete or mark as ongoing/resolved`,
     run: async (Bloom, message, fulltext) => {
+      if (!getCurrentDate) await initModules();
       const sender = message.key.remoteJid;
       const authorized = isBloomKing(sender, message);
 
@@ -214,14 +222,15 @@ async function create(Bloom, message, fulltext, senderJid) {
     await Bloom.sendMessage(senderJid, {
       text: `╭──── 🧠\n│ _Ticket ID: ${id}_\n│ _status: ${newTicket.status}_\n│ *Use:* !ticket ${id} to track.\n╰──── 🚀`,
     }, { quoted: message });
-
-    await Bloom.sendMessage(logschat, {
+    const openchat = await get('OPENCHAT');
+    await Bloom.sendMessage(openchat, {
       text: `╭──── 🧠\n│ User: ${realSender.split('@')[0]} raised a ticket\n│ ID: ${id}\n│ Date: ${date}\n╰──── 🚀\n> Message: _${issue}_`,
     });
 
   } catch (error) {
     console.error(`Error creating ticket:`, error);
-    await Bloom.sendMessage(logschat, { text: `❌ Failed to create ticket: ${error}` });
+    const logchat = await get('OPENCHAT');
+    await Bloom.sendMessage(logchat, { text: `❌ Failed to create ticket: ${error}` });
   }
 }
 
@@ -295,6 +304,7 @@ async function del(Bloom, message, ticketId, sender, isAdmin) {
 
   } catch (err) {
     console.error('Error deleting ticket:', err);
+    const logschat = await get('OPENCHAT');
     await Bloom.sendMessage(logschat, { text: `❌ Error deleting ticket ${ticketId}: ${err}` });
   }
 }

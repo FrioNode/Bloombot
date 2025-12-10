@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const cron = require('node-cron');
 const mongoose = require('mongoose');
 const activeTimeouts = new Map();
-const { mongo } = require('../colors/setup');
+const mongo = process.env.MONGO
 
 function renderBoard(board) {
     const emojiMap = { ' ': '⏺️', '❌': '❌', '⭕': '⭕' };
@@ -24,12 +24,12 @@ async function createGame(senderJid, groupId) {
         $or: [{ 'player1.jid': senderJid }, { 'player2.jid': senderJid }],
         status: 'active'
     });
-    if (existingActive) return { error: 'You are already in an active game. Use tttend to leave.' };
+    if (existingActive) return { error: 'You are already in an active game. Use ttt end to leave.' };
 
     // Then check for waiting games
     const existingWaiting = await TicTacToe.findOne({
         'player1.jid': senderJid, status: 'waiting' });
-    if (existingWaiting) return { error: 'You already have a waiting game. Use tttend to cancel it.' };
+    if (existingWaiting) return { error: 'You already have a waiting game. Use ttt end to cancel it.' };
 
     const roomId = uuidv4().split('-')[0];
     const game = new TicTacToe({ roomId,  groupId,
