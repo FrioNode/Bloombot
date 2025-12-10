@@ -165,13 +165,24 @@ ${bonusGiven ? `│ 🎁 Daily bonus claimed! (+5 EXP)\n│ 🔥 Streak: *${expD
             });
         }
     },
-    jid: {
-        type: 'user',
-        desc: 'Returns the group or user JID of the chat',
-        run: async (Bloom, message) => {
-            await Bloom.sendMessage(message.key.remoteJid, { text: `🆔 Chat JID:\n\n${message.key.remoteJid}` });
-        }
-    },
+jid: {
+    type: 'user',
+    desc: 'Returns the PN JID and LID for the user',
+    run: async (Bloom, message) => {
+
+        const jid = message.key.remoteJid;        // could be LID or PN
+        const jidAlt = message.key.remoteJidAlt;  // alternate ID
+
+        await Bloom.sendMessage(message.key.remoteJid, {
+            text:
+                `🆔 *Chat Identifiers*\n\n` +
+                `• *Primary ID:* ${jid}\n` +
+                `• *Alternate ID:* ${jidAlt ?? 'None'}\n\n` +
+                `If one is @lid and the other is @s.whatsapp.net,\n` +
+                `the @lid is the new LID format (preferred).`
+        });
+    }
+},
     level: {
         type: 'user',
         desc: 'See rank/level of another user',

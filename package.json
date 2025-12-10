@@ -25,6 +25,7 @@
     "@distube/ytdl-core": "^4.16.10",
     "@whiskeysockets/baileys": "7.0.0-rc.9",
     "axios": "^1.9.0",
+    "baileys": "7.0.0-rc.9",
     "chokidar": "^4.0.3",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",

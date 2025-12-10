@@ -28,7 +28,7 @@ function getAll() {
         bloomchat: process.env.BLOOMCHAT || '120363154923982755@g.us',
         logschat: process.env.LOGSCHAT || '120363154923982755@g.us',
         openchat: process.env.OPENCHAT || '120363154923982755@g.us',
-        invite: process.env.INVITE || 'L952Zbo6M2KGlAcGHRk4m8',
+        invite: process.env.INVITE || 'DOhndqrd7RJAGxJ7z0wP7g',
         channelid: process.env.CHANNELID || '120363321675231023@newsletter',
         channel: process.env.CHANNEL || 'https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d',
         botname: process.env.BOTNAME || 'Luna',
