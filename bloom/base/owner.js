@@ -93,7 +93,7 @@ return await Bloom.sendMessage(remoteJid, {
                 }
 
                 for (const groupId of Object.keys(groups)) {
-                    await Bloom.sendMessage(groupId, { text: `_Incomming Broadcast From_ *${message.pushName}* \n${bcmess}` });
+                    await Bloom.sendMessage(groupId, { text: `[ _Broadcast From_ *${message.pushName}* ] \n\n${bcmess}` });
                 }
 
                 await Bloom.sendMessage(message.key.remoteJid, { text: '✅ Broadcast sent to all groups.' });
