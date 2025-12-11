@@ -19,8 +19,7 @@ const isOwner =isBloomKing;
             run: async (Bloom, message, fulltext) => {
                 const remoteJid = message.key.remoteJid;
                 const sender = message.key.participant || remoteJid;
-                const sudochat = (await get('OWNERNUMBER')) + '@s.whatsapp.net';
-                if (sender !== sudochat) {
+                if (!isBloomKing(sender,message)) {
                     return await Bloom.sendMessage(remoteJid, { text: '❌ This command is for the bot owner only.' }, { quoted: message });
                 }
 
