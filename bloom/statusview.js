@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { emojis } = require('../colors/react');
 
-const DB_PATH = path.join(__dirname, 'viewedStatus.json');
+const DB_PATH = path.join(__dirname, '../viewedStatus.json');
 
 function loadViewed() {
     try {

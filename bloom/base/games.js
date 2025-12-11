@@ -90,6 +90,7 @@ reg: {
             if (isNaN(arg)) return Bloom.sendMessage(message.key.remoteJid, { text: 'Invalid input. You must deposit a valid number.' }, { quoted: message });
 
             const user = await User.findById(senderID);
+            if (!user) return Bloom.sendMessage(message.key.remoteJid, { text: 'You are not registered in the economy. Please register first.\n\n!reg <username>' }, { quoted: message });
             if (user.walletBalance < arg) return Bloom.sendMessage(message.key.remoteJid, { text: `Insufficient funds in your wallet to deposit. You have ${user.walletBalance} available, but you tried to deposit ${arg}.` }, { quoted: message });
             if (arg > 100000) return Bloom.sendMessage(message.key.remoteJid, 'You cannot deposit more than 100,000.');
 
@@ -156,6 +157,7 @@ reg: {
             if (!receiver) return Bloom.sendMessage(message.key.remoteJid, { text: 'The specified receiver does not exist in the economy database.' }, { quoted: message });
 
             const user = await User.findById(senderID);
+            if (!user) return Bloom.sendMessage(message.key.remoteJid, { text: 'You are not registered in the economy. Please register first.\n\n!reg <username>' }, { quoted: message });
             if (user.walletBalance < arg) return Bloom.sendMessage(message.key.remoteJid, { text: 'Insufficient funds in your wallet.' }, { quoted: message });
             if (arg > 500000) return Bloom.sendMessage(message.key.remoteJid, { text: 'You cannot transfer more than 500,000.' }, { quoted: message });
 
@@ -207,6 +209,7 @@ reg: {
             const senderID = message.key.participant || message.key.remoteJid;
             const itemName = fulltext.trim().split(/\s+/)[1]?.toLowerCase();
             const user = await User.findById(senderID);
+            if (!user) return Bloom.sendMessage(message.key.remoteJid, { text: 'You are not registered in the economy. Please register first.\n\n!reg <username>' }, { quoted: message });
             const itemPrice = shopItems[itemName];
 
             if (!itemPrice) return Bloom.sendMessage(message.key.remoteJid, {text: 'Item not found in the shop.'}, {quoted: message});
@@ -238,6 +241,7 @@ reg: {
         run: async (Bloom, message) => {
             const senderID = message.key.participant || message.key.remoteJid;
             const user = await User.findById(senderID);
+            if (!user) return Bloom.sendMessage(message.key.remoteJid, { text: 'You are not registered in the economy. Please register first.\n\n!reg <username>' }, { quoted: message });
             let inventoryMessage = `╭───── ${user.name} ─────\n│-- _Your inventory_ --\n`;
 
             function formatItems(items, itemType) {
@@ -319,6 +323,7 @@ reg: {
         run: async (Bloom, message) => {
             const senderID = message.key.participant || message.key.remoteJid;
             const user = await User.findById(senderID);
+            if (!user) return Bloom.sendMessage(message.key.remoteJid, { text: 'You are not registered in the economy. Please register first.\n\n!reg <username>' }, { quoted: message });
             const currentDate = new Date();
             const lastCatchTime = new Date(user.lastZooCatch);
             const timeDifference = currentDate - lastCatchTime;
@@ -426,6 +431,7 @@ fish: {
             const betAmountStr = parts[2];
             const betAmount = parseInt(betAmountStr, 10);
             const user = await User.findById(senderID);
+            if (!user) return Bloom.sendMessage(message.key.remoteJid, { text: 'You are not registered in the economy. Please register first.\n\n!reg <username>' }, { quoted: message });
             const now = new Date();
             const lastGambleTime = new Date(user.lastGamble || 0);
             const diff = now - lastGambleTime;
@@ -580,7 +586,7 @@ fish: {
             const senderID = message.key.participant || message.key.remoteJid;
             const arg = fulltext.trim().split(/\s+/)[1];
             const user = await User.findById(senderID);
-
+            if (!user) return Bloom.sendMessage(message.key.remoteJid, { text: 'You are not registered in the economy. Please register first.\n\n!reg <username>' }, { quoted: message });
             const animalIndex = user.inventory.animals.findIndex(item => item.name === arg);
             const stoneIndex = user.inventory.stones.findIndex(item => item.name === arg);
 
@@ -622,7 +628,7 @@ fish: {
             const senderID = message.key.participant || message.key.remoteJid;
             const user = await User.findById(senderID);
 
-            if (!user) return Bloom.sendMessage(message.key.remoteJid, { text: "You don't exist in the economy." }, { quoted: message });
+            if (!user) return Bloom.sendMessage(message.key.remoteJid, { text: 'You are not registered in the economy. Please register first.\n\n!reg <username>' }, { quoted: message });
 
             const toolLimits = { wooden_axe: 5, iron_axe: 10, golden_axe: 20, diamond_axe: 15 };
             const stoneTypes = {
@@ -670,7 +676,7 @@ fish: {
         run: async (Bloom, message) => {
             const senderID = message.key.participant || message.key.remoteJid;
             const user = await User.findById(senderID);
-
+            if (!user) return Bloom.sendMessage(message.key.remoteJid, { text: 'You are not registered in the economy. Please register first.\n\n!reg <username>' }, { quoted: message });
             user.walletBalance = 0;
             user.bankBalance = 0;
             user.inventory = { mining: [], magic: [], fishing: [], healing: [], animals: [], stones: [], miningUses: new Map() };
@@ -726,8 +732,8 @@ fish: {
             try {
                 const senderID = message.key.participant || message.key.remoteJid;
                 const user = await User.findById(senderID);
-
-                if (!user || !user.inventory || !user.inventory.pokemons || user.inventory.pokemons.length === 0) {
+                if (!user) return Bloom.sendMessage(message.key.remoteJid, { text: 'You are not registered in the economy. Please register first.\n\n!reg <username>' }, { quoted: message });
+                if (!user.inventory || !user.inventory.pokemons || user.inventory.pokemons.length === 0) {
                     await Bloom.sendMessage(message.key.remoteJid, { text: "You don't have any Pokémon in your inventory yet! You avent caught any." }, { quoted: message });
                     return;
                 }
@@ -883,10 +889,7 @@ fish: {
         const senderID = message.key.participant || message.key.remoteJid;
         const user = await User.findById(senderID);
 
-        if (!user)
-            return Bloom.sendMessage(message.key.remoteJid, { text: "You are not registered. Use !reg <name>"}, { quoted: message });
-
-        // Check for magic wand
+        if (!user) return Bloom.sendMessage(message.key.remoteJid, { text: 'You are not registered in the economy. Please register first.\n\n!reg <username>' }, { quoted: message });
         const wandIndex = user.inventory.magic.findIndex(i => i.name === 'magic_wand');
         if (wandIndex === -1)
             return Bloom.sendMessage(message.key.remoteJid, { text: "❌ You need a *magic wand* to use magic! Buy one from the shop."}, { quoted: message });

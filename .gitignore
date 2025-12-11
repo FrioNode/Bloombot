@@ -5,3 +5,4 @@ heart/*
 *-lock.json
 *.bak
 test.js
+*status.json
