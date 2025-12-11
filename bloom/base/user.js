@@ -2,7 +2,7 @@ const os = require('os');
 const { exec } = require('child_process');
 const { Exp, User, connectDB } = require('../../colors/schema');
 const { get } = require('../../colors/setup');
-const mess = require('../../colors/mess');
+const { mess } = require('../../colors/mess');
 const mongoose = require('mongoose');
 
 const LEVELS = [

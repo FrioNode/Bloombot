@@ -1,5 +1,5 @@
 const { isGroupAdminContext } = require('../../colors/auth');
-const mess = require('../../colors/mess');
+const { mess } = require('../../colors/mess');
 const { Settings } = require('../../colors/schema');
 
 const toggles = {

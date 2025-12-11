@@ -1,7 +1,7 @@
 const luna = require('../../package.json');
 const { get, set } = require('../../colors/setup');
 const { isBloomKing } = require('../../colors/auth');
-const mess = require('../../colors/mess');
+const { mess } = require('../../colors/mess');
 const { Exp } = require('../../colors/schema');
 const { exec } = require('child_process');
 const { promisify } = require('util');

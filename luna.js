@@ -12,6 +12,7 @@ const {
 } = require('baileys');
 
 const { get } = require('./colors/setup');
+const { connectDB } = require('./colors/schema');
 const { bloomCmd, initCommandHandler, startReminderChecker } = require('./bloom/brain');
 const { startStatusWatcher } = require('./bloom/statusview');
 
@@ -24,11 +25,11 @@ const qrCode = require('qrcode-terminal');
 const express = require('express');
 const isDocker = require('is-docker').default;
 const { emojis, doReact } = require('./colors/react');
-const mess = require('./colors/mess');
+const { mess } = require('./colors/mess');
 const { _autoStartGame } = require('./bloom/base/games');
 
 const store = require('./colors/luna_store');
-
+connectDB('Luna module');
 async function preloadConfig() {
     const KEYS = [
         "SESSION", "MONGO", "REDIS", "NODE",

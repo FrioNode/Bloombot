@@ -1,104 +1,115 @@
+// project/colors/mess.js
 const { get } = require('./setup');
 const bloom = require('../package.json');
 
-let botname = 'Luna';
-let emoji = '🌼';
-let ownername = 'Benson';
-let prefix = '!';
-let devname = 'FrioNode';
-let cpyear = new Date().getFullYear();
-let mode = 'group';
+let state = {
+    botname: 'Luna',
+    emoji: '🌼',
+    ownername: 'Benson',
+    prefix: '!',
+    devname: 'FrioNode',
+    cpyear: new Date().getFullYear(),
+    mode: 'group',
+};
 
-// This object will be updated later once config loads from Mongo
-let mess = {};
+// Main container for messages
+const mess = {};
 
-// Async initializer — runs once but does NOT block require()
-async function initMess() {
-    botname = await get('BOTNAME') || botname;
-    emoji = await get('EMOJI') || emoji;
-    ownername = await get('OWNERNAME') || ownername;
-    prefix = await get('PREFIX') || prefix;
-    devname = await get('DEVNAME') || devname;
-    cpyear = await get('CPYEAR') || cpyear;
-    mode = await get('MODE') || mode;
+// Build message object based on current state
+function buildMessages() {
+    mess.about = `_Hi, I am ${state.botname} ${state.emoji}_\n> A WhatsApp multidevice AI written in JavaScript based on Baileys. I was developed by Master ${state.ownername} and LICENSED under ISC licensing policy at ColdNode Labs (Naivasha, Kenya). I am one of the most advanced AI user-bot models with more than 400 features. Check more from my developer on: https://github.com/(${state.devname})\n\n${state.emoji} To open a ticket send: *(${state.prefix}ticket)*`;
 
-    mess = {
-        about: `_Hi, I am ${botname} ${emoji}_\n> A WhatsApp multidevice AI written in JavaScript based on Baileys. I was developed by Master ${ownername} and LICENSED under ISC licensing policy at ColdNode Labs (Naivasha, Kenya). I am one of the most advanced AI user-bot models with more than 400 features. Check my developer on GitHub (${devname}).\n\n${emoji} To open a ticket send: *(${prefix}ticket)*`,
+    mess.ticket = `Your ticket has been created successfully.\n_${state.devname} will contact you shortly. Meanwhile check (${state.prefix}menu)_`;
 
-        ticket: `Your ticket has been created successfully.\n_${devname} will contact you shortly. Meanwhile check (${prefix}menu)_`,
-
-        bloom: `╭────${emoji} ${botname} ─────
+    mess.bloom = `╭────${state.emoji} ${state.botname} ─────
 │   > Version: ${bloom.version} beta
-│   > Global prefix: ${prefix}
+│   > Global prefix: ${state.prefix}
 │    _A reason to imagine_
-│    _Operating mode: ${mode}_
+│    _Operating mode: ${state.mode}_
 ╰─────────────────
-> (c) ${cpyear} ${botname} By @${devname} - ☁️ •|•`,
+> (c) ${state.cpyear} ${state.botname} By @${state.devname} - ☁️ •|•`;
 
-        powered: `Powered By ${devname}`,
-        admin: "_This command is meant for group admins only!_",
-        owner: `This Command is meant for ${botname} owner only!`,
-        autorestart: `${botname} will restart automatically to apply changes.`,
-        manualrestart: `You need to restart ${botname} manually.`,
-        norestart: `_🚫 Only ${botname} owner can restart bot_`,
-        shut: `Shutting down.... You will need to start ${botname} manually!`,
-        noshut: `Unauthorized`,
-        ping: "_Response time:_",
-        pong: "_Pong!_",
-        search: "_Searching for results..._",
-        nosearch: "_No matching content found_",
-        broadcast: "_Broadcast sent successfully_",
+    mess.powered = `Powered By ${state.devname}`;
+    mess.admin = "_This command is meant for group admins only!_";
+    mess.owner = `This command is meant for ${state.botname} owner only!`;
+    mess.autorestart = `${state.botname} will restart automatically to apply changes.`;
+    mess.manualrestart = `You need to restart ${state.botname} manually.`;
+    mess.norestart = `_🚫 Only ${state.botname} owner can restart bot_`;
+    mess.shut = `Shutting down.... You will need to start ${state.botname} manually!`;
+    mess.noshut = `Unauthorized`;
 
-        restarting: `╭────────────────────
-│> *🔁 Restarting ${emoji} ${botname}....*
+    mess.ping = "_Response time:_";
+    mess.pong = "_Pong!_";
+    mess.search = "_Searching for results..._";
+    mess.nosearch = "_No matching content found_";
+    mess.broadcast = "_Broadcast sent successfully_";
+
+    mess.restarting = `╭────────────────────
+│> *🔁 Restarting ${state.emoji} ${state.botname}....*
 │ _I will notify you once online_
 │ Restart manually if something fails.
-╰────────────────────── 🚀`,
+╰────────────────────── 🚀`;
 
-        group: "_This command can only be used in group chats._",
-        agenda: `_Only ${botname} owner can do that in a group_`,
-        ticketarg: `Please write your issue or ticket ID\nExample:\n!ticket something is not ok\n!ticket BB-0000A`,
-        noarg: `Provide arguments! Command incomplete.`,
-        limited: `⚠️ Maximum 3 open tickets.`,
-        gmetafail: "❌ Failed to fetch group metadata",
-        botadmin: `_${botname} must be admin first!_`,
-        youadmin: "_You are not an admin!_",
-        wenot: "❌ Neither you nor I am admin.",
-        nsfwoff: `_NSFW not enabled!\nUse *${prefix}nsfw on*`,
-        nsfwon: `_NSFW already enabled! Use *${prefix}nsfw off*`,
-        games: `_Games are disabled! Use *${prefix}act games*`,
-        economy: `_Economy disabled! Use *${prefix}act economy*`,
-        act: `_Second parameter required!\n> ${prefix}act (economy,games,nsfw,welcome,left)`,
-        deact: `_Second parameter required!\n> ${prefix}deact (economy,games,nsfw,welcome,left)`,
+    mess.group = "_This command can only be used in group chats._";
+    mess.agenda = `_Only ${state.botname} owner can do that in a group_`;
+    mess.ticketarg = `Please write your issue or ticket ID\nExample:\n${state.prefix}ticket something is not ok\n${state.prefix}ticket BB-0000A`;
+    mess.noarg = `Provide arguments! Command incomplete.`;
+    mess.limited = `⚠️ Maximum 3 open tickets.`;
+    mess.gmetafail = "❌ Failed to fetch group metadata";
+    mess.botadmin = `_${state.botname} must be admin first!_`;
+    mess.youadmin = "_You are not an admin!_";
+    mess.wenot = "❌ Neither you nor I am admin.";
 
-        add: `_To add a user:\n${prefix}add 2547xxxxxxx_`,
-        joinlink: `_Need a group link or code_\n${prefix}join link_here`,
+    mess.nsfwoff = `_NSFW not enabled!\nUse *${state.prefix}nsfw on*`;
+    mess.nsfwon = `_NSFW already enabled! Use *${state.prefix}nsfw off*`;
+    mess.games = `_Games are disabled! Use *${state.prefix}act games*`;
+    mess.economy = `_Economy disabled! Use *${state.prefix}act economy*`;
 
-        error404: `_Command not found!_\nTry ${prefix}menu`,
-        error: `An error occurred..!`,
-        bug: "*An error occurred..!*\nReport sent.",
-        not_a_repo: '❌ Not a Git repo.',
-        no_updates: '✅ Up to date!',
-        pull_success: '✅ Updated successfully!',
-        pull_failed: '❌ Git pull failed!',
-        restart_later: '⏰ Restart cancelled.',
-        restarting_now: '♻️ Restarting bot...',
-        restart_failed: '❌ Restart failed!',
-        installing_dependencies: '📦 Installing dependencies...',
-        install_failed: '❌ Dependency install failed!',
+    mess.act = `_Second parameter required!\n> ${state.prefix}act (economy,games,nsfw,welcome,left)`;
+    mess.deact = `_Second parameter required!\n> ${state.prefix}deact (economy,games,nsfw,welcome,left)`;
 
-        privateMode: `Bot in private mode — do not disturb`,
-        blocked: `You will be blocked for violating privacy policy`,
-        groupOnly: `Bot set to group-only mode`,
+    mess.add = `_To add a user:\n${state.prefix}add 2547xxxxxxx_`;
+    mess.joinlink = `_Need a group link or code_\n${state.prefix}join link_here`;
 
-        footer: `> (c) ${cpyear} ${botname} By @${devname} - ☁️ •|•`,
-    };
+    mess.error404 = `_Command not found!_\nTry ${state.prefix}menu`;
+    mess.error = `An error occurred..!`;
+    mess.bug = "*An error occurred..!*\nReport sent.";
+
+    mess.not_a_repo = '❌ Not a Git repo.';
+    mess.no_updates = '✅ Up to date!';
+    mess.pull_success = '✅ Updated successfully!';
+    mess.pull_failed = '❌ Git pull failed!';
+    mess.restart_later = '⏰ Restart cancelled.';
+    mess.restarting_now = '♻️ Restarting bot...';
+    mess.restart_failed = '❌ Restart failed!';
+    mess.installing_dependencies = '📦 Installing dependencies...';
+    mess.install_failed = '❌ Dependency install failed!';
+
+    mess.privateMode = `Bot in private mode — do not disturb`;
+    mess.blocked = `You will be blocked for violating privacy policy`;
+    mess.groupOnly = `Bot set to group-only mode`;
+
+    mess.footer = `> (c) ${state.cpyear} ${state.botname} By @${state.devname} - ☁️ •|•`;
 }
 
-// Fire async initialization (not awaited)
-initMess();
+// Load from DB and rebuild messages
+async function initMess() {
+    state.botname = await get('BOTNAME') || state.botname;
+    state.emoji = await get('EMOJI') || state.emoji;
+    state.ownername = await get('OWNERNAME') || state.ownername;
+    state.prefix = await get('PREFIX') || state.prefix;
+    state.devname = await get('DEVNAME') || state.devname;
+    state.cpyear = await get('CPYEAR') || state.cpyear;
+    state.mode = await get('MODE') || state.mode;
 
-// Exported object will be filled later
-module.exports = new Proxy({}, {
-    get: (_, key) => mess[key],
-});
+    buildMessages();
+}
+
+// Support hot reload — called by watcher
+async function reload() {
+    await initMess();
+}
+
+initMess(); // Run on module load
+
+module.exports = { mess, reload, initMess };

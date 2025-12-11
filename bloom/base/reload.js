@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const mess = require('../../colors/mess');
+const { mess } = require('../../colors/mess');
 const { isBloomKing } = require('../../colors/auth');
 
 module.exports = {

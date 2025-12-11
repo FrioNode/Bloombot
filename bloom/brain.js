@@ -2,15 +2,15 @@
  *  Luna Brain Module — Fully Patched for Dynamic Mongo Config
  ********************************************************************/
 
-const mongoose = require('mongoose');
-const { Settings, UserCounter, AFK, connectDB } = require('../colors/schema');
-const mess = require('../colors/mess');
-const { isSenderAdmin, isBotAdmin } = require('../colors/auth');
-const { get } = require('../colors/setup');
-const { trackUsage } = require('../colors/exp');
-const { tttmove, startReminderChecker } = require('./ttthandle');
 const fs = require('fs');
 const path = require('path');
+const mongoose = require('mongoose');
+const mess = require('../colors/mess');
+const { get } = require('../colors/setup');
+const { trackUsage } = require('../colors/exp');
+const { isSenderAdmin, isBotAdmin } = require('../colors/auth');
+const { tttmove, startReminderChecker } = require('./ttthandle');
+const { Settings, UserCounter, AFK, connectDB } = require('../colors/schema');
 
 connectDB('Brain Module');
 
@@ -123,13 +123,21 @@ async function setupHotReload() {
         }
     });
 
-    async function reloadFile(filePath) {
-        try {
-            delete require.cache[require.resolve(filePath)];
-            require(filePath);
-            if (!filePath.includes('colors')) await loadCommands();
-        } catch (err) {}
-    }
+   async function reloadFile(filePath) {
+    try {
+        delete require.cache[require.resolve(filePath)];
+        const mod = require(filePath);
+
+        // ⭐ SUPER SMALL PATCH: HANDLE MESS HOT RELOAD ⭐
+        if (filePath.endsWith('colors/mess.js')) {
+            if (mod.reload) await mod.reload();
+            return; // do not reload commands for mess.js
+        }
+        // ⭐ END PATCH ⭐
+
+        if (!filePath.includes('colors')) await loadCommands();
+    } catch (err) {}
+}
 }
 
 /* -----------------------------------------------------------
