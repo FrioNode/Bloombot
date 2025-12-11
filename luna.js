@@ -25,14 +25,15 @@ const qrCode = require('qrcode-terminal');
 const express = require('express');
 const isDocker = require('is-docker').default;
 const { emojis, doReact } = require('./colors/react');
-const { mess } = require('./colors/mess');
+const { mess, initMess } = require('./colors/mess'); const dotenv = require('dotenv');
 const { _autoStartGame } = require('./bloom/base/games');
-
+dotenv.config(); initMess();
+const session = process.env.SESSION
 const store = require('./colors/luna_store');
 connectDB('Luna module');
 async function preloadConfig() {
     const KEYS = [
-        "SESSION", "MONGO", "REDIS", "NODE",
+        "MONGO", "REDIS", "NODE",
         "OWNERNUMBER", "SUDOLID", "DEVNAME", "OWNERNAME",
         "BLOOMCHAT", "LOGSCHAT", "OPENCHAT", "INVITE",
         "CHANNELID", "CHANNEL", "BOTNAME", "IMAGE",
@@ -65,7 +66,7 @@ async function startBot() {
     const config = await preloadConfig();
 
     const {
-        session, botname, react, emoji, invite,
+        botname, react, emoji, invite,
         logschat, channel, channelid, image,
         mode, storewriteinterval } = config;
 
