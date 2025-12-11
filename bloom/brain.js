@@ -5,13 +5,13 @@
 const fs = require('fs');
 const path = require('path');
 const mongoose = require('mongoose');
-const mess = require('../colors/mess');
+const { mess, initMess } = require('../colors/mess');
 const { get } = require('../colors/setup');
 const { trackUsage } = require('../colors/exp');
 const { isSenderAdmin, isBotAdmin } = require('../colors/auth');
 const { tttmove, startReminderChecker } = require('./ttthandle');
 const { Settings, UserCounter, AFK, connectDB } = require('../colors/schema');
-
+initMess();
 connectDB('Brain Module');
 
 let commandRegistry = {};
@@ -152,7 +152,7 @@ const bloomCmd = async (Luna, message) => {
         if (message.key.remoteJid === 'status@broadcast') return false;
 
         const { command, fulltext } = extractCommand(message);
-
+        if (!command || command.trim() === "") { return false; }
         if (/^[1-9]$/.test(command)) {
             await tttmove(Luna, message, fulltext);
             return true;
@@ -221,8 +221,7 @@ async function checkMode(Luna, message) {
         if (mode === 'public') return true;
 
         if (mode === 'private' && sender !== sudo) {
-            let user = await UserCounter.findOne({ user: sender }) ||
-                       await UserCounter.create({ user: sender, count: 0 });
+            let user = await UserCounter.findOne({ user: sender }) ||  await UserCounter.create({ user: sender, count: 0 });
 
             user.count++;
 
@@ -263,10 +262,7 @@ async function checkMessageType(Luna, message) {
         const isAdmin = await isSenderAdmin(Luna, message);
         const botAdmin = await isBotAdmin(Luna, message);
 
-        const text =
-            message.message?.conversation ||
-            message.message?.extendedTextMessage?.text ||
-            '';
+        const text = message.message?.conversation || message.message?.extendedTextMessage?.text || '';
 
         const messageType = Object.keys(message.message)[0];
 
@@ -326,17 +322,22 @@ async function checkCommandTypeFlags(Luna, message) {
         if (!data) return true;
 
         const settings = await Settings.findOne({ group: groupId });
-        if (!settings) return true;
 
-        if (data.type === 'game' && !settings.gameEnabled) {
+        if (!settings) return true;
+        const type = data.type?.toLowerCase() || '';
+        const gameEnabled = !!settings?.gameEnabled;
+        const nsfwEnabled = !!settings?.nsfwEnabled;
+
+        if (['game', 'economy'].includes(type) && !gameEnabled) {
             await Luna.sendMessage(groupId, { text: mess.games });
             return false;
         }
 
-        if (data.type === 'nsfw' && !settings.nsfwEnabled) {
+        if (type === 'nsfw' && !nsfwEnabled) {
             await Luna.sendMessage(groupId, { text: mess.nsfwoff });
             return false;
         }
+
 
         return true;
     } catch {

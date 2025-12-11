@@ -21,8 +21,8 @@ const Setting = mongoose.model('Setup', settingSchema);
 async function connectDB() {
   if (!connected) {
     await mongoose.connect(mongoUri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
+        serverSelectionTimeoutMS: 60000,
+        socketTimeoutMS: 60000,
     });
     connected = true;
     console.log('[MongoDB] Connected via Mongoose');

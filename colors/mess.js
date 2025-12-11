@@ -60,12 +60,10 @@ function buildMessages() {
     mess.youadmin = "_You are not an admin!_";
     mess.wenot = "❌ Neither you nor I am admin.";
 
-    mess.nsfwoff = `_NSFW not enabled!\nUse *${state.prefix}nsfw on*`;
-    mess.nsfwon = `_NSFW already enabled! Use *${state.prefix}nsfw off*`;
-    mess.games = `_Games are disabled! Use *${state.prefix}act games*`;
-    mess.economy = `_Economy disabled! Use *${state.prefix}act economy*`;
+    mess.nsfwoff = `_NSFW not enabled!_\nUse *${state.prefix}nsfw on*`;
+    mess.nsfwon = `_NSFW already enabled!_\nUse *${state.prefix}nsfw off* to activate nsfw`;
+    mess.games = `_Games are disabled!_\nUse *${state.prefix}games on* to activate games`;
 
-    mess.act = `_Second parameter required!\n> ${state.prefix}act (economy,games,nsfw,welcome,left)`;
     mess.deact = `_Second parameter required!\n> ${state.prefix}deact (economy,games,nsfw,welcome,left)`;
 
     mess.add = `_To add a user:\n${state.prefix}add 2547xxxxxxx_`;
