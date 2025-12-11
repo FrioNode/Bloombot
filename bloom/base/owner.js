@@ -19,7 +19,8 @@ const isOwner =isBloomKing;
             run: async (Bloom, message, fulltext) => {
                 const remoteJid = message.key.remoteJid;
                 const sender = message.key.participant || remoteJid;
-                if (!isBloomKing(sender,message)) {
+                console.log(sender, "djhhjg");
+                if (!(await isBloomKing(sender,message))) {
                     return await Bloom.sendMessage(remoteJid, { text: '❌ This command is for the bot owner only.' }, { quoted: message });
                 }
 
@@ -76,9 +77,7 @@ return await Bloom.sendMessage(remoteJid, {
             // console.log('Bloom object keys:', Object.keys(Bloom));
             const sender = message.key.remoteJid;
             const senderid = message.key.participant;
-
-            console.log(sender, senderid);
-            if (!isBloomKing(sender, message)) {
+            if (!(await isBloomKing(sender,message))) {
                 return await Bloom.sendMessage(sender, { text: mess.owner }, { quoted: message });
             }
             console.log(message.pushName);
@@ -110,7 +109,7 @@ return await Bloom.sendMessage(remoteJid, {
         run: async (Bloom, message, fulltext) => {
             const sender = message.key.remoteJid;
 
-            if (!isOwner(sender, message)) {
+            if (!(await isBloomKing(sender,message))) {
                 return await Bloom.sendMessage(sender, { text: mess.norestart }, { quoted: message });
             }
 
@@ -129,7 +128,7 @@ return await Bloom.sendMessage(remoteJid, {
         run: async (Bloom, message, fulltext) => {
             const sender = message.key.remoteJid;
 
-            if (!isOwner(sender, message)) {
+            if (!(await isBloomKing(sender,message))) {
                 return await Bloom.sendMessage(sender, { text: mess.norestart }, { quoted: message });
             }
 
@@ -149,7 +148,7 @@ return await Bloom.sendMessage(remoteJid, {
             run: async (Bloom, message, fulltext) => {
                 const sender = message.key.remoteJid;
 
-                if (!isOwner(sender, message)) {
+                if (!(await isBloomKing(sender,message))) {
                     return await Bloom.sendMessage(sender, { text: mess.owner || '❌ Unauthorized access.' }, { quoted: message });
                 }
 
@@ -186,7 +185,7 @@ return await Bloom.sendMessage(remoteJid, {
         setxp: {
             run: async (Bloom, message, fulltext) => {
                 const sender = message.key.remoteJid;
-                if (!isOwner(sender, message)) {
+                if (!(await isBloomKing(sender,message))) {
                     return await Bloom.sendMessage(message.key.remoteJid, { text: mess.owner });
                 }
 
@@ -228,8 +227,7 @@ return await Bloom.sendMessage(remoteJid, {
         xpreset: {
             run: async (Bloom, message, fulltext) => {
                 const sender = message.key.participant || message.key.remoteJid;
-                const sudochat = (await get('OWNERNUMBER')) + '@s.whatsapp.net';
-                if (sender !== sudochat) {
+                if (!(await isBloomKing(sender,message))) {
                     return await Bloom.sendMessage(message.key.remoteJid, {
                         text: "🚫 Only the bot owner can reset EXP."
                     });
@@ -279,7 +277,7 @@ return await Bloom.sendMessage(remoteJid, {
         const value = rest.join(' ');
         const arg = argRaw?.toUpperCase(); // <-- convert only the argument to uppercase
 
-        if (!isBloomKing(sender, message)){
+        if (!(await isBloomKing(sender,message))){
             return await Bloom.sendMessage(message.key.remoteJid, {
                 text: mess.owner
             }, { quoted: message });
@@ -321,7 +319,7 @@ get: {
         const replyPath = message.key.remoteJid;
 
         // Only owner
-        if (!isBloomKing(sender, message)) {
+        if (!(await isBloomKing(sender,message))) {
             return await Bloom.sendMessage(replyPath, { text: '❌ This command is for the bot owner only.' }, { quoted: message });
         }
 

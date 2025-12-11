@@ -10,7 +10,7 @@ module.exports = {
         run: async (Bloom, message) => {
             const sender = message.key.participant || message.key.remoteJid;
             // Bot owner check
-            if (!isBloomKing(sender,message)) {
+            if (!(await isBloomKing(sender,message))) {
                 return await Bloom.sendMessage(message.key.remoteJid, {
                     text: `${mess.owner}`
                 });

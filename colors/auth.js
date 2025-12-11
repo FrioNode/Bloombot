@@ -124,7 +124,6 @@ const isSenderAdmin = async (Bloom, message) => {
  * ----------------------------- */
 const isBloomKing = async (sender, message) => {
     const id = sender.endsWith('@g.us') ? message.key.participant : sender;
-
     const sudochat = await safeGet('OWNERNUMBER'); // normalized or null
     let sudolid = await get('SUDOLID');
     if (sudolid) sudolid = sudolid.replace('@s.whatsapp.net', '@lid');

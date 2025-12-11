@@ -33,7 +33,7 @@ module.exports = {
                 const isLidGroup = metadata.participants.some(p => p.id.endsWith('@lid'));
                 if (isLidGroup) {
                     return await Bloom.sendMessage(groupJid, {
-                        text: '❌ This group uses Linked Identity (LID), and adding users by number is not supported yet.'
+                        text: '❌ This group uses Linked Identity (LID), and adding users by number is not supported yet by this bot.'
                     });
                 }
 
