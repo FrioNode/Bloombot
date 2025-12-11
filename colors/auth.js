@@ -1,6 +1,6 @@
 // colors/auth.js
 const { get } = require('./setup');
-const mess = require('./mess');
+const { mess } = require('./mess');
 const fs = require('fs').promises;
 const path = require('path');
 

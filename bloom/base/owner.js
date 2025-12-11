@@ -1,5 +1,5 @@
 const luna = require('../../package.json');
-const { get, set } = require('../../colors/setup');
+const { get, set, connectDB } = require('../../colors/setup');
 const { isBloomKing } = require('../../colors/auth');
 const { mess } = require('../../colors/mess');
 const { Exp } = require('../../colors/schema');
@@ -8,7 +8,6 @@ const { promisify } = require('util');
 const execPromise = promisify(exec);
 const fs = require('fs');
 const path = require('path');
-const configPath = path.join(__dirname, '../../colors/config.json');
 // ------FRIONODE-----
 
 const isOwner =isBloomKing;
@@ -311,6 +310,42 @@ return await Bloom.sendMessage(remoteJid, {
             await Bloom.sendMessage(message.key.remoteJid, {
                 text: `❌ Failed to update config: ${error.message}`
             }, { quoted: message });
+        }
+    }
+},
+get: {
+    type: 'owner',
+    desc: 'Get config values from MongoDB (all or specific key)',
+    usage: 'get [key]',
+    run: async (Bloom, message, fulltext) => {
+        const sender = message.key.participant || message.key.remoteJid;
+        const replyPath = message.key.remoteJid;
+
+        // Only owner
+        if (!isBloomKing(sender, message)) {
+            return await Bloom.sendMessage(replyPath, { text: '❌ This command is for the bot owner only.' }, { quoted: message });
+        }
+
+        const args = fulltext.trim().split(' ').slice(1);
+        const key = args[0]?.toUpperCase();
+
+        try {
+            if (key) {
+                // Single key
+                const value = await get(key);
+                return await Bloom.sendMessage(replyPath, { text: `• ${key} = ${value || '❌ Not found'}` }, { quoted: message });
+            } else {
+                // All keys
+                const Setting = await connectDB();
+                const docs = await Setting.find({}); // fetch all
+                if (!docs.length) return await Bloom.sendMessage(replyPath, { text: '⚠️ No config keys found.' }, { quoted: message });
+
+                const allKeysText = docs.map(d => `• ${d._id} = ${d.value}`).join('\n');
+                return await Bloom.sendMessage(replyPath, { text: `📋 Config values:\n${allKeysText}` }, { quoted: message });
+            }
+        } catch (err) {
+            console.error('Get command error:', err);
+            return await Bloom.sendMessage(replyPath, { text: `❌ Failed to fetch config: ${err.message}` }, { quoted: message });
         }
     }
 }
