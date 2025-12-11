@@ -41,7 +41,7 @@ fly launch
 Then deploy with a single whisper:
 
 ```bash
-fly deploy
+fly deploy --remote-only
 ```
 
 Your magical bot shall awaken at: `https://lunabot.fly.dev`
@@ -60,13 +60,15 @@ Its heart beats in the cloud — beyond time, beyond borders.
 2. **Feed it your secrets** (create `.env`):
 
    ```env
+   MONGO=your_mongoDB_uri
+   REDIS=your_redis_uri
    SESSION=BLOOM~a1b2c3d4
    OWNERNUMBER=254718241545
-   LOGSCHAT=123456789-123456@g.us
+   SUDOLID=90904738946389@lid
+   OPENCHAT=123456789-123456@g.us
    CHANNEL=https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d
    CHANNELID=12345@newsletter
-   MODE=public
-   REACT=true
+   INVITE=group_invite_code
    ```
 
 3. **Run the incantation**:
@@ -82,11 +84,13 @@ Scan it fast — the veil does not stay open forever.
 
 ## 🧾 Mandatory Runes (Required ENV)
 
-| Key        | Purpose                                   |
-| ---------- | ----------------------------------------- |
-| `SESSION`  | Your scroll of immortality (Pastebin key) |
-| `LOGSCHAT` | Group JID where the bot speaks first      |
-| `OWNERNUMBER`   | Bot Controler or owner   |
+| Key           | Purpose                                   |
+| ----------    | ----------------------------------------- |
+| `SESSION`     | Your scroll of immortality (Pastebin key) |
+| `OPENCHAT`    | Group JID where the bot speaks first      |
+| `OWNERNUMBER` | Bot Controler or owner                    |
+| `MONGO`       | Your database storage                     |
+| `RDIS`        | For faster usage tracking                 |
 
 ---
 
@@ -96,8 +100,8 @@ Scan it fast — the veil does not stay open forever.
 | ----------- | -------------------------------------------- | ------------------- |
 | `CHANNEL`   | WhatsApp Channel URL for startup promotions  | *none*              |
 | `CHANNELID` | Newsletter JID for channel previews          | *none*              |
-| `REACT`     | Should the bot react to chats randomly?      | `true`              |
-| `MODE`      | `public` or `private` behavior               | `private`           |
+| `REACT`     | Should the bot react to chats randomly?      | `false`              |
+| `MODE`      | `public` or `private` behavior               | `group`           |
 | `IMAGE`     | Startup image URL (shown in startup message) | logo from `colors/` |
 
 ---
@@ -146,7 +150,7 @@ Use wisely. The guild protects no fool.
 
 Made with lavender, Node.js, and chaos by [@FrioNode](https://github.com/FrioNode)
 
-🌐 Website: [lunabot.fly.dev](https://lunabot.fly.dev)
+🌐 Website: [frionode.fly.dev](https://frionode.fly.dev)
 
 ---
 
