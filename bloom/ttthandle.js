@@ -1,10 +1,10 @@
-const { TicTacToe } = require('../colors/schema');
+const { TicTacToe, connectDB } = require('../colors/schema');
 const { v4: uuidv4 } = require('uuid');
 const cron = require('node-cron');
 const mongoose = require('mongoose');
 const activeTimeouts = new Map();
 const mongo = process.env.MONGO
-
+connectDB('TicTacToe Module');
 function renderBoard(board) {
     const emojiMap = { ' ': '⏺️', '❌': '❌', '⭕': '⭕' };
     let rendered = '';
@@ -127,41 +127,33 @@ async function endGame(senderJid) {
     }  return { success: true }; }
 
 async function cleanupStaleGames() {
-    let conn;
     try {
-        conn = mongoose.connection.readyState === 1
-        ? mongoose.connection
-        : await mongoose.createConnection(mongo).asPromise();
+        if (mongoose.connection.readyState !== 1) return;
 
-        const model = conn.model('TicTacToe', TicTacToe.schema);
         const now = new Date();
 
-        const waitingResult = await model.deleteMany({
+        const waitingResult = await TicTacToe.deleteMany({
             status: 'waiting',
             timeoutAt: { $lt: now }
-        }).maxTimeMS(30000);
+        });
 
-        const endedResult = await model.deleteMany({
+        const endedResult = await TicTacToe.deleteMany({
             status: { $in: ['ended', 'active'] },
             updatedAt: { $lt: new Date(now - 24 * 60 * 60 * 1000) }
-        }).maxTimeMS(30000);
+        });
 
         console.log(`♻️ Cleaned: ${waitingResult.deletedCount} waiting, ${endedResult.deletedCount} ended games`);
 
     } catch (err) {
-        console.error('❌ Cleanup error:', err.message);
-    } finally {
-        if (conn && conn !== mongoose.connection) {
-            await conn.close(); }   } }
+        console.error('❌ Cleanup error:', err);
+    }
+}
 
 function initializeCleanup() {
-    const checkDB = async () => {
-        if (mongoose.connection.readyState === 1) {
-            await cleanupStaleGames();
-            cron.schedule('*/10 * * * *', cleanupStaleGames);
-            console.log('🔄 Cleanup for TicTacoe: (every 10m)');
-        } else { setTimeout(checkDB, 5000); }
-    };  checkDB(); }
+    cron.schedule('*/20 * * * *', cleanupStaleGames);
+    console.log('🔄 Cleanup scheduled: every 20 minutes');
+}
+
 
     async function tttmove(Bloom, message, fulltext){
         try {
@@ -173,9 +165,13 @@ function initializeCleanup() {
             if (isNaN(move) || move < 1 || move > 9) {
                 return await Bloom.sendMessage(group, { text: '⚠️ Please enter a number between 1-9' }); }
             const game = await TicTacToe.findOne({
-                groupId: group,
-                status: 'active'
-            }).select('player1 player2 currentTurn board status').lean();
+                        groupId: group,
+                        status: 'active',
+                        $or: [
+                            { 'player1.jid': sender },
+                            { 'player2.jid': sender }
+                        ]
+                    }).select('player1 player2 currentTurn board status').lean();
 
             if (!game) { return await Bloom.sendMessage(group, { text: '❌ No active game found. Start a new game with !ttt' }); }
             const players = [game.player1.jid, game.player2.jid];
@@ -191,11 +187,11 @@ function initializeCleanup() {
                     text: `🎉 @${result.winnerPrefix} (${result.winnerName}) wins!\n\n${boardText}`,
                                         mentions: [result.winnerJid]
                 });
-                await endGame(group);
+                await endGame(sender);
             }
             else if (result.status === 'draw') {
                 await Bloom.sendMessage(group, { text: `🤝 Game ended in draw!\n\n${boardText}` });
-                await endGame(group);
+                await endGame(sender);
             }
             else {
                 await Bloom.sendMessage(group, {
@@ -221,5 +217,5 @@ function startReminderChecker(Bloom) {
                 await r.save();
             } catch (e) { console.error('Failed to send reminder:', e); } } }, 60000); }
 
-cleanupStaleGames(); initializeCleanup();
+initializeCleanup();
 module.exports = {  createGame, joinGame, makeMove, endGame, renderBoard, checkWinner, cleanupStaleGames, tttmove, startReminderChecker };
