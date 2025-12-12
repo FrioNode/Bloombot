@@ -1,4 +1,5 @@
 const QRCode = require('qrcode');
+const sharp = require('sharp');
 const { downloadMediaMessage } = require('baileys');
 const Jimp = require('jimp');
 const jsQR = require('jsqr');
@@ -189,7 +190,88 @@ module.exports = {
         }, { quoted: message });
       }
     }
+  },
+  sticker: {
+  type: 'utility',
+  desc: 'Convert an image to a WhatsApp sticker',
+  usage: 'sticker OR reply to an image with sticker',
+  run: async (Bloom, message, fulltext) => {
+    const sender = message.key.remoteJid;
+    const quoted = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+    const stanzaId = message.message?.extendedTextMessage?.contextInfo?.stanzaId;
+    const contextKey = message.message?.extendedTextMessage?.contextInfo?.participant || message.key.remoteJid;
+
+    // Require user to reply to an image OR send an image with caption "sticker"
+    let isImage = false;
+    let msgImage = null;
+
+    // User replied to an image
+    if (quoted?.imageMessage) {
+      isImage = true;
+      msgImage = quoted;
+    }
+
+    // User sent image directly with caption "sticker"
+    if (message.message?.imageMessage) {
+      const caption = message.message?.imageMessage?.caption || "";
+      if (/sticker/i.test(caption)) {
+        isImage = true;
+        msgImage = message.message;
+      }
+    }
+
+    if (!isImage) {
+      await Bloom.sendMessage(sender, {
+        text: '❓ Send an image with caption *sticker* OR reply to an image with the command.\nExample: `sticker`'
+      }, { quoted: message });
+      return;
+    }
+
+    try {
+      // Build full message to download buffer
+      const fullQuotedMsg = {
+        key: { remoteJid: contextKey, id: stanzaId || message.key.id,
+          fromMe: false, participant: contextKey,  },
+        message: msgImage
+      };
+
+      const buffer = await downloadMediaMessage(
+        fullQuotedMsg,
+        'buffer',
+        {},
+        { reuploadRequest: Bloom.updateMediaMessage }
+      );
+
+      // === Convert to WebP Sticker ===
+      const webpBuffer = await sharp(buffer)
+        .resize(512, 512, { fit: 'cover' })
+        .toFormat('webp')
+        .toBuffer();
+
+      // OPTIONAL metadata
+      const { Sticker, StickerTypes } = require('wa-sticker-formatter');
+      const sticker = new Sticker(webpBuffer, {
+        pack: 'FrioNode',
+        author: 'Luna',
+        type: StickerTypes.FULL,
+        quality: 75
+      });
+
+      const stickerBuffer = await sticker.toBuffer();
+
+      // === Send sticker ===
+      await Bloom.sendMessage(sender, {
+        sticker: stickerBuffer
+      }, { quoted: message });
+
+    } catch (err) {
+      console.error('Sticker error:', err);
+      await Bloom.sendMessage(sender, {
+        text: `❌ Failed to make sticker:\n${err.message}`
+      }, { quoted: message });
+    }
   }
+}
   };
 
 // ===== Sub-functions ===== //

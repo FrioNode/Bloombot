@@ -8,6 +8,7 @@ const { promisify } = require('util');
 const execPromise = promisify(exec);
 const fs = require('fs');
 const path = require('path');
+const dotenv = require('dotenv'); dotenv.config();
 // ------FRIONODE-----
 
 const isOwner =isBloomKing;
@@ -104,24 +105,32 @@ return await Bloom.sendMessage(remoteJid, {
         }
     },
     reboot: {
-        type: 'owner',
-        desc: 'Reboots the bot.',
-        run: async (Bloom, message, fulltext) => {
-            const sender = message.key.remoteJid;
+    type: 'owner',
+    desc: 'Reboots the bot.',
+    run: async (Bloom, message, fulltext) => {
+        const sender = message.key.remoteJid;
 
-            if (!(await isBloomKing(sender,message))) {
-                return await Bloom.sendMessage(sender, { text: mess.norestart }, { quoted: message });
-            }
-
-            try {
-                await Bloom.sendMessage(sender, { text: mess.restarting }, { quoted: message });
-                await execPromise(luna.scripts.restart);
-            } catch (err) {
-                console.error('Reboot error:', err);
-                await Bloom.sendMessage(sender, { text: `❌ Failed to reboot the bot: ${err.message}` }, { quoted: message });
-            }
+        // Check if sender is the bot owner
+        if (!(await isBloomKing(sender, message))) {
+            return await Bloom.sendMessage(sender, { text: mess.norestart }, { quoted: message });
         }
-    },
+
+        try {
+            await Bloom.sendMessage(sender, { text: mess.restarting }, { quoted: message });
+
+            if (process.env.IS_DOCKER === 'true') {
+                // Docker-safe restart: exit process, Docker will restart container
+                process.exit(0);
+            } else {
+                // Local restart: execute the restart script
+                await execPromise(luna.scripts.restart);
+            }
+        } catch (err) {
+            console.error('Reboot error:', err);
+            await Bloom.sendMessage(sender, { text: `❌ Failed to reboot the bot: ${err.message}` }, { quoted: message });
+        }
+    }
+},
     stop: {
         type: 'owner',
         desc: 'Stops the bot.',

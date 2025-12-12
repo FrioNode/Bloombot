@@ -1,7 +1,8 @@
 const axios = require('axios');
 const figlet = require('figlet');
 const { get } =require('../../colors/setup');
-const { footer } = require('../../colors/mess');
+const { mess, initMess } = require('../../colors/mess');
+initMess(); let footer = mess.footer;
 module.exports = {
     wiki: {
     type: 'fun',
@@ -245,10 +246,10 @@ module.exports = {
 
                 const random = data.photos[Math.floor(Math.random() * data.photos.length)];
                 const imageUrl = random.src.medium;
-
+                console.log(footer);
                 await Bloom.sendMessage(sender, {
                     image: { url: imageUrl },
-                    footer: `🖼️ Random image of: *${query}*`
+                    caption: `🖼️ Random image of: *${query}*\n_Results are randomly selected._`
                 }, { quoted: message });
 
             } catch (err) {

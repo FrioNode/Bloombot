@@ -1,7 +1,7 @@
 const axios = require('axios');
 const { get } =require('../../colors/setup');
-const { footer } = require('../../colors/mess');
-
+const { mess, initMess } = require('../../colors/mess');
+initMess();
 // Helper function to convert wind degrees to direction
 function getWindDirection(degrees) {
     const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
@@ -48,7 +48,7 @@ module.exports = {
 • Pressure: ${data.main.pressure} hPa
 • Visibility: ${(data.visibility / 1000).toFixed(1)} km
 --------------------------------
-${footer}`.trim();
+${mess.footer}`.trim();
 
                 await Bloom.sendMessage(sender, {
                     text: weatherInfo
