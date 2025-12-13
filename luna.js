@@ -48,7 +48,11 @@ async function preloadConfig() {
 
     return config;
 }
-console.log('Lets check if the configs were loaded', config);
+
+(async () => {
+    const configs = await preloadConfig();
+    console.log('Lets check if the configs were loaded', configs);
+})();
 
 const log = (...args) => {
     const stack = new Error().stack.split('\n');
