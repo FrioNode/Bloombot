@@ -70,6 +70,7 @@ async function startBot() {
         botname, react, emoji, invite,
         openchat, channel, channelid, image,
         mode, storewriteinterval } = config;
+    const freechat = process.env.OPENCHAT || openchat
 
     const sessionDir = path.join(__dirname, 'heart');
     const credsPath = path.join(sessionDir, 'creds.json');
@@ -148,7 +149,7 @@ async function startBot() {
                         } catch {}
 
                         try {
-                            await Luna.groupMetadata(openchat);
+                            await Luna.groupMetadata(freechat);
                         } catch (err) {
                             log('❌ Cannot access openchat metadata', err);
                         }
@@ -177,7 +178,7 @@ async function startBot() {
                             },
                         };
 
-                        try { await Luna.sendMessage(openchat, payload); }
+                        try { await Luna.sendMessage(freechat, payload); }
                         catch {}
                     }
 
