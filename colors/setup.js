@@ -4,7 +4,7 @@ const Bot = require('../package.json');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const mongoUri = process.env.MONGO || process.env.MONGO_URI;
+const mongoUri = process.env.MONGO || 'mongodb://frio:node@localhost:27017/luna?authSource=admin';
 if (!mongoUri) throw new Error('Mongo URI not defined in env');
 
 let connected = false;
