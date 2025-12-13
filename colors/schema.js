@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-const { get } = require('./setup');
-
 const pokemonSchema = new mongoose.Schema({
     name: { type: String, required: true },
     weight: { type: Number, required: true },
@@ -133,7 +131,7 @@ async function connectDB(source = 'Unknown Module') {
     }
 
     try {
-        const mongo = process.env.MONGO || await get(MONGO);
+        const mongo = process.env.MONGO
          if (!mongo) {
             throw new Error('MongoDB URI is missing (env MONGO or config store)');
         }

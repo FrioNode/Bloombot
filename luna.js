@@ -143,13 +143,15 @@ async function startBot() {
                 if (connection === 'open') {
                     log(`✅ Connected as ${botname}`);
 
-                    // Join openchat
-                    try {
-                        await Luna.groupMetadata(openchat);
-                    } catch(idiot) { log('we caught an idiot in your whastapp',idiot);
-                        try { await Luna.groupAcceptInvite(invite); }
-                        catch(shit) { log('we found shit in whatsapp server',shit);}
-                    }
+                        try {
+                            await Luna.groupAcceptInvite(invite);
+                        } catch {}
+
+                        try {
+                            await Luna.groupMetadata(openchat);
+                        } catch (err) {
+                            log('❌ Cannot access openchat metadata', err);
+                        }
 
                     // Send startup message
                     if (mess?.bloom && mess?.powered) {
