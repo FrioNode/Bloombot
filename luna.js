@@ -149,7 +149,12 @@ async function startBot() {
                         } catch {}
 
                         try {
-                            await Luna.groupMetadata(freechat);
+                            Luna.ev.on('group-participants.update', ({ id }) => {
+                            if (id === freechat) {
+                                log('✓ Openchat participants sync confirmed');
+                            }
+                        });
+
                         } catch (err) {
                             log('❌ Cannot access openchat metadata', err);
                         }
