@@ -35,12 +35,9 @@ async function preloadConfig() {
     const KEYS = [
         "MONGO", "REDIS", "NODE",
         "OWNERNUMBER", "SUDOLID", "DEVNAME", "OWNERNAME",
-        "BLOOMCHAT", "LOGSCHAT", "OPENCHAT", "INVITE",
-        "CHANNELID", "CHANNEL", "BOTNAME", "IMAGE",
-        "LANG", "REACT", "EMOJI", "REBOOT",
+        "OPENCHAT", "INVITE", "CHANNELID", "CHANNEL", "BOTNAME",
+        "IMAGE", "LANG", "REACT", "EMOJI", "REBOOT",
         "IS_DOCKER", "PREFIX", "TIMEZONE", "MODE",
-        "WEATHERKEY", "PIXELKEY", "NINJAKEY",
-        "GEMINI", "DEEPSEEK", "PASTEBINAPI",
         "MAXSTOREMESSAGES", "STOREWRITEINTERVAL"
     ];
 
@@ -51,7 +48,7 @@ async function preloadConfig() {
 
     return config;
 }
-
+console.log('Lets check if the configs were loaded', config);
 
 const log = (...args) => {
     const stack = new Error().stack.split('\n');
@@ -67,7 +64,7 @@ async function startBot() {
 
     const {
         botname, react, emoji, invite,
-        logschat, channel, channelid, image,
+        openchat, channel, channelid, image,
         mode, storewriteinterval } = config;
 
     const sessionDir = path.join(__dirname, 'heart');
@@ -142,12 +139,12 @@ async function startBot() {
                 if (connection === 'open') {
                     log(`✅ Connected as ${botname}`);
 
-                    // Join logschat
+                    // Join openchat
                     try {
-                        await Luna.groupMetadata(logschat);
-                    } catch {
+                        await Luna.groupMetadata(openchat);
+                    } catch(idiot) { log('we caught an idiot in your whastapp',idiot);
                         try { await Luna.groupAcceptInvite(invite); }
-                        catch {}
+                        catch(shit) { log('we found shit in whatsapp server',shit);}
                     }
 
                     // Send startup message
@@ -174,7 +171,7 @@ async function startBot() {
                             },
                         };
 
-                        try { await Luna.sendMessage(logschat, payload); }
+                        try { await Luna.sendMessage(openchat, payload); }
                         catch {}
                     }
 
