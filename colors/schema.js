@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-const mongo = process.env.MONGO
+const { get } = require('./setup');
+
 const pokemonSchema = new mongoose.Schema({
     name: { type: String, required: true },
     weight: { type: Number, required: true },
@@ -125,7 +126,6 @@ const reminderSchema = new mongoose.Schema({
 });
 let isConnected = false;
 
-
 async function connectDB(source = 'Unknown Module') {
     if (isConnected) {
         console.log(`✓ ${source}: Already connected to MongoDB`);
@@ -133,6 +133,10 @@ async function connectDB(source = 'Unknown Module') {
     }
 
     try {
+        const mongo = process.env.MONGO || await get(MONGO);
+         if (!mongo) {
+            throw new Error('MongoDB URI is missing (env MONGO or config store)');
+        }
         await mongoose.connect(mongo, {
             serverSelectionTimeoutMS: 60000,
             socketTimeoutMS: 60000,
