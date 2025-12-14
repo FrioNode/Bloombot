@@ -4,16 +4,6 @@ const STORE_FILE = './baileys_store.json'
 // Config: keep last 20 messages per chat (configurable) - More aggressive for lower RAM
 let MAX_MESSAGES = 20
 
-// Try to read config from settings
-try {
-    const settings = require('./setup.js')
-    if (settings.maxStoreMessages && typeof settings.maxStoreMessages === 'number') {
-        MAX_MESSAGES = settings.maxStoreMessages
-    }
-} catch (e) {
-    // Use default if settings not available
-}
-
 const store = {
     messages: {},
     contacts: {},

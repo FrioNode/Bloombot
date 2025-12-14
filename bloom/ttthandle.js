@@ -1,10 +1,8 @@
-const { TicTacToe, connectDB } = require('../colors/schema');
+const { TicTacToe, Reminder } = require('../colors/schema');
 const { v4: uuidv4 } = require('uuid');
 const cron = require('node-cron');
-const mongoose = require('mongoose');
 const activeTimeouts = new Map();
-const mongo = process.env.MONGO
-connectDB('TicTacToe Module');
+
 function renderBoard(board) {
     const emojiMap = { ' ': '⏺️', '❌': '❌', '⭕': '⭕' };
     let rendered = '';
@@ -128,8 +126,6 @@ async function endGame(senderJid) {
 
 async function cleanupStaleGames() {
     try {
-        if (mongoose.connection.readyState !== 1) return;
-
         const now = new Date();
 
         const waitingResult = await TicTacToe.deleteMany({
@@ -205,7 +201,6 @@ function initializeCleanup() {
                 await Bloom.sendMessage(group, { text: '⚠️ An error occurred during the move' }); } } }
 // --- foregn code reminders
 
-const { Reminder } = require('../colors/schema');
 function startReminderChecker(Bloom) {
     setInterval(async () => {
         const now = new Date();

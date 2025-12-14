@@ -1,5 +1,5 @@
 const luna = require('../../package.json');
-const { get, set, connectDB } = require('../../colors/setup');
+const { get, set } = require('../../colors/setup');
 const { isBloomKing } = require('../../colors/auth');
 const { mess } = require('../../colors/mess');
 const { Exp } = require('../../colors/schema');

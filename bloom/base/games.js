@@ -1,12 +1,10 @@
 const fs = require('fs');
-const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
-const { User, Pokemon, TicTacToe, connectDB } = require('../../colors/schema');
+const { User, Pokemon, TicTacToe } = require('../../colors/schema');
 const { createGame, joinGame, endGame, renderBoard } = require('../ttthandle');
 const { pokemon } = require('../../colors/pokemon');
 const { get }= require('../../colors/setup');
 
- connectDB('Game Module')
 const pokemonNames = ['Pikachu', 'Charmander', 'Bulbasaur', 'Squirtle', 'Jigglypuff', 'Meowth', 'Psyduck', 'Eevee', 'Snorlax', 'Mewtwo'];
 const animals = ['lion', 'buffalo', 'fox', 'monkey', 'ant', 'rabbit', 'dinosaur', 'zebra'];
 const sizes = ['small', 'medium', 'big'];

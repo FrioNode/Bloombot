@@ -1,9 +1,8 @@
 const os = require('os');
 const { exec } = require('child_process');
-const { Exp, User, connectDB } = require('../../colors/schema');
+const { Exp, User } = require('../../colors/schema');
 const { get } = require('../../colors/setup');
 const { mess } = require('../../colors/mess');
-const mongoose = require('mongoose');
 
 const LEVELS = [
     { name: '👶 Baby', min: 0 },
@@ -19,8 +18,6 @@ const LEVELS = [
 { name: '🔮 Archmage', min: 2200 },
 { name: '🧙 Wizard', min: 3000 }
 ];
-
-connectDB('User module')
 
 const locale = process.env.TZ || 'Africa/Nairobi';
 const getCurrentDate = () => {
@@ -118,7 +115,6 @@ module.exports = {
         desc: 'Check your EXP and get daily bonus',
         run: async (Bloom, message) => {
             try {
-                if (mongoose.connection.readyState !== 1) throw new Error('Database not connected');
                 const jid = message.key?.participant || message.key?.remoteJid;
                 const now = new Date();
                 let expData = await Exp.findOne({ jid }) || new Exp({ jid, points: 0, streak: 0 });

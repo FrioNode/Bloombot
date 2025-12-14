@@ -10,9 +10,8 @@ const { get } = require('../colors/setup');
 const { trackUsage } = require('../colors/exp');
 const { isSenderAdmin, isBotAdmin } = require('../colors/auth');
 const { tttmove, startReminderChecker } = require('./ttthandle');
-const { Settings, UserCounter, AFK, connectDB } = require('../colors/schema');
+const { Settings, UserCounter, AFK } = require('../colors/schema');
 initMess();
-connectDB('Brain Module');
 
 let commandRegistry = {};
 let activeLunaInstance = null;

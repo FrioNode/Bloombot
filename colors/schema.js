@@ -122,6 +122,12 @@ const reminderSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now },
     reminded: { type: Boolean, default: false }
 });
+
+const settingSchema = new mongoose.Schema({
+  _id: { type: String, required: true }, // key name
+  value: { type: String, required: true } // always string
+}, { collection: 'setup', versionKey: false });
+
 let isConnected = false;
 
 async function connectDB(source = 'Unknown Module') {
@@ -209,7 +215,8 @@ const AFK = mongoose.models.AFK || mongoose.model('AFK', afkSchema);
 const Pokemon = mongoose.models.Pokemon || mongoose.model('Pokemon', pokemonSchema);
 const UserCounter = mongoose.models.UserCounter || mongoose.model('UserCounter', userCounterSchema);
 const User = mongoose.models.User || mongoose.model('User', userSchema);
-const Settings = mongoose.models.Settings || mongoose.model('Settings', settingsSchema);
+const Settings = mongoose.models.Settings || mongoose.model('Settings', settingsSchema); // group
+const Setting = mongoose.model('Setup', settingSchema); // bot
 const Exp = mongoose.models.Exp || mongoose.model('Exp', expSchema);
 
-module.exports = { Pokemon, UserCounter, User , Settings, Exp, AFK, TicTacToe, Reminder, Ticket, TicketId, connectDB };
+module.exports = { Pokemon, UserCounter, User , Settings, Setting, Exp, AFK, TicTacToe, Reminder, Ticket, TicketId, connectDB };

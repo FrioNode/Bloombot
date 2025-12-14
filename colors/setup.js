@@ -1,34 +1,9 @@
 // setup.js
 const mongoose = require('mongoose');
+const { Setting } = require('./schema');
 const Bot = require('../package.json');
 const dotenv = require('dotenv');
 dotenv.config();
-
-const mongoUri = process.env.MONGO || 'mongodb://frio:node@localhost:27017/luna?authSource=admin';
-if (!mongoUri) throw new Error('Mongo URI not defined in env');
-
-let connected = false;
-
-// ----- Simple key/value schema -----
-const settingSchema = new mongoose.Schema({
-  _id: { type: String, required: true }, // key name
-  value: { type: String, required: true } // always string
-}, { collection: 'setup', versionKey: false });
-
-const Setting = mongoose.model('Setup', settingSchema);
-
-// ----- Connect to MongoDB -----
-async function connectDB() {
-  if (!connected) {
-    await mongoose.connect(mongoUri, {
-        serverSelectionTimeoutMS: 60000,
-        socketTimeoutMS: 60000,
-    });
-    connected = true;
-    console.log('[MongoDB] Connected via Mongoose');
-  }
-  return Setting;
-}
 
 // ----- Initialize Mongo with defaults -----
 async function initDefaults() {
@@ -64,7 +39,6 @@ async function initDefaults() {
     CPYEAR: new Date().getFullYear().toString()
   };
 
-  const Setting = await connectDB();
   for (const [key, value] of Object.entries(defaults)) {
     const exists = await Setting.exists({ _id: key });
     if (!exists) {
@@ -76,7 +50,6 @@ async function initDefaults() {
 
 // ----- Get a config value -----
 async function get(key) {
-  const Setting = await connectDB();
   const doc = await Setting.findById(key).lean();
   if (doc && doc.value != null) return String(doc.value);
   return process.env[key] ? String(process.env[key]) : '';
@@ -87,7 +60,7 @@ async function set(key, value) {
   if (value === undefined || value === null) {
     throw new Error(`[Setup] Cannot set key "${key}" to undefined or null`);
   }
-  const Setting = await connectDB();
+
   await Setting.findByIdAndUpdate(
     key,
     { value: String(value) },
@@ -98,10 +71,5 @@ async function set(key, value) {
 
 // ----- Initialize defaults immediately -----
 initDefaults().catch(err => console.error('[MongoDB] initDefaults failed:', err));
-
-module.exports = {
-  connectDB,
-  initDefaults,
-  get,
-  set
-};
+console.log('setting wnt cool!');
+module.exports = { initDefaults, get, set };
