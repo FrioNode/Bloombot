@@ -1,23 +1,15 @@
-# Debian-based Node 20
 FROM node:20-bullseye
 
-RUN apt-get update && apt-get install -y \
-    git \
-    build-essential \
-    libcairo2-dev \
-    libjpeg-dev \
-    libpango1.0-dev \
-    libgif-dev \
-    libvips-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN corepack enable
 
 WORKDIR /luna
 
-RUN git clone https://github.com/frionode/luna.git .
+COPY package.json pnpm-lock.yaml ./
 
-RUN npm install
-RUN npm install -g pm2
+RUN pnpm install --frozen-lockfile
+
+COPY . .
 
 ENV IS_DOCKER=true
 
-CMD ["pm2-runtime", "npm", "--", "start"]
+CMD ["pnpm", "start"]
