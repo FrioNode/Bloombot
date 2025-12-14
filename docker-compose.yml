@@ -7,9 +7,4 @@ services:
     env_file: .env
     volumes:
       - ./heart:/luna/heart
-    networks:
-      - luna-network
-
-networks:
-  luna-network:
-    external: true
+    network_mode: "host"
