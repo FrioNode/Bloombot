@@ -6,10 +6,7 @@ WORKDIR /luna
 
 COPY package.json pnpm-lock.yaml ./
 
-RUN pnpm install --frozen-lockfile \
-  --allow-build=sharp \
-  --allow-build=protobufjs \
-  --allow-build=baileys
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 
