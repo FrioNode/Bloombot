@@ -117,7 +117,7 @@ async function startBot() {
                     creds: state.creds,
                     keys: makeCacheableSignalKeyStore(
                         state.keys,
-                        pino({ level: "fatal" }).child({ level: "fatal" })
+                        pino({ level: "debug" }).child({ level: "fatal" })
                     )
                 },
                 syncFullHistory: false,
