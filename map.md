@@ -1,3 +1,4 @@
+```mermaid
 sequenceDiagram
     autonumber
     participant User
