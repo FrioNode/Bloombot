@@ -10,7 +10,7 @@
 </p>
 
 > 🌐 Official Portal: [https://lunabot.fly.dev](https://lunabot.fly.dev)
-
+> [Bot map view](map.md) - Se architecture flow
 ---
 
 ## 🌌 What Is Luna?
