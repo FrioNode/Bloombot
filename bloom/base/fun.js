@@ -178,12 +178,12 @@ module.exports = {
             }
         }
     },
-    number: {
+        number: {
         type: 'fun',
-        desc: 'Sends a random number trivia fact',
+        desc: 'Sends a random number fact',
         run: async (Bloom, message) => {
             try {
-                const res = await fetch('http://numbersapi.com/random/trivia?json');
+                const res = await fetch('https://numbersapi.com/random/trivia?json');
                 const data = await res.json();
                 await Bloom.sendMessage(
                     message.key.remoteJid,
@@ -194,12 +194,41 @@ module.exports = {
                 console.error('Error fetching number trivia:', error);
                 await Bloom.sendMessage(
                     message.key.remoteJid,
-                    { text: 'Failed to fetch number trivia. Try again later!' },
+                    { text: 'Failed to fetch number trivia. API is unstable until its maintained' },
                     { quoted: message }
                 );
             }
         }
     },
+trivia: {
+    type: 'fun',
+    desc: 'Sends a random trivia fact',
+    run: async (Bloom, message) => {
+        try {
+            const res = await fetch('https://uselessfacts.jsph.pl/api/v2/facts/random?language=en');
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
+            const data = await res.json();
+            if (!data.text) {
+                throw new Error('Invalid API response');
+            }
+            await Bloom.sendMessage(
+                message.key.remoteJid,
+                { text: `${data.text}\n${footer}` },
+                { quoted: message }
+            );
+        } catch (error) {
+            console.error('Error fetching trivia fact:', error);
+
+            await Bloom.sendMessage(
+                message.key.remoteJid,
+                { text: 'Failed to fetch a trivia fact. Try again later!' },
+                { quoted: message }
+            );
+        }
+    }
+},
     joke: {
         type: 'fun',
         desc: 'Sends a random joke',

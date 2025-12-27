@@ -58,6 +58,7 @@ async function loadCommands() {
                             commandRegistry[cmd] = data;
                         }
                     }
+                    console.logs(`✅ Loaded command: ${cmd} from ${dir}/${file}`);
                 } catch (err) {}
             }
         }
