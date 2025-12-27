@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 const { mess, initMess } = require('../colors/mess');
 const { get } = require('../colors/setup');
 const { trackUsage } = require('../colors/exp');
-const { isSenderAdmin, isBotAdmin } = require('../colors/auth');
+const { isSenderAdmin, isBotAdmin, isBloomKing } = require('../colors/auth');
 const { tttmove, startReminderChecker } = require('./ttthandle');
 const { Settings, UserCounter, AFK } = require('../colors/schema');
 initMess();
@@ -210,7 +210,6 @@ async function checkMode(Luna, message) {
     try {
         const mode = await get('MODE');
         const sender = message.key.participant || message.key.remoteJid;
-        const sudo = await get('OWNERNUMBER');
 
         const { command } = extractCommand(message);
         const isGroup = message.key.remoteJid.endsWith('@g.us');
@@ -219,7 +218,7 @@ async function checkMode(Luna, message) {
 
         if (mode === 'public') return true;
 
-        if (mode === 'private' && sender !== sudo) {
+        if (mode === 'private' && !(await isBloomKing(sender,message))) {
             let user = await UserCounter.findOne({ user: sender }) ||  await UserCounter.create({ user: sender, count: 0 });
 
             user.count++;
@@ -235,7 +234,7 @@ async function checkMode(Luna, message) {
             return false;
         }
 
-        if (mode === 'group' && !isGroup && sender !== sudo) {
+        if (mode === 'group' && !isGroup && !(await isBloomKing(sender,message))) {
             await Luna.sendMessage(sender, { text: mess.groupOnly });
             return false;
         }
