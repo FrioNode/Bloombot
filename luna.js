@@ -189,6 +189,7 @@ async function startBot() {
 
                     await startReminderChecker(Luna);
                     await startStatusWatcher(Luna, log);
+                    await _autoStartGame(Luna, log);
                     await initCommandHandler(Luna);
 
                     if (react === 'true') log("🤖 Auto React Enabled");

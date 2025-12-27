@@ -1,4 +1,4 @@
-const stringSimilarity = require('string-similarity');
+const stringSimilarity = require('mismo-strings');
 const axios = require('axios');
 
 module.exports = {
