@@ -136,7 +136,7 @@ ${next ? `│ ⬆️ *${toNext}* more to *${next.name}*` : `│ 🏆 *MAX LEVEL*
 ${bonusGiven ? `│ 🎁 Daily bonus claimed! (+5 EXP)\n│ 🔥 Streak: *${expData.streak} days*` : `│ 🕒 Daily bonus in: ${msToTime(86400000 - (now - new Date(expData.lastDaily)))}`}
 ╰────────────────────`;
 
-                await Bloom.sendMessage(message.key.remoteJid, { text: response });
+                await Bloom.sendMessage(message.key.remoteJid, { text: response }, {quoted: message});
             } catch (err) {
                 console.error('EXP Command Error:', err);
                 await Bloom.sendMessage(message.key.remoteJid, { text: '❌ Error checking EXP' });
@@ -148,7 +148,8 @@ ${bonusGiven ? `│ 🎁 Daily bonus claimed! (+5 EXP)\n│ 🔥 Streak: *${expD
         desc: 'See leaderboard for top 10 users',
         run: async (Bloom, message) => {
             const topUsers = await Exp.find().sort({ points: -1 }).limit(10);
-            if (!topUsers.length) return await Bloom.sendMessage(message.key.remoteJid, { text: "No users found in the leaderboard yet." });
+            if (!topUsers.length) return await Bloom.sendMessage(message.key.remoteJid, { text: "No users found in the leaderboard yet." },
+                 {quoted: message});
 
             const leaderboardText = topUsers.map((user, index) => {
                 const { name } = getLevelData(user.points);
@@ -176,7 +177,7 @@ jid: {
                 `• *Alternate ID:* ${jidAlt ?? 'None'}\n\n` +
                 `If one is @lid and the other is @s.whatsapp.net,\n` +
                 `the @lid is the new LID format (preferred).`
-        });
+        }, {quoted: message});
     }
 },
     level: {
@@ -188,10 +189,10 @@ jid: {
             let targetJid = message.message?.extendedTextMessage?.contextInfo?.participant;
 
             if (!targetJid && /^\d{8,15}$/.test(text)) targetJid = `${text}@s.whatsapp.net`;
-            if (!targetJid) return await Bloom.sendMessage(message.key.remoteJid, { text: "❗ Please tag a user or provide a valid number." });
+            if (!targetJid) return await Bloom.sendMessage(message.key.remoteJid, { text: "❗ Please tag a user or provide a valid number." }, {quoted: message});
 
             const exp = await Exp.findOne({ jid: targetJid });
-            if (!exp) return await Bloom.sendMessage(message.key.remoteJid, { text: `🙁 That user has no EXP yet.` });
+            if (!exp) return await Bloom.sendMessage(message.key.remoteJid, { text: `🙁 That user has no EXP yet.` }, {quoted: message});
 
             const { name, nextName, toNext } = getLevelData(exp.points);
             await Bloom.sendMessage(message.key.remoteJid, {
@@ -235,7 +236,7 @@ ${next ? `│ ⬆️ *${toNext}* to reach *${next.name}*` : `│ 🏆 *MAX LEVEL
 ${counts}
 ╰───────────────────`;
 
-            await Bloom.sendMessage(message.key.remoteJid, { text: profile, mentions: [jid] });
+            await Bloom.sendMessage(message.key.remoteJid, { text: profile, mentions: [jid] }, {quoted: message});
         }
     },
     progress: {
@@ -256,7 +257,7 @@ ${counts}
 │ 🔋 Progress: [${'▓'.repeat(percent/5)}${'░'.repeat(20-percent/5)}] ${percent}%
 │ ⬆️ *${next.name}* at *${next.min}* points
 ╰───────────────`
-            });
+            }, {quoted: message});
         }
     }
 };

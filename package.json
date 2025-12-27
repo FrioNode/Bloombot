@@ -18,6 +18,11 @@
     "bot",
     "automation"
   ],
+  "pnpm": {
+  "overrides": {
+    "fluent-ffmpeg": "^2.1.4"
+  }
+},
   "author": "FrioNode",
   "license": "ISC",
   "packageManager": "pnpm@10.15.1",
