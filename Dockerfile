@@ -4,7 +4,7 @@ RUN corepack enable
 
 WORKDIR /luna
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json ./
 
 RUN pnpm install --frozen-lockfile
 
