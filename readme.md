@@ -152,9 +152,8 @@ Your session info (BLOOM~paste_id , creds.json) and a short video guide showing 
 Important: Use only one session method — never both.
 
 1️⃣ BLOOM~paste_id (Recommended for VPS / Cloud)
-BLOOM~paste_id
 
-Add this value to your .env file:
+Add this value to your .env file: Most VPS allow you to manage variables on a friendly UI
 
 ```SESSION=BLOOM~paste_id```
 
@@ -285,22 +284,33 @@ After that, Luna stores and manages config dynamically in MongoDB.
 
 ### Mandatory Runes
 
-| Key           | Purpose                    |
-| ------------- | -------------------------- |
-| `SESSION`     | WhatsApp session (BLOOM~…) |
-| `MONGO`       | MongoDB URI                |
-| `REDIS`       | Redis URI                  |
-| `OWNERNUMBER` | Bot owner                  |
-| `INVITE`      | Main group invite code     |
+| Key           | Purpose                |
+| ------------- | ---------------------- |
+| `SESSION`     | authentication         |
+| `MONGO`       | MongoDB URI            |
+| `REDIS`       | Redis URI              |
+| `OWNERNUMBER` | Bot owner              |
+| `INVITE`      | Main group invite code |
 
 ### Optional Glyphs
 
-| Key       | Purpose          | Default  |
-| --------- | ---------------- | -------- |
-| `MODE`    | public / private | `group`  |
-| `REACT`   | auto reactions   | `false`  |
-| `IMAGE`   | startup image    | built-in |
-| `CHANNEL` | WhatsApp channel | none     |
+Most environment variables are **optional** and only enable extra features.  
+Luna runs with minimal configuration; API keys are required **only if you want those features**.
+
+- `MODE` — Controls whether the bot runs in `public` or `private` mode (default: `group`)
+- `REACT` — Enables or disables automatic reactions (default: `false`)
+- `IMAGE` — Custom startup image (default: built-in)
+- `CHANNEL` — Optional WhatsApp channel ID for announcements
+
+### Optional External APIs
+
+- `NINJAKEY` — Used by Ninja APIs  
+  Get it from: https://api-ninjas.com/
+
+- `WEATHERKEY` — Used to fetch weather data  
+  Get it from: https://openweathermap.org/api
+
+📌 **Note:** There are many other environment variables, but **most are optional** and only required for specific features.
 
 ---
 
@@ -321,12 +331,11 @@ After that, Luna stores and manages config dynamically in MongoDB.
 
 ### 🧪 Is this against WhatsApp rules?
 
-Yes.
-So is magic.
+Yes and So is magic.
 
 ---
 
-## 👑 Created By
+## 👑 A Creation of love & caffein
 
 Crafted with Node.js, lavender, and chaos
 by [@FrioNode](https://github.com/FrioNode)
