@@ -2,7 +2,7 @@ const luna = require('../../package.json');
 const { get, set } = require('../../colors/setup');
 const { isBloomKing } = require('../../colors/auth');
 const { mess } = require('../../colors/mess');
-const { Exp } = require('../../colors/schema');
+const { Exp, Setting } = require('../../colors/schema');
 const { exec } = require('child_process');
 const { promisify } = require('util');
 const execPromise = promisify(exec);
@@ -342,7 +342,6 @@ get: {
                 return await Bloom.sendMessage(replyPath, { text: `• ${key} = ${value || '❌ Not found'}` }, { quoted: message });
             } else {
                 // All keys
-                const Setting = await connectDB();
                 const docs = await Setting.find({}); // fetch all
                 if (!docs.length) return await Bloom.sendMessage(replyPath, { text: '⚠️ No config keys found.' }, { quoted: message });
 
