@@ -129,9 +129,7 @@ No external tools required.
 
 ### 🌐 Pairing Website (Cloud / Special Cases)
 
-<a href="https://lunaconnect.onrender.com/" target="_blank" rel="noopener noreferrer">
-👉 https://lunaconnect.onrender.com/
-</a>
+👉 [https://lunaconnect.onrender.com/](https://lunaconnect.onrender.com/)
 
 This is **NOT mandatory**, but **required for VPS/cloud deployments** because:
 
