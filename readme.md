@@ -1,4 +1,4 @@
-<h1 align="center">🌸 Luna: The Hermetic Companion 🦋</h1>
+<h1 align="center">🌕 Luna: The Hermetic Companion 🦋</h1>
 
 <p align="center">
   <a href="https://chat.whatsapp.com/Eqa4MEPkmxwFwMCPX3pt4I">
@@ -42,7 +42,7 @@ Luna can be deployed in many ways, but **almost all users fall into one of these
 
 Do **not** skip this section. Luna is stateful and service-backed.
 
-### 1️⃣ MongoDB (Required)
+### 1️⃣ MongoDB 🍃 (Required)
 
 Luna uses MongoDB for:
 
@@ -50,12 +50,12 @@ Luna uses MongoDB for:
 * Dynamic settings (`setup.js`)
 * Runtime state
 
-**VPS / Cloud**
+**VPS / Cloud** ☁️
 
 * Use a managed MongoDB (Atlas, Railway, etc.)
 * Local MongoDB on VPS is **not recommended**
 
-**Local Deployment**
+**Local Deployment** 🐧
 
 * You may use:
 
@@ -64,7 +64,7 @@ Luna uses MongoDB for:
 
 ---
 
-### 2️⃣ Redis (Strongly Recommended)
+### 2️⃣ Redis 🪫 (Strongly Recommended)
 
 Redis improves:
 
@@ -82,7 +82,7 @@ Redis improves:
 
 ---
 
-### 3️⃣ WhatsApp Group (Important)
+### 3️⃣ WhatsApp Group 🥏 (Important)
 
 Luna is also a **gaming bot**.
 
@@ -151,7 +151,7 @@ Your session info (BLOOM~paste_id , creds.json) and a short video guide showing 
 
 Important: Use only one session method — never both.
 
-1️⃣ BLOOM~paste_id (Recommended for VPS / Cloud)
+1️⃣ BLOOM~paste_id 📜 (Recommended for VPS / Cloud) 
 
 Add this value to your .env file: Most VPS allow you to manage variables on a friendly UI
 
@@ -161,7 +161,7 @@ On boot, Luna automatically downloads the session and saves it internally to:
 
 heart/creds.json
 
-2️⃣ creds.json File (Local Only)
+2️⃣ creds.json File 📁 (Local Only)
 
 The `creds.json` file from the pairing site (check your own chat as above)
 
