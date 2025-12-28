@@ -5,7 +5,10 @@
     <img src="https://img.shields.io/badge/Join_Our_Conclave-25D366?style=for-the-badge&logo=whatsapp&logoColor=white">
   </a>
   <a href="https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d">
-    <img src="https://img.shields.io/badge/Subscribe_The_Oracle-075E54?style=for-the-badge&logo=whatsapp">
+    <img src="https://img.shields.io/badge/Subscribe_The_Oracle-075E54?style=for-the-badge&logo=whatsapp&logoColor=white">
+  </a>
+  <a href="https://t.me/frione">
+    <img src="https://img.shields.io/badge/See_us_in_Blue-0088CC?style=for-the-badge&logo=telegram&logoColor=white">
   </a>
 </p>
 
