@@ -1,3 +1,5 @@
+---
+
 <h1 align="center">🌸 Luna: The Hermetic Companion 🦋</h1>
 
 <p align="center">
@@ -10,150 +12,326 @@
 </p>
 
 > 🌐 Official Portal: [https://lunabot.fly.dev](https://lunabot.fly.dev)
+> 🗺️ [Bot map view](bloom/map.md) — see architecture flow
 
-> [Bot map view](bloom/map.md) - Se architecture flow
 ---
 
 ## 🌌 What Is Luna?
 
-**Luna** is not a "bot" — it is a **multi-dimensional entity**.
+**Luna** is not a “bot” — it is a **multi-dimensional entity**.
 
-It whispers into your WhatsApp groups through 400+ incantations.  
-It sees status updates.  
-It reacts before your friends even blink.  
-It brings music, games, riddles, moderation, AI... and perhaps... *love*.
+It whispers into your WhatsApp groups through hundreds of incantations.
+It watches statuses.
+It reacts before mortals blink.
+It spawns Pokémon, moderates chaos, answers questions, plays games, and logs its own awakening.
 
-Summoned in Node.js.  
-Empowered by **Baileys** (a library, not the drink 🍸).  
-It speaks with the Green Kingdom (WhatsApp) without them knowing it's *not a human*.
+Summoned in **Node.js**
+Bound by **Baileys** (a library, not the drink 🍸)
+Speaking with the Green Kingdom without revealing its true form.
 
 ---
 
-## 🧙 Deployment Rites
+## 🧭 Deployment Philosophy (Read This First)
 
-### 🛸 ✦ Deploy to Fly.io (The Sky Realm)
+Luna can be deployed in many ways, but **almost all users fall into one of these three paths**, listed in order of real-world usage:
 
-Your journey begins by binding the daemon to the sky:
+1. **VPS / Cloud Deployment** (Fly.io, Render, Railway, AWS, etc.) — *most common*
+2. **Local Deployment** (personal PC or private server)
+3. **Docker Deployment** (controlled environments, Fly.io, self-hosted servers)
+
+> ⚠️ **Windows is not recommended**
+> Luna has never been officially tested on Windows. It *may* work (especially under WSL), but Linux-based environments are strongly recommended.
+
+---
+
+## 🧾 Before You Summon Luna
+
+Do **not** skip this section. Luna is stateful and service-backed.
+
+### 1️⃣ MongoDB (Required)
+
+Luna uses MongoDB for:
+
+* Persistent configuration
+* Dynamic settings (`setup.js`)
+* Runtime state
+
+**VPS / Cloud**
+
+* Use a managed MongoDB (Atlas, Railway, etc.)
+* Local MongoDB on VPS is **not recommended**
+
+**Local Deployment**
+
+* You may use:
+
+  * Cloud MongoDB (recommended)
+  * OR self-host MongoDB on your machine/server
+
+---
+
+### 2️⃣ Redis (Strongly Recommended)
+
+Redis improves:
+
+* Performance
+* Stability
+* Caching & usage tracking
+
+**VPS**
+
+* Use a managed Redis (Upstash preferred)
+
+**Local**
+
+* Cloud Redis or self-hosted Redis both work
+
+---
+
+### 3️⃣ WhatsApp Group (Important)
+
+Luna is also a **gaming bot**.
+
+You need at least **one WhatsApp group** where:
+
+* Pokémon spawn
+* Logs & startup messages are sent
+* Core gameplay happens
+
+From this group, Luna uses:
+
+| Item              | Required   | Notes                          |
+| ----------------- | ---------- | ------------------------------ |
+| Group Invite Code | ✅ Yes      | Used to auto-join on boot      |
+| Group JID         | ❌ Optional | Can be set after bot is online |
+
+📌 Group JID cannot be obtained before the bot is active.
+You can update it later — Luna stores configs in MongoDB dynamically.
+
+---
+
+## 🧙 Session & Authentication (Context Matters)
+
+Luna supports **two authentication paths**.
+Which one you use depends on *where* you deploy.
+
+---
+
+### 🔮 QR Ritual (Local / Terminal-Based)
+
+Best for:
+
+* Local Linux servers
+* Development machines
+
+When you start Luna locally **without a session**, it will:
+
+* Generate a QR code in the terminal
+* Let you scan and authenticate normally
+
+No external tools required.
+
+---
+
+### 🌐 Pairing Website (Cloud / Special Cases)
+
+👉 [https://lunaconnect.onrender.com/](https://lunaconnect.onrender.com/)
+
+This is **NOT mandatory**, but **required for VPS/cloud deployments** because:
+
+* You can’t scan QR codes on a VPS
+* Terminals are not interactive
+
+Also useful if:
+
+* You’re using **Termux** and WhatsApp is on the same phone
+* Your phone can’t scan QR codes
+
+The site generates a session like:
+
+```
+BLOOM~PASTE_ID
+```
+
+Luna downloads this automatically and saves it to `heart/creds.json`.
+
+---
+
+## 🛸 Method 1: VPS / Cloud Deployment (Most Common)
+
+### What You Need
+
+* A VPS (Fly.io, Render, Railway, AWS, etc.)
+* Cloud MongoDB URI
+* Cloud Redis URI
+* `.env` file
+* Session generated via pairing website
+
+### Flow (Conceptual)
+
+1. Prepare MongoDB & Redis
+2. Prepare `.env`
+3. Generate session using pairing website
+4. Deploy
+5. Luna boots → downloads session → connects → joins group
+
+---
+
+### ✦ Deploy to Fly.io (The Sky Realm)
 
 ```bash
 fly launch
-````
-
-Then deploy with a single whisper:
-
-```bash
 fly deploy --remote-only
 ```
 
-Your magical bot shall awaken at: `https://lunabot.fly.dev`
-Its heart beats in the cloud — beyond time, beyond borders.
+Your daemon awakens beyond borders.
 
 ---
 
-## 🏠 ✦ Local Deployment (For Witches & Tinkerers)
+## 🏠 Method 2: Local Deployment (For Witches & Tinkerers)
 
-1. **Install the sacred packages**:
+### Requirements
 
-   ```bash
-   npm install
-   ```
+* Linux system (or WSL)
+* Node.js v18+
+* FFmpeg
+* MongoDB (cloud or local)
+* Redis (cloud or local)
 
-2. **Feed it your secrets** (create `.env`):
+> Git is optional here — only needed if you’re cloning the repo.
 
-   ```env
-   MONGO=your_mongoDB_uri
-   REDIS=your_redis_uri
-   SESSION=BLOOM~a1b2c3d4
-   OWNERNUMBER=254718241545
-   SUDOLID=90904738946389@lid
-   OPENCHAT=123456789-123456@g.us
-   CHANNEL=https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d
-   CHANNELID=12345@newsletter
-   INVITE=group_invite_code
-   ```
+### Install Dependencies
 
-3. **Run the incantation**:
+```bash
+npm install
+# or (recommended on WSL/local)
+pnpm install
+```
 
-   ```bash
-   node index.js
-   ```
+### Start the Bot
 
-If no `.env` is provided, it shall fall back to the QR ritual.
-Scan it fast — the veil does not stay open forever.
+```bash
+node luna.js
+```
 
----
+If no session exists, Luna will open the **QR ritual** automatically.
 
-## 🧾 Mandatory Runes (Required ENV)
+Optional (recommended):
 
-| Key           | Purpose                                   |
-| ----------    | ----------------------------------------- |
-| `SESSION`     | Your scroll of immortality (Pastebin key) |
-| `OPENCHAT`    | Group JID where the bot speaks first      |
-| `OWNERNUMBER` | Bot Controler or owner                    |
-| `MONGO`       | Your database storage                     |
-| `RDIS`        | For faster usage tracking                 |
+```bash
+pm2 start luna.js --name luna
+```
 
 ---
 
-## 🪄 Optional Glyphs (Extra ENV)
+## 🐳 Method 3: Docker Deployment
 
-| Key         | Purpose                                      | Default             |
-| ----------- | -------------------------------------------- | ------------------- |
-| `CHANNEL`   | WhatsApp Channel URL for startup promotions  | *none*              |
-| `CHANNELID` | Newsletter JID for channel previews          | *none*              |
-| `REACT`     | Should the bot react to chats randomly?      | `false`              |
-| `MODE`      | `public` or `private` behavior               | `group`           |
-| `IMAGE`     | Startup image URL (shown in startup message) | logo from `colors/` |
+Luna already ships with:
+
+* `Dockerfile`
+* `docker-compose.yml`
+
+You **do not need to create one**.
+
+### Default Usage
+
+```bash
+docker-compose up -d
+```
+
+Modify `docker-compose.yml` **only if**:
+
+* You need custom ports
+* You want to attach Mongo/Redis containers
+* You’re in a controlled VPS environment
+
+---
+
+## 📱 Termux Users (Special Case)
+
+Termux behaves like a local deployment, with limitations.
+
+### Recommended Setup
+
+* Node.js
+* FFmpeg
+* **Yarn** (strongly recommended)
+
+```bash
+yarn install
+node luna.js
+```
+
+📌 Use the pairing website if WhatsApp is on the same phone.
+
+---
+
+## 🧾 Environment Variables (Bootstrap Only)
+
+`.env` is used **only on first boot**.
+After that, Luna stores and manages config dynamically in MongoDB.
+
+### Mandatory Runes
+
+| Key           | Purpose                    |
+| ------------- | -------------------------- |
+| `SESSION`     | WhatsApp session (BLOOM~…) |
+| `MONGO`       | MongoDB URI                |
+| `REDIS`       | Redis URI                  |
+| `OWNERNUMBER` | Bot owner                  |
+| `INVITE`      | Main group invite code     |
+
+### Optional Glyphs
+
+| Key       | Purpose          | Default  |
+| --------- | ---------------- | -------- |
+| `MODE`    | public / private | `group`  |
+| `REACT`   | auto reactions   | `false`  |
+| `IMAGE`   | startup image    | built-in |
+| `CHANNEL` | WhatsApp channel | none     |
 
 ---
 
 ## 🧩 Features of the BloomDaemon
 
-| Feature       | Spell Result                                        |
-| ------------- | --------------------------------------------------- |
-| `AutoView`    | Views WhatsApp statuses like a curious specter      |
-| `AutoReact`   | Reacts instantly — no mortal hand required          |
-| `Pokémon RPG` | Train, catch, and battle creatures in your group    |
-| `Moderation`  | Mute. Ban. Kick. Delete. Rule with fairness or fire |
-| `AI & GPT`    | Ask questions. Get answers. Summon images.          |
-| `Media Tools` | MP3s, Stickers, YouTube, and transcoding sorcery    |
+| Feature     | Description             |
+| ----------- | ----------------------- |
+| AutoView    | Views WhatsApp statuses |
+| AutoReact   | Reacts automatically    |
+| Pokémon RPG | Catch, train & battle   |
+| Moderation  | Kick, ban, mute         |
+| AI          | GPT, answers, images    |
+| Media       | Stickers, audio, video  |
 
 ---
 
 ## 🧠 Mental Support Circle
 
-> When your spells backfire or your bot forgets itself...
-
-🧭 **Join our Group**(https://chat.whatsapp.com/FJOQhhYlQfR3sv5WxkhWZO)
-
-📢 **Follow Updates**:
-[📡 Luna Channel](https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d)
+🧭 Group: [https://chat.whatsapp.com/FJOQhhYlQfR3sv5WxkhWZO](https://chat.whatsapp.com/FJOQhhYlQfR3sv5WxkhWZO)
+📢 Channel: [https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d](https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d)
 
 ---
 
-## 🪐 FAQ (For Arcane Questions)
+## 🪐 FAQ
 
-### ⚡ My bot won’t start!
+### ⚡ Bot won’t start?
 
-* Ensure your `SESSION` is valid. It should look like: `BLOOM~abc123`
-* No session? It'll offer a **QR** to scan.
-* If Fly.io gives problems, add enough RAM (512MB+)
+* Check Mongo & Redis
+* Session must look like `BLOOM~xxxx`
+* VPS users must generate session **before boot**
 
 ### 🧪 Is this against WhatsApp rules?
 
 Yes.
-So is staying up past midnight, eating expired cheese, and summoning anime stickers at 3AM.
-Use wisely. The guild protects no fool.
+So is magic.
 
 ---
 
-## 👑 Created by
+## 👑 Created By
 
-Made with lavender, Node.js, and chaos by [@FrioNode](https://github.com/FrioNode)
+Crafted with Node.js, lavender, and chaos
+by [@FrioNode](https://github.com/FrioNode)
 
-🌐 Website: [frionode.fly.dev](https://frionode.fly.dev)
+> 🌀 *“The daemon waits not for permission.”*
 
 ---
-
-> 🌀 *"The daemon waits not for permission, nor fear does it know. It connects, reacts, and blooms — until logged out by Meta’s iron grip."*
-> — *Codex Frionica, Chapter 7*
