@@ -6,7 +6,7 @@ WORKDIR /luna
 
 COPY package.json ./
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 COPY . .
 
