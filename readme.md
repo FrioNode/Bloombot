@@ -1,7 +1,7 @@
 <h1 align="center">🌸 Luna: The Hermetic Companion 🦋</h1>
 
 <p align="center">
-  <a href="https://chat.whatsapp.com/FJOQhhYlQfR3sv5WxkhWZO">
+  <a href="https://chat.whatsapp.com/Eqa4MEPkmxwFwMCPX3pt4I">
     <img src="https://img.shields.io/badge/Join_Our_Conclave-25D366?style=for-the-badge&logo=whatsapp&logoColor=white">
   </a>
   <a href="https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d">
@@ -11,7 +11,7 @@
 
 > 🌐 Official Portal: [https://lunabot.fly.dev](https://lunabot.fly.dev)
 
-> [Bot map view](map.md) - Se architecture flow
+> [Bot map view](bloom/map.md) - Se architecture flow
 ---
 
 ## 🌌 What Is Luna?
