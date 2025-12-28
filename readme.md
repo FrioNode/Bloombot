@@ -14,17 +14,13 @@
 
 ---
 
-## 🌌 What Is Luna?
+## 🌌 What Is Luna? (spanish word for moon)
 
-**Luna** is not a “bot” — it is a **multi-dimensional entity**.
+**Luna** is not a “bot” — it is a **multi-dimensional entity from the galaxy**.
 
-It whispers into your WhatsApp groups through hundreds of incantations.
-It watches statuses.
-It reacts before mortals blink.
-It spawns Pokémon, moderates chaos, answers questions, plays games, and logs its own awakening.
+It whispers into your WhatsApp groups through hundreds of incantations, watches statuses, reacts before mortals blink, spawns Pokémon, moderates chaos, answers questions, plays games, and logs its own awakening. Those are the features 🧩 of the LunaDaemon
 
-Summoned in **Node.js**
-Bound by **Baileys** (a library, not the drink 🍸)
+Summoned in **Node.js** Bound by **Baileys** (a library, not the drink 🍸)
 Speaking with the Green Kingdom without revealing its true form.
 
 ---
@@ -34,7 +30,7 @@ Speaking with the Green Kingdom without revealing its true form.
 Luna can be deployed in many ways, but **almost all users fall into one of these three paths**, listed in order of real-world usage:
 
 1. **VPS / Cloud Deployment** (Fly.io, Render, Railway, AWS, etc.) — *most common*
-2. **Local Deployment** (personal PC or private server)
+2. **Local Deployment** (personal PC or private server / termux)
 3. **Docker Deployment** (controlled environments, Fly.io, self-hosted servers)
 
 > ⚠️ **Windows is not recommended**
@@ -103,7 +99,7 @@ From this group, Luna uses:
 | Group Invite Code | ✅ Yes      | Used to auto-join on boot      |
 | Group JID         | ❌ Optional | Can be set after bot is online |
 
-📌 Group JID cannot be obtained before the bot is active.
+📌 Group JID helps the bot know where to spawn pokemons and send logs too, it cannot be obtained before the bot is active.
 You can update it later — Luna stores configs in MongoDB dynamically.
 
 ---
@@ -137,47 +133,63 @@ No external tools required.
 
 This is **NOT mandatory**, but **required for VPS/cloud deployments** because:
 
-* You can’t scan QR codes on a VPS
+* You can’t scan QR codes on most VPS
 * Terminals are not interactive
 
 Also useful if:
 
 * You’re using **Termux** and WhatsApp is on the same phone
-* Your phone can’t scan QR codes
+* Your phone can’t scan QR codes or
+* You just want to use it, no offence
 
-The site generates a session like:
+📦 Session Output (Use Only One)
 
-```
-BLOOM~PASTE_ID
-```
+When you pair using the website, the paired WhatsApp account receives the session data directly as messages to itself.
+Check your chats — usually the first unpinned chat — to find:
 
-Luna downloads this automatically and saves it to `heart/creds.json`.
+Your session info (BLOOM~paste_id , creds.json) and a short video guide showing how to use it
 
----
+Important: Use only one session method — never both.
+
+1️⃣ BLOOM~paste_id (Recommended for VPS / Cloud)
+BLOOM~paste_id
+
+Add this value to your .env file:
+
+```SESSION=BLOOM~paste_id```
+
+On boot, Luna automatically downloads the session and saves it internally to:
+
+heart/creds.json
+
+2️⃣ creds.json File (Local Only)
+
+The `creds.json` file from the pairing site (check your own chat as above)
+
+Manually create the folder: heart/ and place the file inside.
+
+Note: This method is only for local deployments or maybe when your VPS support file upload.
 
 ## 🛸 Method 1: VPS / Cloud Deployment (Most Common)
 
 ### What You Need
 
-* A VPS (Fly.io, Render, Railway, AWS, etc.)
+* A VPS (Fly.io, Render, Railway, Heroku, AWS etc.)
 * Cloud MongoDB URI
 * Cloud Redis URI
-* `.env` file
 * Session generated via pairing website
 
-### Flow (Conceptual)
-
-1. Prepare MongoDB & Redis
-2. Prepare `.env`
-3. Generate session using pairing website
-4. Deploy
-5. Luna boots → downloads session → connects → joins group
+Most of these VPS have good UI but they also offer CLI tools (one example below)
 
 ---
 
 ### ✦ Deploy to Fly.io (The Sky Realm)
 
+You need to creat an account on this world [https://fly.io](https://fly.io).
+Read documentaion oh how to install & use `flyctl` here 👉🏽 [https://fly.io/docs/flyctl/install/](https://fly.io/docs/flyctl/install/) below are quick commands to get you started.
+
 ```bash
+fly login
 fly launch
 fly deploy --remote-only
 ```
@@ -196,7 +208,7 @@ Your daemon awakens beyond borders.
 * MongoDB (cloud or local)
 * Redis (cloud or local)
 
-> Git is optional here — only needed if you’re cloning the repo.
+> Git is optional here — only needed if you’re cloning the repo. (some socceres downloads as zip)
 
 ### Install Dependencies
 
@@ -218,6 +230,7 @@ Optional (recommended):
 
 ```bash
 pm2 start luna.js --name luna
+pm2 logs
 ```
 
 ---
@@ -258,6 +271,7 @@ Termux behaves like a local deployment, with limitations.
 ```bash
 yarn install
 node luna.js
+# termux supports pm2 as well
 ```
 
 📌 Use the pairing website if WhatsApp is on the same phone.
@@ -290,19 +304,6 @@ After that, Luna stores and manages config dynamically in MongoDB.
 
 ---
 
-## 🧩 Features of the BloomDaemon
-
-| Feature     | Description             |
-| ----------- | ----------------------- |
-| AutoView    | Views WhatsApp statuses |
-| AutoReact   | Reacts automatically    |
-| Pokémon RPG | Catch, train & battle   |
-| Moderation  | Kick, ban, mute         |
-| AI          | GPT, answers, images    |
-| Media       | Stickers, audio, video  |
-
----
-
 ## 🧠 Mental Support Circle
 
 🧭 Group: [https://chat.whatsapp.com/FJOQhhYlQfR3sv5WxkhWZO](https://chat.whatsapp.com/FJOQhhYlQfR3sv5WxkhWZO)
@@ -330,6 +331,8 @@ So is magic.
 Crafted with Node.js, lavender, and chaos
 by [@FrioNode](https://github.com/FrioNode)
 
-> 🌀 *“The daemon waits not for permission.”*
+
+> 🌀 *"The daemon waits not for permission, nor fear does it know. It connects, reacts, and blooms — until logged out by Meta’s iron grip."*
+> — *Codex Frionica, Chapter 7*
 
 ---
