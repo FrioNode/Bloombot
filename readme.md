@@ -277,6 +277,30 @@ node luna.js
 
 ---
 
+## 📊 Built-in Web Dashboard
+
+After Luna boots, it automatically exposes a small **Express web app** for monitoring.
+
+This dashboard shows:
+
+- Real-time bot usage
+- Uptime information
+- Major runtime errors
+
+### Accessing the Dashboard
+
+**Local Deployment**
+- Visit: http://localhost:3000  
+- Port `3000` is the default (may change if configured)
+
+**VPS / Cloud Deployment**
+- The same Express app is created
+- Access it using your VPS public URL or routing rules  
+  (depends on how your provider exposes ports)
+
+📌 On cloud platforms, check how your VPS routes HTTP traffic to view the dashboard publicly.
+---
+
 ## 🧾 Environment Variables (Bootstrap Only)
 
 `.env` is used **only on first boot**.
