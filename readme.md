@@ -1,5 +1,3 @@
----
-
 <h1 align="center">🌸 Luna: The Hermetic Companion 🦋</h1>
 
 <p align="center">
