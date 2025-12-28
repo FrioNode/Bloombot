@@ -317,6 +317,7 @@ Luna runs with minimal configuration; API keys are required **only if you want t
 ## 🧠 Mental Support Circle
 
 🧭 Group: [https://chat.whatsapp.com/FJOQhhYlQfR3sv5WxkhWZO](https://chat.whatsapp.com/FJOQhhYlQfR3sv5WxkhWZO)
+
 📢 Channel: [https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d](https://whatsapp.com/channel/0029VagLDl6BFLgUIWV9aV2d)
 
 ---
