@@ -298,7 +298,7 @@ This dashboard shows:
 - Access it using your VPS public URL or routing rules  
   (depends on how your provider exposes ports)
 
-📌 On cloud platforms, check how your VPS routes HTTP traffic to view the dashboard publicly.
+#### 📌 On cloud platforms, check how your VPS routes HTTP traffic to view the dashboard publicly.
 ---
 
 ## 🧾 Environment Variables (Bootstrap Only)
