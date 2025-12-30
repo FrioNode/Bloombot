@@ -13,7 +13,9 @@
 </p>
 
 > 🧩 Pairing site: [https://lunaconnect.up.railway.app/](https://lunaconnect.up.railway.app/)
+
 > 🌐 Official Portal: [https://lunabot.fly.dev](https://lunabot.fly.dev)
+
 > 🗺️ [Bot map view](bloom/map.md) — see architecture flow
 
 ---
