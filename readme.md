@@ -12,6 +12,7 @@
   </a>
 </p>
 
+> 🧩 Pairing site: [https://lunaconnect.up.railway.app/](https://lunaconnect.up.railway.app/)
 > 🌐 Official Portal: [https://lunabot.fly.dev](https://lunabot.fly.dev)
 > 🗺️ [Bot map view](bloom/map.md) — see architecture flow
 
@@ -21,7 +22,7 @@
 
 **Luna** is not a “bot” — it is a **multi-dimensional entity from the galaxy**.
 
-It whispers into your WhatsApp groups through hundreds of incantations, watches statuses, reacts before mortals blink, spawns Pokémon, moderates chaos, answers questions, plays games, and logs its own awakening. Those are the features 🧩 of the LunaDaemon
+It whispers into your WhatsApp groups through hundreds of incantations, watches statuses, reacts before mortals blink, spawns Pokémon, moderates chaos, answers questions, plays games, and logs its own awakening. Those are the features of the LunaDaemon
 
 Summoned in **Node.js** Bound by **Baileys** (a library, not the drink 🍸)
 Speaking with the Green Kingdom without revealing its true form.
@@ -132,7 +133,7 @@ No external tools required.
 
 ### 🌐 Pairing Website (Cloud / Special Cases)
 
-👉 [https://lunaconnect.onrender.com/](https://lunaconnect.onrender.com/)
+👉 [https://lunaconnect.up.railway.app/](https://lunaconnect.up.railway.app/)
 
 This is **NOT mandatory**, but **required for VPS/cloud deployments** because:
 

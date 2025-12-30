@@ -3,7 +3,7 @@ const { get, set } = require('../../colors/setup');
 const { isBloomKing } = require('../../colors/auth');
 const { mess } = require('../../colors/mess');
 const { Exp, Setting } = require('../../colors/schema');
-const { exec } = require('child_process');
+const { exec, spawn } = require('child_process');
 const { promisify } = require('util');
 const execPromise = promisify(exec);
 const fs = require('fs');
@@ -152,45 +152,98 @@ return await Bloom.sendMessage(remoteJid, {
         }
     },
         $: {
-            type: 'owner',
-            desc: 'Executes a shell command (owner only)',
-            run: async (Bloom, message, fulltext) => {
-                const sender = message.key.remoteJid;
+    type: 'owner',
+    desc: 'Executes a shell command with live output (owner only)',
+    run: async (Bloom, message, fulltext) => {
+        const sender = message.key.remoteJid;
 
-                if (!(await isBloomKing(sender,message))) {
-                    return await Bloom.sendMessage(sender, { text: mess.owner || '❌ Unauthorized access.' }, { quoted: message });
-                }
+        if (!(await isBloomKing(sender, message))) {
+            return await Bloom.sendMessage(
+                sender,
+                { text: mess.owner || '❌ Unauthorized access.' },
+                { quoted: message }
+            );
+        }
 
-                const command = fulltext.trim().split(' ').slice(1).join(' '); // remove "$" from fulltext
+        let command = fulltext.trim().split(' ').slice(1).join(' ');
 
-                if (!command) {
-                    return await Bloom.sendMessage(sender, { text: mess.noarg }, { quoted: message });
-                }
+        if (!command) {
+            return await Bloom.sendMessage(
+                sender,
+                { text: mess.noarg },
+                { quoted: message }
+            );
+        }
 
-                try {
-                    const { stdout, stderr } = await execPromise(command);
+        // Auto-disable curl progress meter (optional but recommended)
+        if (command.startsWith('curl ')) {
+            command = command.replace('curl ', 'curl -s ');
+        }
 
-                    if (stderr) {
-                        return await Bloom.sendMessage(sender, {
-                            text: `❌ stderr:\n\`\`\`\n${stderr}\n\`\`\``
-                        }, { quoted: message });
-                    }
+        // 1️⃣ Send initial message
+        const runningMsg = await Bloom.sendMessage(
+            sender,
+            {
+                text: '⏳ Running command...\n\n```bash\n\n```'
+            },
+            { quoted: message }
+        );
 
-                    const output = stdout.length > 3000
-                    ? stdout.slice(0, 3000) + '\n... (output truncated)'
-                    : stdout;
+        const msgKey = runningMsg.key;
 
-                    await Bloom.sendMessage(sender, {
-                        text: `✅ Output:\n\`\`\`\n${output}\n\`\`\``
-                    }, { quoted: message });
+        // 2️⃣ Spawn process
+        const child = spawn(command, { shell: true });
 
-                } catch (err) {
-                    await Bloom.sendMessage(sender, {
-                        text: `❌ Error:\n\`\`\`\n${err.message}\n\`\`\``
-                    }, { quoted: message });
-                }
+        let output = '';
+        let lastEdit = 0;
+        const EDIT_INTERVAL = 900; // ms
+        const MAX_LEN = 3000;
+
+        const editMessage = async (prefix = '⏳ Running...') => {
+            const trimmed = output.slice(-MAX_LEN);
+            try {
+                await Bloom.sendMessage(sender, {
+                    text: `${prefix}\n\n\`\`\`bash\n${trimmed}\n\`\`\``,
+                    edit: msgKey
+                });
+            } catch {
+                // ignore edit failures (rate limit, etc.)
             }
-        },
+        };
+
+        // 3️⃣ Stream stdout
+        child.stdout.on('data', async (data) => {
+            output += data.toString();
+
+            if (Date.now() - lastEdit > EDIT_INTERVAL) {
+                lastEdit = Date.now();
+                await editMessage();
+            }
+        });
+
+        // 4️⃣ Stream stderr (progress bars, warnings, etc.)
+        child.stderr.on('data', async (data) => {
+            output += data.toString();
+
+            if (Date.now() - lastEdit > EDIT_INTERVAL) {
+                lastEdit = Date.now();
+                await editMessage();
+            }
+        });
+
+        // 5️⃣ Process finished
+        child.on('close', async (code) => {
+            await editMessage(`✅ Finished (exit code ${code})`);
+        });
+
+        // 6️⃣ Safety timeout (optional)
+        setTimeout(() => {
+            if (!child.killed) {
+                child.kill('SIGTERM');
+            }
+        }, 60_000);
+    }
+},
         setxp: {
             run: async (Bloom, message, fulltext) => {
                 const sender = message.key.remoteJid;
