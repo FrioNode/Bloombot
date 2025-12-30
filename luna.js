@@ -79,27 +79,34 @@ async function startBot() {
         fs.mkdirSync(sessionDir, { recursive: true });
     }
 
-    async function downloadSessionData() {
-        if (!session || !session.startsWith("BLOOM~")) {
-            console.warn("⚠️ No valid SESSION env found (expected format: BLOOM~XXXXXX)");
-            return false;
-        }
-
-        const pasteId = session.split("BLOOM~")[1];
-        const url = `https://pastebin.com/raw/${pasteId}`;
-
-        try {
-            const response = await axios.get(url);
-            const data = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
-
-            await fs.promises.writeFile(credsPath, data);
-            log("✅ Session successfully downloaded and saved from Pastebin.");
-            return true;
-        } catch (error) {
-            log("❌ Failed to download session from Pastebin:", error.message);
-            return false;
-        }
+async function downloadSessionData() {
+    if (!session || !session.startsWith("LUNA~")) {
+        console.warn("⚠️ No valid SESSION env found (expected format: LUNA~XXXXXX)");
+        return false;
     }
+    const url = `https://lunaconnect.up.railway.app/session/${session}`;
+
+    try {
+        const response = await axios.get(url);
+
+        if (!response.data || !response.data.value) {
+            throw new Error("Invalid session response");
+        }
+
+        const decoded = Buffer.from(response.data.value, "base64").toString("utf-8");
+        const sessionObject = JSON.parse(decoded);
+        const finalData = JSON.stringify(sessionObject, null, 2);
+
+        await fs.promises.writeFile(credsPath, finalData);
+
+        log("✅ Session successfully downloaded, decoded, and saved.");
+        return true;
+
+    } catch (error) {
+        log("❌ Failed to download session:", error.message);
+        return false;
+    }
+}
 
     async function start() {
         try {
