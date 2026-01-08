@@ -443,7 +443,30 @@ module.exports = {
                 usage: 'nsfw on/off',
                 run: async (Bloom, message, fulltext) =>
                 toggleSetting(Bloom, message, fulltext, 'cmds')
+            },
+    tag: {
+    type: 'group',
+    desc: 'Send a message tagging all users silently',
+    usage: 'hidetag <message>',
+    run: async (Bloom, message, fulltext) => {
+        // Only allow admins
+        if (!await isGroupAdminContext(Bloom, message)) return;
+        const args = fulltext.trim().split(' ');
+        if (args.length < 2) {
+            return await Bloom.sendMessage(message.key.remoteJid, { text: 'Usage: tag <message>' });
+        }
+        const input = args.slice(1).join(' ');
+        const metadata = await Bloom.groupMetadata(message.key.remoteJid);
+        const participants = metadata.participants.map(p => p.id);
+        await Bloom.sendMessage(message.key.remoteJid, {
+            text: input || "\u200b", // default to invisible if empty
+            contextInfo: {
+                mentionedJid: participants
             }
+        });
+    }
+}
+
 };
 
 async function toggleSetting(Bloom, message, fulltext, alias) {
