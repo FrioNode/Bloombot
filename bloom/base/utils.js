@@ -1,7 +1,7 @@
 const QRCode = require('qrcode');
 const sharp = require('sharp');
 const { downloadMediaMessage } = require('baileys');
-const Jimp = require('jimp');
+const { Jimp } = require("jimp");
 const jsQR = require('jsqr');
 const { get } = require('../../colors/setup');
 
