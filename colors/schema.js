@@ -111,6 +111,7 @@ const TicTacToeSchema = new mongoose.Schema({
     board: { type: [String], default: [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '] },
     currentTurn: { type: String },
     status: { type: String, enum: ['waiting', 'active', 'ended'], default: 'waiting' },
+    isAI: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
     timeoutAt: { type: Date }
 });

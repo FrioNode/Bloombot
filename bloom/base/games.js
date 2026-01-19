@@ -793,7 +793,9 @@ fish: {
                 await Bloom.sendMessage(chatId, { text: "⚠️ An error occurred while fetching Pokémon data. Please try again later." }, { quoted: message });
             }
         }
-    },
+    }, 
+    
+    /*
     ttt: {
         type: 'game',
         desc: 'Tic Tac Toe game (create, join, end)',
@@ -879,7 +881,112 @@ fish: {
                 }
             }
         }
-    },
+    }*/
+   
+    ttt: {
+    type: 'game',
+    desc: 'Tic Tac Toe game (human vs human OR human vs AI)',
+    usage: `🎮 *TIC TAC TOE HELP* 🎮
+    *Commands*:
+    ➼ \`!ttt\` - Create 2-player game (❌)
+    ➼ \`!ttt ai\` - Start vs Luna AI (🤖)
+    ➼ \`!ttt join\` - Join 2-player game (⭕) 
+    ➼ \`!ttt end\` - End game
+    ➼ \`1-9\` - Make move (during game)
+
+    *Rules*:
+    1. ❌ always goes first
+    2. Win by 3 in a row
+    3. 5-min timeout for waiting games`,
+    run: async (Bloom, message, fulltext) => {
+        try {
+            const sender = message.key.participant || message.key.remoteJid;
+            const groupId = message.key.remoteJid;
+            const args = fulltext.trim().split(' ').slice(1);
+
+            if (!groupId.endsWith('@g.us')) {
+                return await Bloom.sendMessage(groupId, {
+                    text: '❌ Only works in group chats.'
+                });
+            }
+
+            // !ttt ai - Human vs AI mode
+            if (args[0] === 'ai') {
+                const existingGame = await TicTacToe.findOne({
+                    groupId,
+                    $or: [{ 'player1.jid': sender }, { 'player2.jid': sender }],
+                    status: { $ne: 'ended' }
+                });
+
+                if (existingGame) {
+                    return await Bloom.sendMessage(groupId, { 
+                        text: '❌ Finish your current game first!' 
+                    });
+                }
+
+                const roomId = uuidv4().split('-')[0];
+                const game = new TicTacToe({
+                    roomId, groupId,
+                    player1: { jid: sender, symbol: '❌' },  // Human
+                    player2: { jid: 'luna_ai', symbol: '⭕' }, // AI
+                    currentTurn: sender, 
+                    board: Array(9).fill(' '), 
+                    status: 'active',  // AI game starts immediately
+                    isAI: true
+                });
+
+                await game.save();
+                
+                const board = renderBoard(game.board);
+                return await Bloom.sendMessage(groupId, {
+                    text: `🤖 *Luna AI Tic Tac Toe!*\n\n` +
+                        `❌: @${sender.split('@')[0]} (Human)\n` +
+                        `⭕: Luna AI\n\n${board}\n\n` +
+                        `🎯 Your turn first! Reply with 1-9`,
+                    mentions: [sender]
+                });
+            }
+
+            // Original 2-player logic (no change)
+            if (!args[0]) {
+                const res = await createGame(sender, groupId);
+                if (res.error) return await Bloom.sendMessage(groupId, { text: res.error });
+                
+                return await Bloom.sendMessage(groupId, {
+                    text: `🎮 Game created!\n\n👤 @${sender.split('@')[0]} (❌)\n` +
+                        `Type *ttt join* for Player 2\nGame ID: ${res.roomId}`,
+                    mentions: [sender]
+                });
+            }
+
+            if (args[0] === 'join') {
+                const res = await joinGame(sender, groupId);
+                if (res.error) return await Bloom.sendMessage(groupId, { text: res.error });
+                
+                const board = renderBoard(res.board);
+                return await Bloom.sendMessage(groupId, {
+                    text: `✅ Game started!\n\n❌: @${res.player1.jid.split('@')[0]}\n` +
+                        `⭕: @${res.player2.jid.split('@')[0]}\n\n${board}\n\n` +
+                        `▶️ @${res.player1.jid.split('@')[0]}'s turn (❌)`,
+                    mentions: [res.player1.jid, res.player2.jid]
+                });
+            }
+
+            if (args[0] === 'end') {
+                const res = await endGame(sender);
+                if (res.error) return await Bloom.sendMessage(groupId, { text: res.error });
+                return await Bloom.sendMessage(groupId, {
+                    text: `✅ Game ended by @${sender.split('@')[0]}`,
+                    mentions: [sender]
+                });
+            }
+
+        } catch (err) {
+            console.error('TTT Error:', err);
+            await Bloom.sendMessage(groupId, { text: '⚠️ Game error occurred' });
+        }
+    }
+},
     magic: {
     type: 'economy',
     desc: 'Use the mysterious magic wand',
