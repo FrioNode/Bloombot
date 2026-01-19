@@ -1,4 +1,6 @@
 const { TicTacToe, Reminder } = require('../colors/schema');
+const { get } = require('../colors/setup');
+const { GroqAI } = require('../colors/groq');
 const { v4: uuidv4 } = require('uuid');
 const cron = require('node-cron');
 const activeTimeouts = new Map();
@@ -20,20 +22,6 @@ function checkWinner(board) {
         }
     }
     return board.includes(' ') ? null : 'draw';
-}
-
-// AI HELPER FUNCTION - Simple logic, NO external dependencies
-function getAIMove(board) {
-    // Smart moves: center first, then corners, then edges
-    const smartMoves = [5, 1, 3, 7, 9, 2, 4, 6, 8];
-    
-    for (const move of smartMoves) {
-        const idx = move - 1;
-        if (board[idx] === ' ') {
-            return move;
-        }
-    }
-    return 5; // Fallback
 }
 
 async function createGame(senderJid, groupId) {
@@ -91,6 +79,75 @@ async function joinGame(senderJid, groupId) {
     }
 
     return { success: true, roomId: game.roomId, board: game.board, player1: game.player1, player2: game.player2 };
+}
+
+// ai move function updated to handle AI games
+async function getAIMove(board) {
+    try {
+        const GROQ_API_KEY = await get('GROQ');
+        if (!GROQ_API_KEY) {
+            console.log('[AI] No GROQ key, using fallback');
+            return 5; // Fallback if no API key
+        }
+
+        const ai = new GroqAI(GROQ_API_KEY);
+        const boardStr = renderBoard(board);
+        
+        // PERFECT Tic Tac Toe prompt for Groq
+        const prompt = `Tic Tac Toe board:
+${boardStr}
+
+You are ⭕ (O). Human is ❌ (X). 
+Current empty positions: ${board.map((cell, i) => cell === ' ' ? i+1 : '').filter(Boolean).join(', ')}
+
+Rules:
+1. Reply ONLY with a number 1-9 (empty position)
+2. Play perfectly - win if possible, block human win,
+3. Choose BEST strategic move
+NOTE: align 3 in a row/column/diagonal to win.
+Best move (number only):`;
+
+        const systemPrompt = `You are perfect Tic Tac Toe AI (⭕). 
+- Analyze board completely
+- Win immediately if possible  
+- Block human win if possible
+- Reply ONLY with number 1-9, nothing else`;
+
+        const response = await ai.processQuery(prompt, {
+            model_choice: 'llama-3.3-70b-versatile',
+            system_prompt: systemPrompt
+        });
+
+        // Extract number from AI response
+        const aiText = response[0]?.content?.parts[0]?.text?.trim() || '';
+        const aiMove = parseInt(aiText.match(/\d+/)?.[0]);
+        
+        // Validate move
+        if (aiMove >= 1 && aiMove <= 9) {
+            const idx = aiMove - 1;
+            if (board[idx] === ' ') {
+                console.log(`[REAL AI] Groq chose: ${aiMove}`);
+                return aiMove;
+            }
+        }
+
+        // Fallback to smart moves if AI fails
+        console.log(`[REAL AI] Invalid move "${aiText}", using fallback`);
+        const smartMoves = [5, 1, 3, 7, 9, 2, 4, 6, 8];
+        for (const move of smartMoves) {
+            if (board[move - 1] === ' ') return move;
+        }
+        return 5;
+
+    } catch (error) {
+        console.error('[REAL AI ERROR]:', error.message);
+        // Fallback to smart moves
+        const smartMoves = [5, 1, 3, 7, 9, 2, 4, 6, 8];
+        for (const move of smartMoves) {
+            if (board[move - 1] === ' ') return move;
+        }
+        return 5;
+    }
 }
 
 async function makeMove(senderJid, position) {
@@ -167,8 +224,11 @@ async function endGame(senderJid) {
 }
 
 // 🔥 NEW: Handle AI move immediately after human move
+// Make handleAIMove async since AI is now async
 async function handleAIMove(Bloom, groupId, board) {
-    try {        
+    try {
+        console.log('[AI] Starting REAL AI move...');
+        
         const game = await TicTacToe.findOne({ 
             groupId: groupId, 
             status: 'active',
@@ -176,15 +236,17 @@ async function handleAIMove(Bloom, groupId, board) {
         });
 
         if (!game || game.currentTurn !== 'luna_ai') {
+            console.log('[AI] Game not ready for AI turn');
             return;
         }
 
-        const aiMove = getAIMove(game.board);
+        // 🔥 USE REAL AI (async)
+        const aiMove = await getAIMove(game.board);
+        console.log(`[REAL AI] Final move chosen: ${aiMove}`);
 
         const result = await makeMove('luna_ai', aiMove);
         const boardText = renderBoard(result.board);
         
-        // ✅ ADD PLAYER INFO LINE
         const player1Name = game.player1.jid.split('@')[0];
         const playerInfo = `❌ @${player1Name}    ⭕ Luna AI`;
         
@@ -204,8 +266,15 @@ async function handleAIMove(Bloom, groupId, board) {
                 mentions: [game.player1.jid]
             });
         }
+        
     } catch (e) {
-        console.error('AI Move Error:', e);
+        console.error('REAL AI Move Error:', e);
+        // Emergency fallback
+        const fallbackMove = 5;
+        const result = await makeMove('luna_ai', fallbackMove);
+        await Bloom.sendMessage(groupId, { 
+            text: `🤖 Luna AI plays ${fallbackMove} (emergency)\n\n${renderBoard(result.board)}\n\n🎯 Your turn!` 
+        });
     }
 }
 
