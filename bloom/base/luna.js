@@ -1,70 +1,100 @@
-const axios = require('axios');
-module.exports = {
-    x: {
-    type: 'utility',
-    desc: 'Ask Luna (Ollama) a question',
-    usage: 'x <question>',
-    run: async (Bloom, message, fulltext) => {
-        const sender = message.key.remoteJid;
+const { get } =require('../../colors/setup');
+const fetch = require('node-fetch');
+const models = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile','qwen/qwen3-32b']; 
 
-        // Extract prompt
-        const prompt = fulltext.split(' ').slice(1).join(' ').trim();
+class GroqAI {
+    constructor(apiKey) {
+        this.apiKey = apiKey;
+    }
 
-        if (!prompt) {
-            return await Bloom.sendMessage(sender, {
-                text: '❓ Please provide a question. Example: `x who are you?`'
-            }, { quoted: message });
-        }
+    async processQuery(prompt, options = {}) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
 
         try {
-            const { data } = await axios.post(
-                'http://localhost:11434/api/generate',
-                {
-                    model: 'luna',
-                    prompt: prompt,
-                    stream: false
+            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.apiKey}`,
+                    'Content-Type': 'application/json',
                 },
-                {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    timeout: 60000
+                body: JSON.stringify({
+                    model: options.model_choice || 'llama-3.1-8b-instant', 
+                    messages: [
+                        {
+                            role: 'system',
+                            content: options.system_prompt || 'You are Luna. Create engaging WhatsApp responses.'
+                        },
+                        { role: 'user', content: prompt }
+                    ],
+                    max_tokens: 1000,
+                    temperature: 0.7,
+                    stream: false
+                }),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeout);
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`${response.status}: ${errorData.error?.message || 'Groq API error'}`);
+            }
+
+            const data = await response.json();
+            return [{
+                content: {
+                    parts: [{
+                        text: data.choices[0].message.content
+                    }]
                 }
-            );
-
-            if (!data || !data.response) {
-                return await Bloom.sendMessage(sender, {
-                    text: '❌ No response from Luna.'
-                }, { quoted: message });
-            }
-
-            const reply = `
-🌙 *Luna AI says*
-
-${data.response.trim()}
-> @frionode Labs (c) 2026`.trim();
-
-            await Bloom.sendMessage(sender, {
-                text: reply
-            }, { quoted: message });
-
-        } catch (err) {
-            console.error('Ollama API error:', err.message);
-
-            if (err.code === 'ECONNREFUSED') {
-                await Bloom.sendMessage(sender, {
-                    text: '❌ Ollama is not running on localhost:11434.'
-                }, { quoted: message });
-            } else if (err.response) {
-                await Bloom.sendMessage(sender, {
-                    text: `❌ Ollama error (${err.response.status}).`
-                }, { quoted: message });
-            } else {
-                await Bloom.sendMessage(sender, {
-                    text: '❌ Failed to contact Luna. Please try again later.'
-                }, { quoted: message });
-            }
+            }];
+        } catch (error) {
+            if (error.name === 'AbortError') throw new Error('Request timeout - try again');
+            throw error;
         }
     }
 }
-}
+
+module.exports = {
+    x: {
+        type: 'utility',
+        desc: 'Use Luna AI to answer questions or have a conversation',
+        usage: 'ai <your question>',
+        run: async (Luna, message, fulltext) => {
+            const sender = message.key.remoteJid;
+            const query = fulltext.split(' ').slice(1).join(' ').trim();
+            
+            if (!query) {
+                return await Luna.sendMessage(sender, {
+                    text: '❓ Please provide a question or prompt for the AI. Example: `ai What is the capital of France?`'
+                }, { quoted: message });
+            } 
+
+            try {
+                const GROQ_API_KEY = await get('GROQ');
+                const aiProcessor = new GroqAI(GROQ_API_KEY);
+                const response = await aiProcessor.processQuery(query, {
+                    model_choice: models[1],
+                    system_prompt: "You are Luna. Create engaging WhatsApp conversations."
+                });
+                
+                const aiText = response?.[0]?.content?.parts?.[0]?.text;
+                if (!aiText) {
+                    throw new Error("No response from AI");
+                }
+                
+                const reply = aiText.replace(/^["']|["']$/g, '').trim();
+                await Luna.sendMessage(sender, {
+                    text: `> 🤖 *Luna Response:*\n\n${reply}`
+                }, { quoted: message });
+                
+            } catch (error) {
+                console.error('AI Processing Error:', error.message);
+                await Luna.sendMessage(sender, {
+                    text: `⚠️ *Luna AI Error:*\n\n${error.message}\n\n💡 Get free key: console.groq.com/keys`
+                }, { quoted: message });
+            }
+        },
+    }
+};
