@@ -125,51 +125,141 @@ ${versesText}
     'quranaudio': {
         type: 'religion',
         desc: 'Get Quran audio recitation',
-        usage: 'quranaudio [surah_number]',
+        usage: 'quranaudio [surah_number:verse] or [surah_number]',
         react: '🎵',
+        run: async (Bloom, message, fulltext) => {
+            const args = fulltext.trim().split(' ').slice(1).join(' ');
+            
+            if (!args) {
+                return await Bloom.sendMessage(message.key.remoteJid, { 
+                    text: `*Example: quranaudio 1*\n*Or: quranaudio 2:255*\n*Surah numbers: 1-114*` 
+                }, { quoted: message });
+            }
+            
+            try {
+                let surahNumber, verseNumber;
+                
+                // Check if input is in format "surah:verse"
+                if (args.includes(':')) {
+                    [surahNumber, verseNumber] = args.split(':').map(Number);
+                } else {
+                    surahNumber = parseInt(args);
+                    verseNumber = 1; // Default to first verse
+                }
+                
+                // Validate input
+                if (isNaN(surahNumber) || surahNumber < 1 || surahNumber > 114) {
+                    return await Bloom.sendMessage(message.key.remoteJid, { 
+                        text: `*Invalid surah number. Must be 1-114*` 
+                    }, { quoted: message });
+                }
+                
+                // Pad numbers to 3 digits for surah and verse
+                const paddedSurah = surahNumber.toString().padStart(3, '0');
+                const paddedVerse = verseNumber.toString().padStart(3, '0');
+                
+                // Construct the audio URL
+                const audioUrl = `https://everyayah.com/data/Alafasy_128kbps/${paddedSurah}${paddedVerse}.mp3`;
+                
+                // For surah 1-9, also try without the leading 0 in surah number
+                const alternativeUrl = surahNumber < 10 ? 
+                    `https://everyayah.com/data/Alafasy_128kbps/00${surahNumber}${paddedVerse}.mp3` : null;
+                
+                try {
+                    // Try the first URL
+                    await Bloom.sendMessage(message.key.remoteJid, {
+                        audio: { url: audioUrl },
+                        mimetype: 'audio/mpeg',
+                        fileName: `Surah_${surahNumber}_Verse_${verseNumber}.mp3`,
+                        ptt: false
+                    }, { quoted: message });
+                    
+                } catch (error1) {
+                    // If first fails and alternative exists, try it
+                    if (alternativeUrl) {
+                        try {
+                            await Bloom.sendMessage(message.key.remoteJid, {
+                                audio: { url: alternativeUrl },
+                                mimetype: 'audio/mpeg',
+                                fileName: `Surah_${surahNumber}_Verse_${verseNumber}.mp3`,
+                                ptt: false
+                            }, { quoted: message });
+                        } catch (error2) {
+                            throw new Error(`Audio not found for Surah ${surahNumber}:${verseNumber}`);
+                        }
+                    } else {
+                        throw error1;
+                    }
+                }
+                
+            } catch (error) {
+                console.error("Error in quranaudio command:", error);
+                await Bloom.sendMessage(message.key.remoteJid, { 
+                    text: `*Error: ${error.message || 'Audio not available'}*\n*Try: quranaudio 1:1 or quranaudio 36*` 
+                }, { quoted: message });
+            }
+        }
+    },
+    
+    'quranfullaudio': {
+        type: 'religion',
+        desc: 'Get complete surah audio recitation',
+        usage: 'quranfullaudio [surah_number]',
+        react: '📻',
         run: async (Bloom, message, fulltext) => {
             const args = fulltext.trim().split(' ').slice(1);
             const surahNumber = args[0];
             
             if (!surahNumber || isNaN(surahNumber) || surahNumber < 1 || surahNumber > 114) {
                 return await Bloom.sendMessage(message.key.remoteJid, { 
-                    text: `*Example: quranaudio 1*\n*Enter surah number (1-114)*` 
-                }, { quoted: message });
-            }
-            
-            // Use reliable audio URLs that should work
-            const audioUrls = {
-                1: 'https://everyayah.com/data/Alafasy_128kbps/001001.mp3',
-                2: 'https://everyayah.com/data/Alafasy_128kbps/002001.mp3',
-                36: 'https://everyayah.com/data/Alafasy_128kbps/036001.mp3',
-                55: 'https://everyayah.com/data/Alafasy_128kbps/055001.mp3',
-                67: 'https://everyayah.com/data/Alafasy_128kbps/067001.mp3',
-                112: 'https://everyayah.com/data/Alafasy_128kbps/112001.mp3',
-                113: 'https://everyayah.com/data/Alafasy_128kbps/113001.mp3',
-                114: 'https://everyayah.com/data/Alafasy_128kbps/114001.mp3'
-            };
-            
-            const audioUrl = audioUrls[surahNumber];
-            
-            if (!audioUrl) {
-                return await Bloom.sendMessage(message.key.remoteJid, { 
-                    text: `*Audio for Surah ${surahNumber} is not available.*\n*Available surahs: 1, 2, 36, 55, 67, 112, 113, 114*` 
+                    text: `*Example: quranfullaudio 1*\n*Enter surah number (1-114)*` 
                 }, { quoted: message });
             }
             
             try {
-                // Send audio directly without checking first
-                await Bloom.sendMessage(message.key.remoteJid, {
-                    audio: { url: audioUrl },
-                    mimetype: 'audio/mpeg',
-                    fileName: `Surah_${surahNumber}.mp3`,
-                    ptt: false
-                }, { quoted: message });
+                // For full surah, use verse 000 which usually contains the full surah
+                const paddedSurah = surahNumber.toString().padStart(3, '0');
+                const audioUrl = `https://everyayah.com/data/Alafasy_128kbps/${paddedSurah}000.mp3`;
+                
+                // Alternative format for some surahs
+                const alternativeUrl = `https://everyayah.com/data/Alafasy_128kbps/00${surahNumber}000.mp3`;
+                
+                try {
+                    await Bloom.sendMessage(message.key.remoteJid, {
+                        audio: { url: audioUrl },
+                        mimetype: 'audio/mpeg',
+                        fileName: `Surah_${surahNumber}_Complete.mp3`,
+                        ptt: false
+                    }, { quoted: message });
+                    
+                } catch (error1) {
+                    try {
+                        await Bloom.sendMessage(message.key.remoteJid, {
+                            audio: { url: alternativeUrl },
+                            mimetype: 'audio/mpeg',
+                            fileName: `Surah_${surahNumber}_Complete.mp3`,
+                            ptt: false
+                        }, { quoted: message });
+                    } catch (error2) {
+                        // If full surah not available, send first verse
+                        const firstVerseUrl = `https://everyayah.com/data/Alafasy_128kbps/${paddedSurah}001.mp3`;
+                        await Bloom.sendMessage(message.key.remoteJid, {
+                            audio: { url: firstVerseUrl },
+                            mimetype: 'audio/mpeg',
+                            fileName: `Surah_${surahNumber}_Verse_1.mp3`,
+                            ptt: false
+                        }, { quoted: message });
+                        
+                        await Bloom.sendMessage(message.key.remoteJid, { 
+                            text: `*Note: Full surah audio not available. Sent first verse instead.*\n*Use: quranaudio ${surahNumber}:X for specific verses*` 
+                        }, { quoted: message });
+                    }
+                }
                 
             } catch (error) {
-                console.error("Error in quranaudio command:", error);
+                console.error("Error in quranfullaudio command:", error);
                 await Bloom.sendMessage(message.key.remoteJid, { 
-                    text: `*Failed to send audio for Surah ${surahNumber}.*\n*Try a different surah.*` 
+                    text: `*Error fetching audio. Try: quranfullaudio 1*` 
                 }, { quoted: message });
             }
         }
@@ -231,7 +321,10 @@ ${versesText}
 *Type:* ${surah.revelationType}
 *Verses:* ${surah.numberOfAyahs}
 
-*Use:* quran ${surah.number} *to get verses*`;
+*Use:* 
+• quran ${surah.number} *for verses*
+• quranaudio ${surah.number} *for audio*
+• quranfull ${surah.number} *for full text*`;
                 
                 await Bloom.sendMessage(message.key.remoteJid, { 
                     text: surahInfo 
@@ -399,7 +492,7 @@ ${madani.substring(0, 1500)}${madani.length > 1500 ? '...\n' : ''}
             }
             
             try {
-                const [surah, verse] = args.split(':');
+                const [surah, verse] = args.split(':').map(Number);
                 
                 if (!surah || !verse || isNaN(surah) || isNaN(verse) || surah < 1 || surah > 114) {
                     return await Bloom.sendMessage(message.key.remoteJid, { 
@@ -448,6 +541,69 @@ ${verseData.translation}
                 console.error("Error in quranverse command:", error);
                 await Bloom.sendMessage(message.key.remoteJid, { 
                     text: `*Error fetching verse. Try: quranverse 1:1*` 
+                }, { quoted: message });
+            }
+        }
+    },
+    
+    'quransearch': {
+        type: 'religion',
+        desc: 'Search Quran for specific words',
+        usage: 'quransearch [keyword]',
+        react: '🔍',
+        run: async (Bloom, message, fulltext) => {
+            const keyword = fulltext.trim().split(' ').slice(1).join(' ');
+            
+            if (!keyword) {
+                return await Bloom.sendMessage(message.key.remoteJid, { 
+                    text: `*Example: quransearch mercy*\n*Or: quransearch الله*` 
+                }, { quoted: message });
+            }
+            
+            try {
+                const res = await fetch(`https://api.alquran.cloud/v1/search/${encodeURIComponent(keyword)}/all/en`, {
+                    timeout: 15000
+                });
+                
+                if (!res.ok) {
+                    return await Bloom.sendMessage(message.key.remoteJid, { 
+                        text: `*Error searching Quran*` 
+                    }, { quoted: message });
+                }
+                
+                const json = await res.json();
+                
+                if (!json.data || json.data.count === 0) {
+                    return await Bloom.sendMessage(message.key.remoteJid, { 
+                        text: `*No results found for "${keyword}"*` 
+                    }, { quoted: message });
+                }
+                
+                const matches = json.data.matches.slice(0, 10); // Limit to 10 results
+                
+                let searchResults = `*Quran Search Results* 🔍\n\n`;
+                searchResults += `*Keyword:* ${keyword}\n`;
+                searchResults += `*Total matches:* ${json.data.count}\n\n`;
+                
+                matches.forEach((match, index) => {
+                    searchResults += `*${index + 1}. ${match.surah.name} ${match.surah.number}:${match.numberInSurah}*\n`;
+                    searchResults += `${match.text}\n\n`;
+                });
+                
+                if (json.data.count > 10) {
+                    searchResults += `*...and ${json.data.count - 10} more results*\n`;
+                }
+                
+                searchResults += `*Use: quranverse [surah:verse] for full verse*`;
+                
+                await Bloom.sendMessage(message.key.remoteJid, { 
+                    text: searchResults 
+                }, { quoted: message });
+                
+            } catch (error) {
+                console.error("Error in quransearch command:", error);
+                await Bloom.sendMessage(message.key.remoteJid, { 
+                    text: `*Error searching Quran. Try again later.*` 
                 }, { quoted: message });
             }
         }

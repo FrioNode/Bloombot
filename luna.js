@@ -166,7 +166,7 @@ async function downloadSessionData() {
                             log('❌ Cannot access openchat metadata', err);
                         }
 
-                    // Send startup message
+               /*     // Send startup message
                     if (mess?.bloom && mess?.powered) {
                         const payload = {
                             image: { url: image },
@@ -193,7 +193,7 @@ async function downloadSessionData() {
                         try { await Luna.sendMessage(freechat, payload); }
                         catch {}
                     }
-
+*/
                     await startReminderChecker(Luna);
                     await startStatusWatcher(Luna, log);
                     await _autoStartGame(Luna, log);
