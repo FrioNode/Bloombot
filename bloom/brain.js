@@ -4,7 +4,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const mongoose = require('mongoose');
 const { mess, initMess } = require('../colors/mess');
 const { get } = require('../colors/setup');
 const { trackUsage } = require('../colors/exp');
