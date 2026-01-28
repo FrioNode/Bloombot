@@ -61,15 +61,6 @@ const createProgressBar = (percent) => {
 };
 
 module.exports = {
-    test: {
-        type: 'user',
-        desc: 'A user testing command',
-        usage: 'test',
-        run: async (Bloom, message, fulltext) => {
-            console.log("📨 Executing testf...");
-            await Bloom.sendMessage(message.key.remoteJid, { text: "Test passed!" });
-        }
-    },
     about: {
         type: 'user',
         desc: 'About this bot',
