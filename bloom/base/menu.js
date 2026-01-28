@@ -38,7 +38,7 @@ module.exports = {
                     }, { quoted: message });
                 }
 
-                menuText += `📂 *${category.toUpperCase()}*\n╭─────────────\n`;
+                menuText += `📂 *${category.toUpperCase()}*\n╭─────────────────\n`;
                 const names = grouped[category];
 
                 // Group the commands into 3 per line for this category
@@ -46,15 +46,15 @@ module.exports = {
                     menuText += `│ ${names.slice(i, i + 4).join(' | ')}\n`;
                 }
 
-                menuText += `╰─────────────\n`;
+                menuText += `╰─────────────────\n`;
             } else {
                 // Show the full menu with categories
                 Object.entries(grouped).forEach(([type, names]) => {
-                    menuText += `📂 *${type.toUpperCase()}*\n╭─────────────\n`;
+                    menuText += `📂 *${type.toUpperCase()}*\n╭─────────────────\n`;
                     for (let i = 0; i < names.length; i += 4) {
                         menuText += `│ ${names.slice(i, i + 4).join(' | ')}\n`;
                     }
-                    menuText += `╰─────────────\n`;
+                    menuText += `╰─────────────────\n`;
                 });
             }
             const final = menuText + mess.footer;
