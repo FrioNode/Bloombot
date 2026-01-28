@@ -691,7 +691,7 @@ fish: {
     },
 
     catch: {
-        type: 'pokemon',
+        type: 'game',
         desc: 'Catch a Pokémon that has appeared',
         usage: 'catch <pokemon_name>',
         run: async (Bloom, message, fulltext) => {
@@ -724,7 +724,7 @@ fish: {
         }
     },
     pokes: {
-        type: 'pokemon',
+        type: 'game',
         desc: 'View your Pokémon collection',
         run: async (Bloom, message) => {
             try {
@@ -753,7 +753,7 @@ fish: {
         }
     },
     pokedex: {
-        type: 'pokemon',
+        type: 'game',
         desc: 'View any Pokémon details by name or ID',
         usage: 'pokedex <pokemon_name> or <ID>',
         run: async (Bloom, message, fulltext) => {
