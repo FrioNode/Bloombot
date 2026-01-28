@@ -86,7 +86,7 @@ function buildMessages() {
     mess.blocked = `You will be blocked for violating privacy policy`;
     mess.groupOnly = `Bot set to group-only mode`;
 
-    mess.footer = `> (c) ${state.cpyear} ${state.botname} By @${state.devname} - ☁️ •|•`;
+    mess.footer = `(c) ${state.cpyear} ${state.botname} By @${state.devname} - ☁️ •|•`;
 }
 
 // Load from DB and rebuild messages
