@@ -22,7 +22,7 @@ async function initCommandHandler(Luna) {
     activeLunaInstance = Luna;
     commandRegistry = {};
     await loadCommands();
-    console.log('♻️ Command handler initialized');
+    console.log('[Brain.js]: ♻️ Command handler initialized');
 }
 
 /* -----------------------------------------------------------
@@ -67,9 +67,9 @@ async function loadCommands() {
 }
 
 /* -----------------------------------------------------------
-   3. BLOOM COMMAND EXECUTION HANDLER
+   3. LUNA COMMAND EXECUTION HANDLER
 ----------------------------------------------------------- */
-async function bloomCm(Luna, message, fulltext, commands) {
+async function LunaCEH(Luna, message, fulltext, commands, log) {
     const commandName = fulltext.split(' ')[0].toLowerCase();
     const commandModule = commands[commandName];
     if (!commandModule?.run) return;
@@ -77,7 +77,7 @@ async function bloomCm(Luna, message, fulltext, commands) {
     try {
         await commandModule.run(Luna, message, fulltext, commands);
     } catch (err) {
-        console.error(`❌ Fatal error: Command "${commandName}" failed:`, err);
+        log(`❌ Fatal error: Command "${commandName}" failed:`, err);
         await Luna.sendMessage(message.key.remoteJid, {
             text: '❗ An error occurred while executing the command.'
         });
@@ -140,9 +140,9 @@ async function setupHotReload() {
 }
 
 /* -----------------------------------------------------------
-   5. MAIN bloomCmd INPUT HANDLER
+   5. MAIN Luna Command Input hanlder
 ----------------------------------------------------------- */
-const bloomCmd = async (Luna, message) => {
+const LunaCIH = async (Luna, message, log) => {
     try {
         if (!Luna || !message?.key) return false;
 
@@ -171,7 +171,7 @@ const bloomCmd = async (Luna, message) => {
         }
 
         if (commandRegistry[command]) {
-            await bloomCm(Luna, message, fulltext, commandRegistry);
+            await LunaCEH(Luna, message, fulltext, commandRegistry, log);
         }
 
         return true;
@@ -404,7 +404,7 @@ async function checkAFK(Luna, message) {
    EXPORTS
 ----------------------------------------------------------- */
 module.exports = {
-    bloomCmd,
+    LunaCIH,
     initCommandHandler,
     commands: commandRegistry,
     startReminderChecker

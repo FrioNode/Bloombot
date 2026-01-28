@@ -13,7 +13,7 @@ const {
 
 const { get } = require('./colors/setup');
 const { connectDB } = require('./colors/schema');
-const { bloomCmd, initCommandHandler, startReminderChecker } = require('./bloom/brain');
+const { LunaCIH, initCommandHandler, startReminderChecker } = require('./bloom/brain');
 const { startStatusWatcher } = require('./bloom/statusview');
 
 const pino = require('pino');
@@ -33,26 +33,15 @@ const store = require('./colors/luna_store');
 connectDB('Luna module');
 async function preloadConfig() {
     const KEYS = [
-        "MONGO", "REDIS", "NODE",
-        "OWNERNUMBER", "SUDOLID", "DEVNAME", "OWNERNAME",
+        "OWNERNUMBER", "SUDOLID", "DEVNAME", "OWNERNAME", "CHANNELNAME",
         "OPENCHAT", "INVITE", "CHANNELID", "CHANNEL", "BOTNAME",
-        "IMAGE", "LANG", "REACT", "EMOJI", "REBOOT",
-        "IS_DOCKER", "PREFIX", "TIMEZONE", "MODE",
-        "MAXSTOREMESSAGES", "STOREWRITEINTERVAL"
-    ];
-
-    const config = {};
+        "IMAGE", "REACT", "EMOJI", "MODE", "STOREWRITEINTERVAL" ];
+    const config = {}; 
     for (const key of KEYS) {
         config[key.toLowerCase()] = await get(key);
     }
-
     return config;
 }
-
-(async () => {
-    const configs = await preloadConfig();
-    console.log('Lets check if the configs were loaded', configs);
-})();
 
 const log = (...args) => {
     const stack = new Error().stack.split('\n');
@@ -63,12 +52,16 @@ const log = (...args) => {
     console.log(`Luna: ${new Date().toLocaleString()} | [${file}]`, ...args);
 };
 
-async function startBot() {
+(async () => {  try {  await preloadConfig();
+    log('⚙️ configuration done');  } catch (err) {
+    log('🚫 configuration failed:', err); process.exit(1);  } })();
+
+async function igniteLuna() {
     const config = await preloadConfig();
 
     const {
-        botname, react, emoji, invite,
-        openchat, channel, channelid, image,
+        botname, react, emoji, invite, openchat,
+        channel, channelid, channelname, image,
         mode, storewriteinterval } = config;
     const freechat = process.env.OPENCHAT || openchat
 
@@ -111,7 +104,10 @@ async function downloadSessionData() {
     async function start() {
         try {
             const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
-            const msgRetryCounterCache = new NodeCache();
+            const msgRetryCounterCache = new NodeCache({
+                                stdTTL: 60 * 5, checkperiod: 60,
+                                useClones: false, maxKeys: 10000  });
+
             const { version, isLatest } = await fetchLatestBaileysVersion();
 
             log(`${botname} on Baileys V${version.join('.')}, Latest: ${isLatest}`);
@@ -149,7 +145,7 @@ async function downloadSessionData() {
                 }
 
                 if (connection === 'open') {
-                    log(`✅ Connected as ${botname}`);
+                    log(`✅ Connected as ${botname}: Space mode`);
 
                         try {
                             await Luna.groupAcceptInvite(invite);
@@ -166,7 +162,7 @@ async function downloadSessionData() {
                             log('❌ Cannot access openchat metadata', err);
                         }
 
-               /*     // Send startup message
+                    // Send startup message
                     if (mess?.bloom && mess?.powered) {
                         const payload = {
                             image: { url: image },
@@ -176,11 +172,11 @@ async function downloadSessionData() {
                                 forwardingScore: 2,
                                 forwardedNewsletterMessageInfo: {
                                     newsletterJid: channelid,
-                                    newsletterName: botname,
+                                    newsletterName: channelname,
                                     serverMessageId: -1,
                                 },
                                 externalAdReply: {
-                                    title: botname,
+                                    title: channelname,
                                     body: mess.powered,
                                     thumbnailUrl: image,
                                     sourceUrl: channel,
@@ -190,10 +186,10 @@ async function downloadSessionData() {
                             },
                         };
 
-                        try { await Luna.sendMessage(freechat, payload); }
-                        catch {}
+                        Luna.sendMessage(freechat, payload).catch(err => {
+                            log('Boot message failed:', err?.message || err);  });
                     }
-*/
+
                     await startReminderChecker(Luna);
                     await startStatusWatcher(Luna, log);
                     await _autoStartGame(Luna, log);
@@ -250,7 +246,7 @@ async function downloadSessionData() {
                     processReactions();
                 }
 
-                try { await bloomCmd(Luna, message); }
+                try { await LunaCIH(Luna, message, log); }
                 catch (err) { log("Command Error:", err); }
             });
 
@@ -316,4 +312,4 @@ async function downloadSessionData() {
     app.listen(PORT, () => log(`🔒 ${botname} server running on port ${PORT}`));
 }
 
-startBot();
+igniteLuna();

@@ -43,5 +43,55 @@ module.exports = {
                 }, { quoted: message });
             }
         },
+    },
+    sms: {
+    type: 'utility',
+    desc: 'Send an SMS via SMSMode API',
+    usage: 'sms <phone_number> <message>',
+    run: async (Luna, message, fulltext) => {
+        const sender = message.key.remoteJid;
+        const args = fulltext.split(' ').slice(1);
+        const to = args.shift(); // first argument = phone number
+        const text = args.join(' ').trim();
+
+        if (!to || !text) {
+            return await Luna.sendMessage(sender, {
+                text: '❌ Usage: sms <phone_number> <message>\nExample: `sms 33600000001 Hello world`'
+            }, { quoted: message });
+        }
+
+        try {
+            const SMSMODE = await get('SMSMODE'); // your key stored safely
+            const response = await fetch('https://rest.smsmode.com/sms/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'X-Api-Key': SMSMODE,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    recipient: { to },
+                    body: { text }
+                })
+            });
+
+            const data = await response.json();
+            console.log('SMSMode Response:', data);
+            if (response.ok) {
+                await Luna.sendMessage(sender, {
+                    text: `✅ SMS sent to ${to}!\nMessage ID: ${data?.messageId || 'N/A'}`
+                }, { quoted: message });
+            } else {
+                throw new Error(data?.error?.message || 'Unknown SMSMode error');
+            }
+
+        } catch (error) {
+            console.error('SMS Sending Error:', error.message);
+            await Luna.sendMessage(sender, {
+                text: `⚠️ Failed to send SMS:\n${error.message}`
+            }, { quoted: message });
+        }
     }
+}
+
 };

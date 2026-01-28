@@ -27,7 +27,6 @@ async function initDefaults() {
     EMOJI: process.env.EMOJI || '🌘',
     REBOOT: process.env.REBOOT === 'true' ? 'true' : 'false',
     IS_DOCKER: process.env.IS_DOCKER || 'false',
-    PREFIX: process.env.PREFIX || '!',
     TIMEZONE: process.env.TIMEZONE || 'Africa/Nairobi',
     MODE: process.env.MODE || 'group',
     WEATHERKEY: process.env.WEATHERKEY || 'x',
@@ -68,8 +67,15 @@ async function set(key, value) {
   );
   return String(value);
 }
+// ----- Delete a config key -----
+async function unset(key) {
+  if (!key) throw new Error('[Setup] Key is required');
+
+  const res = await Setting.findByIdAndDelete(key);
+  return !!res; // true if deleted, false if not found
+}
 
 // ----- Initialize defaults immediately -----
 initDefaults().catch(err => console.error('[MongoDB] initDefaults failed:', err));
 console.log('setting wnt cool!');
-module.exports = { initDefaults, get, set };
+module.exports = { initDefaults, get, set, unset };

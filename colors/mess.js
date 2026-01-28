@@ -6,7 +6,6 @@ let state = {
     botname: 'Luna',
     emoji: '🌼',
     ownername: 'Benson',
-    prefix: '!',
     devname: 'FrioNode',
     cpyear: new Date().getFullYear(),
     mode: 'group',
@@ -17,13 +16,13 @@ const mess = {};
 
 // Build message object based on current state
 function buildMessages() {
-    mess.about = `_Hi, I am ${state.botname} ${state.emoji}_\n> A WhatsApp multidevice AI written in JavaScript based on Baileys. I was developed by Master ${state.ownername} and LICENSED under ISC licensing policy at ColdNode Labs (Naivasha, Kenya). I am one of the most advanced AI user-bot models with more than 400 features. Check more from my developer on: https://github.com/(${state.devname})\n\n${state.emoji} To open a ticket send: *(${state.prefix}ticket)*`;
+    mess.about = `_Hi, I am ${state.botname} ${state.emoji}_\n> A WhatsApp multidevice AI written in JavaScript based on Baileys. I was developed by Master ${state.ownername} and LICENSED under ISC licensing policy at ColdNode Labs (Naivasha, Kenya). I am one of the most advanced AI user-bot models with more than 400 features. Check more from my developer on: https://github.com/(${state.devname})\n\n${state.emoji} To open a ticket send: *(ticket)*`;
 
-    mess.ticket = `Your ticket has been created successfully.\n_${state.devname} will contact you shortly. Meanwhile check (${state.prefix}menu)_`;
+    mess.ticket = `Your ticket has been created successfully.\n_${state.devname} will contact you shortly. Meanwhile check *(menu)*_`;
 
     mess.bloom = `╭────${state.emoji} ${state.botname} ─────
-│   > Version: ${bloom.version} beta
-│   > Global prefix: ${state.prefix}
+│   > Version: ${bloom.version} LTS
+│   > Global theme: ${state.botname}
 │    _A reason to imagine_
 │    _Operating mode: ${state.mode}_
 ╰─────────────────
@@ -52,7 +51,7 @@ function buildMessages() {
 
     mess.group = "_This command can only be used in group chats._";
     mess.agenda = `_Only ${state.botname} owner can do that in a group_`;
-    mess.ticketarg = `Please write your issue or ticket ID\nExample:\n${state.prefix}ticket something is not ok\n${state.prefix}ticket BB-0000A`;
+    mess.ticketarg = `Please write your issue or ticket ID\nExample:\nticket something is not ok\nticket BB-0000A`;
     mess.noarg = `Provide arguments! Command incomplete.`;
     mess.limited = `⚠️ Maximum 3 open tickets.`;
     mess.gmetafail = "❌ Failed to fetch group metadata";
@@ -60,16 +59,16 @@ function buildMessages() {
     mess.youadmin = "_You are not an admin!_";
     mess.wenot = "❌ Neither you nor I am admin.";
 
-    mess.nsfwoff = `_NSFW not enabled!_\nUse *${state.prefix}nsfw on*`;
-    mess.nsfwon = `_NSFW already enabled!_\nUse *${state.prefix}nsfw off* to activate nsfw`;
-    mess.games = `_Games are disabled!_\nUse *${state.prefix}games on* to activate games`;
+    mess.nsfwoff = `_NSFW not enabled!_\nUse *nsfw on*`;
+    mess.nsfwon = `_NSFW already enabled!_\nUse *nsfw off* to activate nsfw`;
+    mess.games = `_Games are disabled!_\nUse *games on* to activate games`;
 
-    mess.deact = `_Second parameter required!\n> ${state.prefix}deact (economy,games,nsfw,welcome,left)`;
+    mess.deact = `_Second parameter required!\n> deact (economy,games,nsfw,welcome,left)`;
 
-    mess.add = `_To add a user:\n${state.prefix}add 2547xxxxxxx_`;
-    mess.joinlink = `_Need a group link or code_\n${state.prefix}join link_here`;
+    mess.add = `_To add a user:\nadd 2547xxxxxxx_`;
+    mess.joinlink = `_Need a group link or code_\njoin link_here`;
 
-    mess.error404 = `_Command not found!_\nTry ${state.prefix}menu`;
+    mess.error404 = `_Command not found!_\nTry menu`;
     mess.error = `An error occurred..!`;
     mess.bug = "*An error occurred..!*\nReport sent.";
 
@@ -95,7 +94,6 @@ async function initMess() {
     state.botname = await get('BOTNAME') || state.botname;
     state.emoji = await get('EMOJI') || state.emoji;
     state.ownername = await get('OWNERNAME') || state.ownername;
-    state.prefix = await get('PREFIX') || state.prefix;
     state.devname = await get('DEVNAME') || state.devname;
     state.cpyear = await get('CPYEAR') || state.cpyear;
     state.mode = await get('MODE') || state.mode;

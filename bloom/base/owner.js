@@ -1,17 +1,14 @@
 const luna = require('../../package.json');
-const { get, set } = require('../../colors/setup');
+const { get, set, unset } = require('../../colors/setup');
 const { isBloomKing } = require('../../colors/auth');
 const { mess } = require('../../colors/mess');
 const { Exp, Setting } = require('../../colors/schema');
 const { exec, spawn } = require('child_process');
 const { promisify } = require('util');
 const execPromise = promisify(exec);
-const fs = require('fs');
-const path = require('path');
 const dotenv = require('dotenv'); dotenv.config();
 // ------FRIONODE-----
 
-const isOwner =isBloomKing;
     module.exports = {
         join: {
             type: 'owner',
@@ -372,39 +369,92 @@ return await Bloom.sendMessage(remoteJid, {
         }
     }
 },
-get: {
-    type: 'owner',
-    desc: 'Get config values from MongoDB (all or specific key)',
-    usage: 'get [key]',
-    run: async (Bloom, message, fulltext) => {
-        const sender = message.key.participant || message.key.remoteJid;
-        const replyPath = message.key.remoteJid;
+        unset: {
+        type: 'owner',
+        desc: 'Delete a config key from MongoDB (Owner only)',
+        usage: 'unset <key>',
+        async run(Bloom, message, fulltext) {
+            const sender = message.key.participant || message.key.remoteJid;
+            const replyPath = message.key.remoteJid;
 
-        // Only owner
-        if (!(await isBloomKing(sender,message))) {
-            return await Bloom.sendMessage(replyPath, { text: '❌ This command is for the bot owner only.' }, { quoted: message });
-        }
-
-        const args = fulltext.trim().split(' ').slice(1);
-        const key = args[0]?.toUpperCase();
-
-        try {
-            if (key) {
-                // Single key
-                const value = await get(key);
-                return await Bloom.sendMessage(replyPath, { text: `• ${key} = ${value || '❌ Not found'}` }, { quoted: message });
-            } else {
-                // All keys
-                const docs = await Setting.find({}); // fetch all
-                if (!docs.length) return await Bloom.sendMessage(replyPath, { text: '⚠️ No config keys found.' }, { quoted: message });
-
-                const allKeysText = docs.map(d => `• ${d._id} = ${d.value}`).join('\n');
-                return await Bloom.sendMessage(replyPath, { text: `📋 Config values:\n${allKeysText}` }, { quoted: message });
+            if (!(await isBloomKing(sender, message))) {
+            return await Bloom.sendMessage(
+                replyPath,
+                { text: mess.owner },
+                { quoted: message }
+            );
             }
-        } catch (err) {
-            console.error('Get command error:', err);
-            return await Bloom.sendMessage(replyPath, { text: `❌ Failed to fetch config: ${err.message}` }, { quoted: message });
+
+            const arg = fulltext.trim().split(' ')[1]?.toUpperCase();
+
+            if (!arg) {
+            return await Bloom.sendMessage(
+                replyPath,
+                { text: 'Usage: unset <key>' },
+                { quoted: message }
+            );
+            }
+
+            try {
+            const deleted = await unset(arg);
+
+            if (!deleted) {
+                return await Bloom.sendMessage(
+                replyPath,
+                { text: `⚠️ Key "${arg}" not found.` },
+                { quoted: message }
+                );
+            }
+
+            await Bloom.sendMessage(
+                replyPath,
+                { text: `🗑️ Config key "${arg}" deleted successfully.` },
+                { quoted: message }
+            );
+
+            } catch (err) {
+            console.error('Unset command error:', err);
+            await Bloom.sendMessage(
+                replyPath,
+                { text: `❌ Failed to delete key: ${err.message}` },
+                { quoted: message }
+            );
+            }
         }
-    }
-}
+        },
+        get: {
+            type: 'owner',
+            desc: 'Get config values from MongoDB (all or specific key)',
+            usage: 'get [key]',
+            run: async (Bloom, message, fulltext) => {
+                const sender = message.key.participant || message.key.remoteJid;
+                const replyPath = message.key.remoteJid;
+
+                // Only owner
+                if (!(await isBloomKing(sender,message))) {
+                    return await Bloom.sendMessage(replyPath, { text: '❌ This command is for the bot owner only.' }, { quoted: message });
+                }
+
+                const args = fulltext.trim().split(' ').slice(1);
+                const key = args[0]?.toUpperCase();
+
+                try {
+                    if (key) {
+                        // Single key
+                        const value = await get(key);
+                        return await Bloom.sendMessage(replyPath, { text: `• ${key} = ${value || '❌ Not found'}` }, { quoted: message });
+                    } else {
+                        // All keys
+                        const docs = await Setting.find({}); // fetch all
+                        if (!docs.length) return await Bloom.sendMessage(replyPath, { text: '⚠️ No config keys found.' }, { quoted: message });
+
+                        const allKeysText = docs.map(d => `• ${d._id} = ${d.value}`).join('\n');
+                        return await Bloom.sendMessage(replyPath, { text: `📋 Config values:\n${allKeysText}` }, { quoted: message });
+                    }
+                } catch (err) {
+                    console.error('Get command error:', err);
+                    return await Bloom.sendMessage(replyPath, { text: `❌ Failed to fetch config: ${err.message}` }, { quoted: message });
+                }
+            }
+        }
 };
