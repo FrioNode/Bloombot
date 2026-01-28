@@ -68,13 +68,12 @@ return await Bloom.sendMessage(remoteJid, {
             }
     },
     bc: {
-        type: 'utility',
+        type: 'owner',
         desc: 'Send broadcast to all participating groups',
         usage: 'bc <message>',
         run: async (Bloom, message, fulltext) => {
             // console.log('Bloom object keys:', Object.keys(Bloom));
             const sender = message.key.remoteJid;
-            const senderid = message.key.participant;
             if (!(await isBloomKing(sender,message))) {
                 return await Bloom.sendMessage(sender, { text: mess.owner }, { quoted: message });
             }
@@ -87,7 +86,7 @@ return await Bloom.sendMessage(remoteJid, {
                 const bcmess = args.slice(1).join(' ');
                 const groups = await Bloom.groupFetchAllParticipating();
                 if (!groups || Object.keys(groups).length === 0) {
-                    return await Bloom.sendMessage(message.key.remoteJid, { text: 'You are not in any group... Join / Create groups to broadcast' });
+                    return await Bloom.sendMessage(message.key.remoteJid, { text: 'Bot not in any group... Join / Create groups to broadcast' });
                 }
 
                 for (const groupId of Object.keys(groups)) {
