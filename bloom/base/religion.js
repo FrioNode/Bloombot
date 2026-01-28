@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 
 module.exports = {
-    'bible': {
+    bible: {
         type: 'religion',
         desc: 'Get Bible verses and chapters',
         usage: 'bible [book chapter:verse]',
@@ -52,7 +52,7 @@ ${chapterData.text}`;
         }
     },
     
-    'quran': {
+    quran: {
         type: 'religion',
         desc: 'Get Quran surah details',
         usage: 'quran [surah_number]',
@@ -122,7 +122,7 @@ ${versesText}
         }
     },
     
-    'qaudio': {
+    qaudio: {
         type: 'religion',
         desc: 'Get Quran audio recitation',
         usage: 'qaudio [surah_number:verse] or [surah_number]',
@@ -201,7 +201,7 @@ ${versesText}
         }
     },
     
-    'qfaudio': {
+    qfaudio: {
         type: 'religion',
         desc: 'Get complete surah audio recitation',
         usage: 'qfaudio [surah_number]',
@@ -265,7 +265,7 @@ ${versesText}
         }
     },
     
-    'qsurah': {
+    qsurah: {
         type: 'religion',
         desc: 'Search Quran by surah name',
         usage: 'qsurah [surah_name]',
@@ -339,81 +339,7 @@ ${versesText}
         }
     },
     
-    'quranfull': {
-        type: 'religion',
-        desc: 'Get full surah with all verses',
-        usage: 'quranfull [surah_number]',
-        react: '📚',
-        run: async (Bloom, message, fulltext) => {
-            const args = fulltext.trim().split(' ').slice(1);
-            const surahNumber = args[0];
-            
-            if (!surahNumber || isNaN(surahNumber) || surahNumber < 1 || surahNumber > 114) {
-                return await Bloom.sendMessage(message.key.remoteJid, { 
-                    text: `*Example: quranfull 1*\n*Enter surah number (1-114)*` 
-                }, { quoted: message });
-            }
-            
-            try {
-                const res = await fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}`, {
-                    timeout: 15000
-                });
-                
-                if (!res.ok) {
-                    return await Bloom.sendMessage(message.key.remoteJid, { 
-                        text: `*Error fetching surah ${surahNumber}*` 
-                    }, { quoted: message });
-                }
-                
-                const json = await res.json();
-                
-                if (!json.data || !json.data.ayahs) {
-                    return await Bloom.sendMessage(message.key.remoteJid, { 
-                        text: `*Surah ${surahNumber} data not found*` 
-                    }, { quoted: message });
-                }
-                
-                const surah = json.data;
-                
-                // For long surahs, split into multiple messages
-                const maxVersesPerMessage = 10;
-                const totalVerses = surah.ayahs.length;
-                
-                for (let i = 0; i < totalVerses; i += maxVersesPerMessage) {
-                    const chunk = surah.ayahs.slice(i, i + maxVersesPerMessage);
-                    
-                    let versesText = '';
-                    chunk.forEach(ayah => {
-                        versesText += `*${ayah.numberInSurah}.* ${ayah.text}\n\n`;
-                    });
-                    
-                    const messageText = i === 0 ? 
-                        `*Quran - Surah ${surah.number}: ${surah.englishName}*\n` +
-                        `*Verses ${i + 1}-${Math.min(i + maxVersesPerMessage, totalVerses)} of ${totalVerses}*\n\n` +
-                        versesText :
-                        `*[Continued] Verses ${i + 1}-${Math.min(i + maxVersesPerMessage, totalVerses)}*\n\n` +
-                        versesText;
-                    
-                    await Bloom.sendMessage(message.key.remoteJid, { 
-                        text: messageText 
-                    }, i === 0 ? { quoted: message } : {});
-                    
-                    // Delay between messages to avoid rate limiting
-                    if (i + maxVersesPerMessage < totalVerses) {
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                    }
-                }
-                
-            } catch (error) {
-                console.error("Error in quranfull command:", error);
-                await Bloom.sendMessage(message.key.remoteJid, { 
-                    text: `*Error fetching full surah. Try a shorter surah.*` 
-                }, { quoted: message });
-            }
-        }
-    },
-    
-    'quranlist': {
+    quranlist: {
         type: 'religion',
         desc: 'List all Quran surahs',
         usage: 'quranlist',
@@ -477,7 +403,7 @@ ${madani.substring(0, 1500)}${madani.length > 1500 ? '...\n' : ''}
         }
     },
     
-    'qverse': {
+    qverse: {
         type: 'religion',
         desc: 'Get specific Quran verse',
         usage: 'qverse [surah:verse]',
@@ -546,7 +472,7 @@ ${verseData.translation}
         }
     },
     
-    'qsearch': {
+    qsearch: {
         type: 'religion',
         desc: 'Search Quran for specific words',
         usage: 'qsearch [keyword]',
