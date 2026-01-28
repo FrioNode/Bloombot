@@ -180,7 +180,7 @@ jid: {
         }, {quoted: message});
     }
 },
-    level: {
+    rank: {
         type: 'user',
         desc: 'See rank/level of another user',
         usage: 'level @user',
@@ -200,12 +200,6 @@ jid: {
                                     mentions: [targetJid]
             });
         }
-    },
-    rank: {
-        run: async (...args) => module.exports.level.run(...args),
-        type: 'user',
-        desc: 'See rank/level of another user',
-        usage: 'level @user'
     },
     profile: {
         type: 'user',
