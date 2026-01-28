@@ -7,6 +7,15 @@ const { exec, spawn } = require('child_process');
 const { promisify } = require('util');
 const execPromise = promisify(exec);
 const dotenv = require('dotenv'); dotenv.config();
+// Custom logger for debugging
+const log = (...args) => {
+    const stack = new Error().stack.split('\n');
+    const callerLine = stack[2];
+    const fileMatch = callerLine.match(/\/([^\/\)]+):\d+:\d+\)?$/);
+    const file = fileMatch ? fileMatch[1] : 'unknown';
+
+    console.log(`Luna: ${new Date().toLocaleString()} | [${file}]`, ...args);
+};
 // ------FRIONODE-----
 
     module.exports = {
@@ -17,7 +26,7 @@ const dotenv = require('dotenv'); dotenv.config();
             run: async (Bloom, message, fulltext) => {
                 const remoteJid = message.key.remoteJid;
                 const sender = message.key.participant || remoteJid;
-                console.log(sender, "djhhjg");
+                log(sender, "djhhjg");
                 if (!(await isBloomKing(sender,message))) {
                     return await Bloom.sendMessage(remoteJid, { text: '❌ This command is for the bot owner only.' }, { quoted: message });
                 }
@@ -37,7 +46,7 @@ const dotenv = require('dotenv'); dotenv.config();
 
                 try {
                     const groupInfo = await Bloom.groupAcceptInvite(code);
-console.log('groupInfo:', groupInfo);
+log('groupInfo:', groupInfo);
 
 let groupName = 'Unnamed Group';
 try {
@@ -45,9 +54,9 @@ try {
     const groupJid = typeof groupInfo === 'string' ? groupInfo : groupInfo.id;
     const meta = await Bloom.groupMetadata(groupJid);
     groupName = meta.subject || groupName;
-   // console.log('groupMetadata:', meta);
+   // log('groupMetadata:', meta);
 } catch (e) {
-    console.error('Failed to fetch group metadata:', e);
+    log('Failed to fetch group metadata:', e);
 }
 
 return await Bloom.sendMessage(remoteJid, {
@@ -62,7 +71,7 @@ return await Bloom.sendMessage(remoteJid, {
                         reason = '❌ Link may be revoked or invalid.';
                     }
 
-                    console.error('Group Join Error:', err);
+                    log('Group Join Error:', err);
                     await Bloom.sendMessage(remoteJid, { text: reason }, { quoted: message });
                 }
             }
@@ -72,12 +81,12 @@ return await Bloom.sendMessage(remoteJid, {
         desc: 'Send broadcast to all participating groups',
         usage: 'bc <message>',
         run: async (Bloom, message, fulltext) => {
-            // console.log('Bloom object keys:', Object.keys(Bloom));
+            // log('Bloom object keys:', Object.keys(Bloom));
             const sender = message.key.remoteJid;
             if (!(await isBloomKing(sender,message))) {
                 return await Bloom.sendMessage(sender, { text: mess.owner }, { quoted: message });
             }
-            console.log(message.pushName);
+            log(message.pushName);
             try {
                 const args = fulltext.trim().split(' ');
                 if (args.length < 2) {
@@ -95,7 +104,7 @@ return await Bloom.sendMessage(remoteJid, {
 
                 await Bloom.sendMessage(message.key.remoteJid, { text: '✅ Broadcast sent to all groups.' });
             } catch (error) {
-                console.error('Broadcast command error:', error);
+                log('Broadcast command error:', error);
                 await Bloom.sendMessage(message.key.remoteJid, { text: '❌ Failed to send broadcast...' });
             }
         }
@@ -122,7 +131,7 @@ return await Bloom.sendMessage(remoteJid, {
                 await execPromise(luna.scripts.restart);
             }
         } catch (err) {
-            console.error('Reboot error:', err);
+            log('Reboot error:', err);
             await Bloom.sendMessage(sender, { text: `❌ Failed to reboot the bot: ${err.message}` }, { quoted: message });
         }
     }
@@ -142,7 +151,7 @@ return await Bloom.sendMessage(remoteJid, {
                 await Bloom.sendMessage(sender, { text: '🛑 Bot has been stopped.' }, { quoted: message });
                 await execPromise(luna.scripts.stop);
             } catch (err) {
-                console.error('Stop error:', err);
+                log('Stop error:', err);
                 await Bloom.sendMessage(sender, { text: `❌ Failed to stop the bot: ${err.message}` }, { quoted: message });
             }
         }
@@ -361,7 +370,7 @@ return await Bloom.sendMessage(remoteJid, {
             }, { quoted: message });
 
         } catch (error) {
-            console.error('Config update failed:', error);
+            log('Config update failed:', error);
             await Bloom.sendMessage(message.key.remoteJid, {
                 text: `❌ Failed to update config: ${error.message}`
             }, { quoted: message });
@@ -412,7 +421,7 @@ return await Bloom.sendMessage(remoteJid, {
             );
 
             } catch (err) {
-            console.error('Unset command error:', err);
+            log('Unset command error:', err);
             await Bloom.sendMessage(
                 replyPath,
                 { text: `❌ Failed to delete key: ${err.message}` },
@@ -451,7 +460,7 @@ return await Bloom.sendMessage(remoteJid, {
                         return await Bloom.sendMessage(replyPath, { text: `📋 Config values:\n${allKeysText}` }, { quoted: message });
                     }
                 } catch (err) {
-                    console.error('Get command error:', err);
+                    log('Get command error:', err);
                     return await Bloom.sendMessage(replyPath, { text: `❌ Failed to fetch config: ${err.message}` }, { quoted: message });
                 }
             }
