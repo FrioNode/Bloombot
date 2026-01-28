@@ -122,10 +122,10 @@ ${versesText}
         }
     },
     
-    'quranaudio': {
+    'qaudio': {
         type: 'religion',
         desc: 'Get Quran audio recitation',
-        usage: 'quranaudio [surah_number:verse] or [surah_number]',
+        usage: 'qaudio [surah_number:verse] or [surah_number]',
         react: '🎵',
         run: async (Bloom, message, fulltext) => {
             const args = fulltext.trim().split(' ').slice(1).join(' ');
@@ -201,10 +201,10 @@ ${versesText}
         }
     },
     
-    'quranfullaudio': {
+    'qfaudio': {
         type: 'religion',
         desc: 'Get complete surah audio recitation',
-        usage: 'quranfullaudio [surah_number]',
+        usage: 'qfaudio [surah_number]',
         react: '📻',
         run: async (Bloom, message, fulltext) => {
             const args = fulltext.trim().split(' ').slice(1);
@@ -265,10 +265,10 @@ ${versesText}
         }
     },
     
-    'quransurah': {
+    'qsurah': {
         type: 'religion',
         desc: 'Search Quran by surah name',
-        usage: 'quransurah [surah_name]',
+        usage: 'qsurah [surah_name]',
         react: '📖',
         run: async (Bloom, message, fulltext) => {
             const surahName = fulltext.trim().split(' ').slice(1).join(' ');
@@ -322,9 +322,9 @@ ${versesText}
 *Verses:* ${surah.numberOfAyahs}
 
 *Use:* 
-• quran ${surah.number} *for verses*
-• quranaudio ${surah.number} *for audio*
-• quranfull ${surah.number} *for full text*`;
+• qverse ${surah.number} *for verses*
+• qaudio ${surah.number} *for audio*
+• qfull ${surah.number} *for full text*`;
                 
                 await Bloom.sendMessage(message.key.remoteJid, { 
                     text: surahInfo 
@@ -477,10 +477,10 @@ ${madani.substring(0, 1500)}${madani.length > 1500 ? '...\n' : ''}
         }
     },
     
-    'quranverse': {
+    'qverse': {
         type: 'religion',
         desc: 'Get specific Quran verse',
-        usage: 'quranverse [surah:verse]',
+        usage: 'qverse [surah:verse]',
         react: '🕋',
         run: async (Bloom, message, fulltext) => {
             const args = fulltext.trim().split(' ').slice(1).join(' ');
@@ -546,10 +546,10 @@ ${verseData.translation}
         }
     },
     
-    'quransearch': {
+    'qsearch': {
         type: 'religion',
         desc: 'Search Quran for specific words',
-        usage: 'quransearch [keyword]',
+        usage: 'qsearch [keyword]',
         react: '🔍',
         run: async (Bloom, message, fulltext) => {
             const keyword = fulltext.trim().split(' ').slice(1).join(' ');
