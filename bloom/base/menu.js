@@ -5,7 +5,7 @@ module.exports = {
         type: 'user',
         desc: 'Shows all commands by type, or specific type if argument is provided',
         usage: `Just type *menu* or *menu* <submenu> for a specific menu\nEg: *menu group*`,
-        run: async (Bloom, message, fulltext, commands) => {
+        run: async (Luna, message, fulltext, commands) => {
             const grouped = {};
             let totalCommands = 0;
 
@@ -33,7 +33,7 @@ module.exports = {
             if (category) {
                 // Ensure the category exists
                 if (!grouped[category]) {
-                    return await Bloom.sendMessage(message.key.remoteJid, {
+                    return await Luna.sendMessage(message.key.remoteJid, {
                         text: `❌ No commands found for category *${category}*.`
                     }, { quoted: message });
                 }
@@ -58,21 +58,21 @@ module.exports = {
                 });
             }
             const final = menuText + mess.footer;
-            await Bloom.sendMessage(message.key.remoteJid, { text: final }, { quoted: message });
+            await Luna.sendMessage(message.key.remoteJid, { text: final }, { quoted: message });
         }
     },
     help: {
         type: 'user',
         desc: 'Shows help info. Usage: help [command]',
         usage: 'Just type: *help* or *help* <command> for specific plugin',
-        run: async (Bloom, message, fulltext, commands) => {
+        run: async (Luna, message, fulltext, commands) => {
             const args = fulltext.trim().split(' ').slice(1); // remove "help"
 
             if (args.length > 0) {
                 const cmdName = args[0].toLowerCase();
                 const cmd = commands[cmdName];
                 if (!cmd) {
-                    return await Bloom.sendMessage(message.key.remoteJid, {
+                    return await Luna.sendMessage(message.key.remoteJid, {
                         text: `❌ Command *${cmdName}* not found. Use *help* / *menu* to see all commands.`
                     });
                 }
@@ -82,7 +82,7 @@ module.exports = {
                 `• Description: ${cmd.desc || 'No description'}\n` +
                 `• Usage: ${cmd.usage || cmdName}\n`;
 
-                return await Bloom.sendMessage(message.key.remoteJid, { text: detailText + mess.footer });
+                return await Luna.sendMessage(message.key.remoteJid, { text: detailText + mess.footer });
             }
 
             // Fallback to full help menu
@@ -102,7 +102,7 @@ module.exports = {
                 }
             }
 
-            await Bloom.sendMessage(message.key.remoteJid, { text: helpText + mess.footer});
+            await Luna.sendMessage(message.key.remoteJid, { text: helpText + mess.footer});
         }
     }
 };
