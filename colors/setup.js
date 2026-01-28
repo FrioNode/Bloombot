@@ -1,5 +1,4 @@
 // setup.js
-const mongoose = require('mongoose');
 const { Setting } = require('./schema');
 const Bot = require('../package.json');
 const dotenv = require('dotenv');
@@ -77,5 +76,4 @@ async function unset(key) {
 
 // ----- Initialize defaults immediately -----
 initDefaults().catch(err => console.error('[MongoDB] initDefaults failed:', err));
-console.log('setting wnt cool!');
 module.exports = { initDefaults, get, set, unset };
