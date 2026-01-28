@@ -1,5 +1,5 @@
 /********************************************************************
- *  Luna Brain Module — Fully Patched for Dynamic Mongo Config
+ *  Luna Brain Module — Dynamic Commands & Mongo Configuration
  ********************************************************************/
 
 const fs = require('fs');
@@ -14,7 +14,17 @@ initMess();
 
 let commandRegistry = {};
 let activeLunaInstance = null;
+/* -----------------------------------------------------------
+   0. CUSTOM LOGGER FOR BRAIN
+----------------------------------------------------------- */
+ const log = (...args) => {
+    const stack = new Error().stack.split('\n');
+    const callerLine = stack[2];
+    const fileMatch = callerLine.match(/\/([^\/\)]+):\d+:\d+\)?$/);
+    const file = fileMatch ? fileMatch[1] : 'unknown';
 
+    console.log(`Luna: ${new Date().toLocaleString()} | [${file}]`, ...args);
+};
 /* -----------------------------------------------------------
    1. INIT COMMAND HANDLER
 ----------------------------------------------------------- */
@@ -22,7 +32,7 @@ async function initCommandHandler(Luna) {
     activeLunaInstance = Luna;
     commandRegistry = {};
     await loadCommands();
-    console.log('[Brain.js]: ♻️ Command handler initialized');
+    log('♻️ Command handler initialized');
 }
 
 /* -----------------------------------------------------------
@@ -53,23 +63,28 @@ async function loadCommands() {
                     const module = require(modulePath);
 
                     for (const [cmd, data] of Object.entries(module)) {
-                        if (!cmd.startsWith('_') && typeof data?.run === 'function') {
-                            commandRegistry[cmd] = data;
-                        }
+                        if (!cmd.startsWith('_') || typeof data?.run !== 'function') continue;
+
+                        const type = typeof data.type === 'string' ? data.type.toLowerCase() : '';
+                        const description = typeof data.description === 'string' ? data.description : '';
+                        const cooldown = typeof data.cooldown === 'number' ? data.cooldown : 0;
+
+                        commandRegistry[cmd] = { run: data.run, type, description, cooldown };
                     }
-                    console.logs(`✅ Loaded command: ${cmd} from ${dir}/${file}`);
-                } catch (err) {}
+
+                    log(`✅ Loaded command: ${cmd} from ${dir}/${file}`);
+                } catch (err) { log(err);}
             }
         }
 
-        console.log(`📦 Total loaded commands: ${Object.keys(commandRegistry).length}`);
-    } catch (err) {}
+        log(`📦 Total loaded commands: ${Object.keys(commandRegistry).length}`);
+    } catch (err) {log(err);}
 }
 
 /* -----------------------------------------------------------
    3. LUNA COMMAND EXECUTION HANDLER
 ----------------------------------------------------------- */
-async function LunaCEH(Luna, message, fulltext, commands, log) {
+async function LunaCEH(Luna, message, fulltext, commands) {
     const commandName = fulltext.split(' ')[0].toLowerCase();
     const commandModule = commands[commandName];
     if (!commandModule?.run) return;
@@ -107,8 +122,14 @@ async function setupHotReload() {
 
     watchedDirs.forEach(dir => {
         const dirPath = path.join(__dirname, dir);
+        const reloadQueue = new Set();
         fs.watch(dirPath, { recursive: false }, (event, filename) => {
-            if (filename?.endsWith('.js')) reloadFile(path.join(dirPath, filename));
+            if (!filename?.endsWith('.js')) return;
+            reloadQueue.add(path.join(dirPath, filename));
+            setTimeout(async () => {
+                for (const file of reloadQueue) await reloadFile(file);
+                reloadQueue.clear();
+            }, 100);
         });
     });
 
@@ -126,23 +147,19 @@ async function setupHotReload() {
     try {
         delete require.cache[require.resolve(filePath)];
         const mod = require(filePath);
-
-        // ⭐ SUPER SMALL PATCH: HANDLE MESS HOT RELOAD ⭐
         if (filePath.endsWith('colors/mess.js')) {
             if (mod.reload) await mod.reload();
-            return; // do not reload commands for mess.js
+            return;
         }
-        // ⭐ END PATCH ⭐
-
         if (!filePath.includes('colors')) await loadCommands();
-    } catch (err) {}
+    } catch (err) { log(err);}
 }
 }
 
 /* -----------------------------------------------------------
    5. MAIN Luna Command Input hanlder
 ----------------------------------------------------------- */
-const LunaCIH = async (Luna, message, log) => {
+const LunaCIH = async (Luna, message) => {
     try {
         if (!Luna || !message?.key) return false;
 
@@ -171,7 +188,7 @@ const LunaCIH = async (Luna, message, log) => {
         }
 
         if (commandRegistry[command]) {
-            await LunaCEH(Luna, message, fulltext, commandRegistry, log);
+            await LunaCEH(Luna, message, fulltext, commandRegistry);
         }
 
         return true;
@@ -254,7 +271,7 @@ async function checkMessageType(Luna, message) {
         if (!groupId.endsWith('@g.us')) return true;
 
         const sender = message.key.participant;
-        const settings = await Settings.findOne({ group: groupId });
+        const settings = await getGroupSettings(groupId);
         if (!settings) return true;
 
         const isAdmin = await isSenderAdmin(Luna, message);
@@ -319,7 +336,7 @@ async function checkCommandTypeFlags(Luna, message) {
         const data = commandRegistry[command];
         if (!data) return true;
 
-        const settings = await Settings.findOne({ group: groupId });
+        const settings = await getGroupSettings(groupId);
 
         if (!settings) return true;
         const type = data.type?.toLowerCase() || '';
@@ -346,14 +363,14 @@ async function checkCommandTypeFlags(Luna, message) {
 /* -----------------------------------------------------------
    10. COMMAND LOCK
 ----------------------------------------------------------- */
-async function checkGroupCommandLock(Luna, message) {
+async function checkGroupCommandLock(message) {
     try {
         const groupId = message.key.remoteJid;
         if (!groupId.endsWith('@g.us')) return true;
 
         const { command } = extractCommand(message);
 
-        const settings = await Settings.findOne({ group: groupId });
+        const settings = await getGroupSettings(groupId);
         if (!settings) return true;
 
         if (!settings.commandsEnabled && command !== 'cmds') {
@@ -399,13 +416,13 @@ async function checkAFK(Luna, message) {
     const node = await get('NODE');
     if (node !== 'production') setupHotReload();
 })();
-
+/* -----------------------------------------------------------
+   x. HELLPER COMMANDS
+----------------------------------------------------------- */
+async function getGroupSettings(groupId) {
+    const settings = await Settings.findOne({ group: groupId });
+    return settings || {}; }
 /* -----------------------------------------------------------
    EXPORTS
 ----------------------------------------------------------- */
-module.exports = {
-    LunaCIH,
-    initCommandHandler,
-    commands: commandRegistry,
-    startReminderChecker
-};
+module.exports = { LunaCIH, initCommandHandler, commands: commandRegistry, startReminderChecker };
