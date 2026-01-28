@@ -232,27 +232,6 @@ ${counts}
 
             await Bloom.sendMessage(message.key.remoteJid, { text: profile, mentions: [jid] }, {quoted: message});
         }
-    },
-    progress: {
-        type: 'user',
-        desc: 'Shows your EXP progress bar',
-        run: async (Bloom, message) => {
-            const jid = message.key?.participant || message.key?.remoteJid;
-            const expData = await Exp.findOne({ jid });
-            if (!expData) return await Bloom.sendMessage(message.key.remoteJid, { text: "Start using commands to earn EXP!" });
-
-            const { current, next } = getLevelData(expData.points);
-            if (!next) return await Bloom.sendMessage(message.key.remoteJid, { text: `╭───────────────\n│ 🏆 Max Level: *${current.name}*\n╰───────────────` });
-
-            const percent = Math.floor(((expData.points - current.min) / (next.min - current.min)) * 100);
-            await Bloom.sendMessage(message.key.remoteJid, {
-                text: `╭───────────────
-│ 🎖️ Level: *${current.name}*
-│ 🔋 Progress: [${'▓'.repeat(percent/5)}${'░'.repeat(20-percent/5)}] ${percent}%
-│ ⬆️ *${next.name}* at *${next.min}* points
-╰───────────────`
-            }, {quoted: message});
-        }
     }
 };
 
