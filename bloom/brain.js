@@ -63,16 +63,15 @@ async function loadCommands() {
                     const module = require(modulePath);
 
                     for (const [cmd, data] of Object.entries(module)) {
-                        if (!cmd.startsWith('_') || typeof data?.run !== 'function') continue;
+                        if (cmd.startsWith('_') || typeof data?.run !== 'function') continue;
 
                         const type = typeof data.type === 'string' ? data.type.toLowerCase() : '';
                         const description = typeof data.description === 'string' ? data.description : '';
                         const cooldown = typeof data.cooldown === 'number' ? data.cooldown : 0;
 
                         commandRegistry[cmd] = { run: data.run, type, description, cooldown };
+                        log(`✅ Loaded command: ${cmd} from ${dir}/${file}`);
                     }
-
-                    log(`✅ Loaded command: ${cmd} from ${dir}/${file}`);
                 } catch (err) { log(err);}
             }
         }
