@@ -1,64 +1,110 @@
 const { get } = require('../../colors/setup');
 const { mess } = require('../../colors/mess');
+const { prepareWAMessageMedia, generateWAMessageFromContent, proto } = require('baileys');
+
 module.exports = {
     menu: {
         type: 'user',
-        desc: 'Shows all commands by type, or specific type if argument is provided',
-        usage: `Just type *menu* or *menu* <submenu> for a specific menu\nEg: *menu group*`,
+        desc: 'Shows all commands by type',
+        usage: `Just type *menu*`,
         run: async (Luna, message, fulltext, commands) => {
-            const grouped = {};
-            let totalCommands = 0;
 
-            // Group commands by type and count the total commands
+            /* ───── Group commands ───── */
+            const grouped = {};
+            let total = 0;
+
             for (const [name, cmd] of Object.entries(commands)) {
-                const type = cmd.type || 'misc';
+                const type = (cmd.type || 'misc').toUpperCase();
                 if (!grouped[type]) grouped[type] = [];
                 grouped[type].push(name);
-                totalCommands++; // Increment total count
+                total++;
             }
 
-            // Check if there's an argument provided
-            const args = fulltext.trim().split(' ');
-            const category = args[1]?.toLowerCase();
+            const categories = Object.keys(grouped);
 
-            let menuText = '';
+            // Split categories into 2 halves
+            const mid = Math.ceil(categories.length / 2);
+            const firstHalf = categories.slice(0, mid);
+            const secondHalf = categories.slice(mid);
 
-            // If no category argument is provided, show the full menu with total commands
-            if (!category) {
-                const botname = await get('BOTNAME');
-                menuText += `📜 *${botname} Menu* (Total: ${totalCommands})\n\n`;
-            }
-
-            // If a category is provided, show only that category's commands
-            if (category) {
-                // Ensure the category exists
-                if (!grouped[category]) {
-                    return await Luna.sendMessage(message.key.remoteJid, {
-                        text: `❌ No commands found for category *${category}*.`
-                    }, { quoted: message });
-                }
-
-                menuText += `📂 *${category.toUpperCase()}*\n╭─────────────────\n`;
-                const names = grouped[category];
-
-                // Group the commands into 3 per line for this category
-                for (let i = 0; i < names.length; i += 4) {
-                    menuText += `│ ${names.slice(i, i + 4).join(' | ')}\n`;
-                }
-
-                menuText += `╰─────────────────\n`;
-            } else {
-                // Show the full menu with categories
-                Object.entries(grouped).forEach(([type, names]) => {
-                    menuText += `📂 *${type.toUpperCase()}*\n╭─────────────────\n`;
-                    for (let i = 0; i < names.length; i += 4) {
-                        menuText += `│ ${names.slice(i, i + 4).join(' | ')}\n`;
+            const buildMenuText = (cats) => {
+                let text = '';
+                for (const cat of cats) {
+                    const cmds = grouped[cat];
+                    text += `> 📂 ${cat}\n╭─────────────────\n`;
+                    for (let i = 0; i < cmds.length; i += 4) {
+                        text += `│ ${cmds.slice(i, i + 4).join(' • ')}\n`;
                     }
-                    menuText += `╰─────────────────\n`;
+                    text += `╰─────────────────\n`;
+                }
+                return text;
+            };
+
+            const botname = await get('BOTNAME');
+
+            const pages = [
+                buildMenuText(firstHalf),
+                buildMenuText(secondHalf)
+            ];
+
+            /* ───── Build Carousel Cards ───── */
+            const cards = [];
+            const DEFAULT_IMAGE = await get('IMAGE');
+            for (let i = 0; i < pages.length; i++) {
+                const media = await prepareWAMessageMedia(
+                    { image: { url: DEFAULT_IMAGE } },
+                    { upload: Luna.waUploadToServer }
+                );
+
+                const header = proto.Message.InteractiveMessage.Header.create({
+                    ...media,
+                    title: `📜 ${botname} Menu (Total: ${total})`,
+                    subtitle: `${botname} Menu Page ${i + 1} / 2`,
+                    hasMediaAttachment: true
+                });
+
+                cards.push({
+                    header,
+                    body: { text: pages[i] },
+                    nativeFlowMessage: {
+                        buttons: [
+                            {
+                                name: 'quick_reply',
+                                buttonParamsJson: JSON.stringify({
+                                    display_text: `${botname} Menu Page ${i + 1}`,
+                                    id: `menu_page_${i + 1}`
+                                })
+                            }
+                        ]
+                    }
                 });
             }
-            const final = menuText + mess.footer;
-            await Luna.sendMessage(message.key.remoteJid, { text: final }, { quoted: message });
+
+            /* ───── Send Carousel ───── */
+            const carousel = generateWAMessageFromContent(
+                message.key.remoteJid,
+                {
+                    viewOnceMessage: {
+                        message: {
+                            interactiveMessage: {
+                                body: { text: '👉 Swipe left & right 2 view navigate\n' },
+                                footer: { text: `${mess.footer}` },
+                                carouselMessage: {
+                                    cards,
+                                    messageVersion: 1
+                                }
+                            }
+                        }
+                    }
+                },
+                { quoted: message }
+            );
+
+            await Luna.relayMessage(
+                message.key.remoteJid,
+                carousel.message,
+                { messageId: carousel.key.id }
+            );
         }
     },
     help: {
