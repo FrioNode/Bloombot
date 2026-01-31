@@ -21,7 +21,12 @@
   "pnpm": {
     "overrides": {
       "fluent-ffmpeg": "^2.1.3"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "baileys",
+      "protobufjs",
+      "sharp"
+    ]  
   },
   "author": "FrioNode",
   "license": "ISC",
