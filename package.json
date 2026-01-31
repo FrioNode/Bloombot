@@ -1,5 +1,5 @@
 {
-  "name": "Luna",
+  "name": "luna",
   "version": "1.0.1",
   "description": "WhatsApp multidevice bot build on baileys",
   "main": "luna.js",
