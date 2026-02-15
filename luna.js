@@ -27,15 +27,18 @@ const isDocker = require('is-docker').default;
 const { emojis, doReact } = require('./colors/react');
 const { mess, initMess } = require('./colors/mess'); const dotenv = require('dotenv');
 const { _autoStartGame } = require('./bloom/base/games');
+const { _payWebhook, _getQueueStats } = require('./bloom/base/pay');
+
 dotenv.config(); initMess();
 const session = process.env.SESSION
 const store = require('./colors/luna_store');
 connectDB('Luna module');
+let LunaInstance = null;
 async function preloadConfig() {
     const KEYS = [
         "OWNERNUMBER", "SUDOLID", "DEVNAME", "OWNERNAME", "CHANNELNAME",
         "OPENCHAT", "INVITE", "CHANNELID", "CHANNEL", "BOTNAME",
-        "IMAGE", "REACT", "EMOJI", "MODE", "STOREWRITEINTERVAL" ];
+        "IMAGE", "REACT", "EMOJI", "MODE", "STOREWRITEINTERVAL", "SENDPAYLOAD" ];
     const config = {}; 
     for (const key of KEYS) {
         config[key.toLowerCase()] = await get(key);
@@ -62,7 +65,7 @@ async function igniteLuna() {
     const {
         botname, react, emoji, invite, openchat,
         channel, channelid, channelname, image,
-        mode, storewriteinterval } = config;
+        mode, storewriteinterval, sendpayload } = config;
     const freechat = process.env.OPENCHAT || openchat
 
     const sessionDir = path.join(__dirname, 'heart');
@@ -136,6 +139,8 @@ async function downloadSessionData() {
                 keepAliveIntervalMs: 10000
             });
 
+            LunaInstance = Luna;
+
             Luna.ev.on('connection.update', async (update) => {
                 const { qr, connection, lastDisconnect } = update;
 
@@ -145,7 +150,7 @@ async function downloadSessionData() {
                 }
 
                 if (connection === 'open') {
-                    log(`✅ Connected as ${botname}: Space mode`);
+                    log(`${emoji} Connected as ${botname}: Space mode - Queue enabled`);
 
                         try {
                             await Luna.groupAcceptInvite(invite);
@@ -185,10 +190,10 @@ async function downloadSessionData() {
                                 },
                             },
                         };
-
+                    if( sendpayload ==='true' ){
                         Luna.sendMessage(freechat, payload).catch(err => {
                             log('Boot message failed:', err?.message || err);  });
-                    }
+                    } }
 
                     await startReminderChecker(Luna);
                     await startStatusWatcher(Luna, log);
@@ -209,8 +214,7 @@ async function downloadSessionData() {
                 }
             });
 
-            const processed = new Set();
-            const reactionQueue = [];
+            const processed = new Set(); const reactionQueue = [];
             let processing = false;
 
             async function processReactions() {
@@ -284,6 +288,8 @@ async function downloadSessionData() {
     setInterval(() => store.writeToFile(), storewriteinterval || 10000);
 
     const app = express();
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
     const PORT = process.env.PORT || 3000;
 
     if (isDocker()) log(`${emoji} ${botname} running in Docker`);
@@ -308,6 +314,14 @@ async function downloadSessionData() {
     });
 
     app.get('/status', (_, res) => res.send(`✅ ${botname} bot is online`));
+    app.post('/webhook', (req, res) => _payWebhook(req, res));
+    app.get('/queue', async (req, res) => {
+            try {
+                const stats = await _getQueueStats();
+                res.json({ success: true, ...stats, timestamp: new Date().toISOString() });
+            } catch (error) {  res.status(500).json({
+                    success: false, error: error.message  });
+            }       });
 
     app.listen(PORT, () => log(`🔒 ${botname} server running on port ${PORT}`));
 }

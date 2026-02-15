@@ -129,6 +129,42 @@ const settingSchema = new mongoose.Schema({
   value: { type: String, required: true } // always string
 }, { collection: 'setup', versionKey: false });
 
+const paymentSchema = new mongoose.Schema({
+    api_ref: { type: String, required: true, unique: true, index: true },
+    sender: { type: String, required: true }, // WhatsApp JID
+    jid_type: { type: String, enum: ['user', 'group'], required: true },    
+    amount: { type: Number, required: true },
+    phone: { type: String, required: true },
+    status: { 
+        type: String, 
+        enum: ['pending', 'processing', 'complete', 'failed'], 
+        default: 'pending' 
+    },
+    webhook_data: { type: mongoose.Schema.Types.Mixed },
+    notified: { type: Boolean, default: false },
+    created: { type: Date, default: Date.now },
+    updated: { type: Date, default: Date.now }
+}, { 
+    expires: '24h', // Auto cleanup after 24h
+    versionKey: false 
+});
+
+const queueJobSchema = new mongoose.Schema({
+    jobId: { type: String, required: true, unique: true, index: true },
+    api_ref: { type: String, required: true, index: true },
+    status: { 
+        type: String, 
+        enum: ['queued', 'processing', 'completed', 'failed', 'retrying'],
+        default: 'queued'
+    },
+    attempts: { type: Number, default: 0 },
+    max_attempts: { type: Number, default: 3 },
+    error: { type: mongoose.Schema.Types.Mixed },
+    created: { type: Date, default: Date.now },
+    processed: { type: Date },
+    metadata: { type: mongoose.Schema.Types.Mixed }
+});
+
 let isConnected = false;
 
 async function connectDB(source = 'Unknown Module') {
@@ -219,5 +255,7 @@ const User = mongoose.models.User || mongoose.model('User', userSchema);
 const Settings = mongoose.models.Settings || mongoose.model('Settings', settingsSchema); // group
 const Setting = mongoose.model('Setup', settingSchema); // bot
 const Exp = mongoose.models.Exp || mongoose.model('Exp', expSchema);
+const Payment = mongoose.models.Payment || mongoose.model('Payment', paymentSchema);
+const QueueJob = mongoose.models.QueueJob || mongoose.model('QueueJob', queueJobSchema);
 
-module.exports = { Pokemon, UserCounter, User , Settings, Setting, Exp, AFK, TicTacToe, Reminder, Ticket, TicketId, connectDB };
+module.exports = { Pokemon, UserCounter, User , Settings, Setting, Exp, AFK, TicTacToe, Reminder, Ticket, TicketId, Payment, QueueJob, connectDB };
